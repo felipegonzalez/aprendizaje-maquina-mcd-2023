@@ -53,5 +53,6 @@ RUN install2.r --error \
 
 RUN install2.r reticulate tensorflow keras \
     abind RcppRoll
-RUN install2.r gifski
+RUN install2.r gifski languageserver
+
 
