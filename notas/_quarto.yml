@@ -1,0 +1,22 @@
+project:
+  type: book
+
+book:
+  title: "Aprendizaje Máquina"
+  author: "Felipe González"
+  chapters:
+    - index.qmd
+    - 01-introduccion.qmd
+    - 99-referencias.qmd
+
+bibliography: referencias/book.bib
+
+format:
+  html:
+    theme: journal
+    lang: es
+    font-size: 1.1em
+    code-fold: false
+
+
+

@@ -1,0 +1,8 @@
+.DS_Store
+notas/_book
+.bash_history
+.cache/
+.config/
+.keras/
+.local/
+

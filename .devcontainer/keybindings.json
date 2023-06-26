@@ -1,0 +1,29 @@
+[
+  {
+    "key": "Cmd+Shift+m",
+    "command": "type",
+    "args": { "text": " |> " },
+    "when": "editorTextFocus && editorLangId == r"
+  },
+  {
+    "key": "Cmd+Shift+m",
+    "command": "type",
+    "args": { "text": " |> " },
+    "when": "editorTextFocus && editorLangId == rmd"
+  },
+  {
+    "key": "ctrl+v",
+    "command": "pasteAndIndent.action",
+    "when": "editorTextFocus && !editorReadonly"
+},
+{
+    "key": "ctrl+v",
+    "command": "editor.action.clipboardPasteAction",
+    "when": "!editorTextFocus"
+},
+{
+    "key": "ctrl+shift+v",
+    "command": "editor.action.clipboardPasteAction",
+    "when": "editorTextFocus && !editorReadonly"
+}
+]
