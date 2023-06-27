@@ -9,7 +9,7 @@ on:
 jobs:
   build-image:
     runs-on: ubuntu-latest
-    container: felipexgonzalez/am-2023:latest
+    container: felipexgonzalez/am-2023-amd64:latest
     steps:
       - uses: actions/checkout@v2
       - name: Render book 
