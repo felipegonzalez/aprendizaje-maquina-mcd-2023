@@ -253,13 +253,13 @@ Ajustamos el modelo:
 #| eval: false
 modelo_aguja |> compile(
   loss = "mse",
-  optimizer = optimizer_adam(learning_rate = 0.001),
+  optimizer = optimizer_adam(learning_rate = 0.0005),
   metrics = c('mae')
 )                                                                                                        
 # Entrenar
 modelo_aguja |> fit(
   generador_entrena,
-  epochs = 80,
+  epochs = 200,
   verbose = TRUE, 
   validation_data = list(x = x[-indices_entrena,,,], 
                          y = y_imagenes[-c(indices_entrena)] / 10)
