@@ -37,7 +37,7 @@ RUN ln -s ${PYTHON_VENV_PATH}/bin/pip /usr/local/bin/pip && \
 RUN chmod -R a+x ${PYTHON_VENV_PATH}
 
 RUN .${PYTHON_VENV_PATH}/bin/activate && \
-    pip install Pillow requests scipy pandas\
+    pip install radian Pillow requests scipy pandas\
     tensorflow==2.10.0 keras==2.10.0
   
 RUN install2.r --error Rcpp
