@@ -348,13 +348,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="cell">
 <div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>modelo_aguja <span class="sc">|&gt;</span> <span class="fu">compile</span>(</span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">loss =</span> <span class="st">"mse"</span>,</span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">optimizer =</span> <span class="fu">optimizer_adam</span>(<span class="at">learning_rate =</span> <span class="fl">0.001</span>),</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">optimizer =</span> <span class="fu">optimizer_adam</span>(<span class="at">learning_rate =</span> <span class="fl">0.0005</span>),</span>
 <span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">metrics =</span> <span class="fu">c</span>(<span class="st">'mae'</span>)</span>
 <span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>)                                                                                                        </span>
 <span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Entrenar</span></span>
 <span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>modelo_aguja <span class="sc">|&gt;</span> <span class="fu">fit</span>(</span>
 <span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>  generador_entrena,</span>
-<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">epochs =</span> <span class="dv">80</span>,</span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">epochs =</span> <span class="dv">200</span>,</span>
 <span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">verbose =</span> <span class="cn">TRUE</span>, </span>
 <span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">validation_data =</span> <span class="fu">list</span>(<span class="at">x =</span> x[<span class="sc">-</span>indices_entrena,,,], </span>
 <span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>                         <span class="at">y =</span> y_imagenes[<span class="sc">-</span><span class="fu">c</span>(indices_entrena)] <span class="sc">/</span> <span class="dv">10</span>)</span>
@@ -365,23 +365,23 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>modelo <span class="ot">&lt;-</span> <span class="fu">load_model_hdf5</span>(<span class="st">"cache/modelo-aguja.h5"</span>)</span>
 <span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>modelo</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>Model: "sequential_3"
+<pre><code>Model: "sequential_2"
 ________________________________________________________________________________
  Layer (type)                       Output Shape                    Param #     
 ================================================================================
- conv2d_11 (Conv2D)                 (None, 60, 60, 32)              2432        
- max_pooling2d_11 (MaxPooling2D)    (None, 30, 30, 32)              0           
- conv2d_10 (Conv2D)                 (None, 26, 26, 32)              25632       
- max_pooling2d_10 (MaxPooling2D)    (None, 13, 13, 32)              0           
- conv2d_9 (Conv2D)                  (None, 11, 11, 16)              4624        
- max_pooling2d_9 (MaxPooling2D)     (None, 5, 5, 16)                0           
- flatten_3 (Flatten)                (None, 400)                     0           
- dropout_10 (Dropout)               (None, 400)                     0           
- dense_10 (Dense)                   (None, 100)                     40100       
- dropout_9 (Dropout)                (None, 100)                     0           
- dense_9 (Dense)                    (None, 100)                     10100       
- dropout_8 (Dropout)                (None, 100)                     0           
- dense_8 (Dense)                    (None, 1)                       101         
+ conv2d_8 (Conv2D)                  (None, 60, 60, 32)              2432        
+ max_pooling2d_8 (MaxPooling2D)     (None, 30, 30, 32)              0           
+ conv2d_7 (Conv2D)                  (None, 26, 26, 32)              25632       
+ max_pooling2d_7 (MaxPooling2D)     (None, 13, 13, 32)              0           
+ conv2d_6 (Conv2D)                  (None, 11, 11, 16)              4624        
+ max_pooling2d_6 (MaxPooling2D)     (None, 5, 5, 16)                0           
+ flatten_2 (Flatten)                (None, 400)                     0           
+ dropout_8 (Dropout)                (None, 400)                     0           
+ dense_8 (Dense)                    (None, 100)                     40100       
+ dropout_7 (Dropout)                (None, 100)                     0           
+ dense_7 (Dense)                    (None, 100)                     10100       
+ dropout_6 (Dropout)                (None, 100)                     0           
+ dense_6 (Dense)                    (None, 1)                       101         
 ================================================================================
 Total params: 82,989
 Trainable params: 82,989
