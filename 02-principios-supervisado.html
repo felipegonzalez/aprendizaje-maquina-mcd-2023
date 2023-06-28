@@ -1,0 +1,4270 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="es" xml:lang="es"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.3.353">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Aprendizaje Máquina - 2&nbsp; Principios de aprendizaje supervisado</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./03-metodos-locales.html" rel="next">
+<link href="./01-introduccion.html" rel="prev">
+<script src="site_libs/quarto-html/quarto.js"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 20,
+  "language": {
+    "search-no-results-text": "Sin resultados",
+    "search-matching-documents-text": "documentos encontrados",
+    "search-copy-link-title": "Copiar el enlace en la búsqueda",
+    "search-hide-matches-text": "Ocultar resultados adicionales",
+    "search-more-match-text": "resultado adicional en este documento",
+    "search-more-matches-text": "resultados adicionales en este documento",
+    "search-clear-button-title": "Borrar",
+    "search-detached-cancel-button-title": "Cancelar",
+    "search-submit-button-title": "Enviar"
+  }
+}</script>
+
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+</head>
+
+<body class="nav-sidebar floating">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Alternar barra lateral" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+      <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./02-principios-supervisado.html"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Principios de aprendizaje supervisado</span></a></li></ol></nav>
+      <a class="flex-grow-1" role="button" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Alternar barra lateral" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+      </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Buscar" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./">Aprendizaje Máquina</a> 
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Buscar"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Temario y referencias</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./01-introduccion.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Introducción</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./02-principios-supervisado.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Principios de aprendizaje supervisado</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./03-metodos-locales.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Métodos locales no estructurados</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./99-referencias.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Referencias</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Tabla de contenidos</h2>
+   
+  <ul>
+  <li><a href="#población-y-pérdida" id="toc-población-y-pérdida" class="nav-link active" data-scroll-target="#población-y-pérdida"><span class="header-section-number">2.1</span> Población y pérdida</a>
+  <ul class="collapse">
+  <li><a href="#ejemplo" id="toc-ejemplo" class="nav-link" data-scroll-target="#ejemplo">Ejemplo</a></li>
+  <li><a href="#ejemplo-1" id="toc-ejemplo-1" class="nav-link" data-scroll-target="#ejemplo-1">Ejemplo</a></li>
+  </ul></li>
+  <li><a href="#estimando-el-desempeño-y-datos-de-prueba" id="toc-estimando-el-desempeño-y-datos-de-prueba" class="nav-link" data-scroll-target="#estimando-el-desempeño-y-datos-de-prueba"><span class="header-section-number">2.2</span> Estimando el desempeño y datos de prueba</a>
+  <ul class="collapse">
+  <li><a href="#ejemplo-óptimo" id="toc-ejemplo-óptimo" class="nav-link" data-scroll-target="#ejemplo-óptimo">Ejemplo: óptimo</a></li>
+  <li><a href="#ejemplo-regla" id="toc-ejemplo-regla" class="nav-link" data-scroll-target="#ejemplo-regla">Ejemplo: regla</a></li>
+  </ul></li>
+  <li><a href="#aprendizaje" id="toc-aprendizaje" class="nav-link" data-scroll-target="#aprendizaje"><span class="header-section-number">2.3</span> Aprendizaje supervisado</a>
+  <ul class="collapse">
+  <li><a href="#ejemplo-vecinos-más-cercanos" id="toc-ejemplo-vecinos-más-cercanos" class="nav-link" data-scroll-target="#ejemplo-vecinos-más-cercanos">Ejemplo: vecinos más cercanos</a></li>
+  <li><a href="#ejemplo-regresión-lineal" id="toc-ejemplo-regresión-lineal" class="nav-link" data-scroll-target="#ejemplo-regresión-lineal">Ejemplo: regresión lineal</a></li>
+  </ul></li>
+  <li><a href="#entendiendo-el-error-de-predicción" id="toc-entendiendo-el-error-de-predicción" class="nav-link" data-scroll-target="#entendiendo-el-error-de-predicción"><span class="header-section-number">2.4</span> Entendiendo el error de predicción</a></li>
+  <li><a href="#ejemplo-fuentes-de-error" id="toc-ejemplo-fuentes-de-error" class="nav-link" data-scroll-target="#ejemplo-fuentes-de-error"><span class="header-section-number">2.5</span> Ejemplo: fuentes de error</a></li>
+  <li><a href="#agregando-más-información-y-error-irreducible" id="toc-agregando-más-información-y-error-irreducible" class="nav-link" data-scroll-target="#agregando-más-información-y-error-irreducible"><span class="header-section-number">2.6</span> Agregando más información y error irreducible</a></li>
+  <li><a href="#acerca-de-la-estimación-del-error-de-predicción" id="toc-acerca-de-la-estimación-del-error-de-predicción" class="nav-link" data-scroll-target="#acerca-de-la-estimación-del-error-de-predicción"><span class="header-section-number">2.7</span> Acerca de la estimación del error de predicción</a></li>
+  <li><a href="#resumen" id="toc-resumen" class="nav-link" data-scroll-target="#resumen"><span class="header-section-number">2.8</span> Resumen</a></li>
+  <li><a href="#qué-cosas-no-veremos-en-este-curso" id="toc-qué-cosas-no-veremos-en-este-curso" class="nav-link" data-scroll-target="#qué-cosas-no-veremos-en-este-curso"><span class="header-section-number">2.9</span> Qué cosas no veremos en este curso</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Principios de aprendizaje supervisado</span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+</header>
+
+<p>En esta sección examinaremos algunos principios teóricos y de metodología para el aprendizaje supervisado.</p>
+<section id="población-y-pérdida" class="level2" data-number="2.1">
+<h2 data-number="2.1" class="anchored" data-anchor-id="población-y-pérdida"><span class="header-section-number">2.1</span> Población y pérdida</h2>
+<p>Supongamos que tenemos una población grande de observaciones potenciales de la forma</p>
+<p><span class="math display">\[(x_1, x_2, \ldots, x_p, y) \]</span></p>
+<p>Y para esa población nos interesa predecir una variable respuesta <span class="math inline">\(y\)</span> numérica en términos de variables de entrada disponibles <span class="math inline">\(x = (x_1,x_2,\ldots, x_p)\)</span>:</p>
+<p><span class="math display">\[(x_1, x_2, \ldots, x_p) \to y\]</span></p>
+<p>El proceso que produce la salida <span class="math inline">\(y\)</span> a partir de las entradas es típicamente muy complejo y dificíl de describir de forma mecanística (por ejemplo, el ingreso dadas características de los hogares).</p>
+<section id="ejemplo" class="level3 unnumbered">
+<h3 class="unnumbered anchored" data-anchor-id="ejemplo">Ejemplo</h3>
+<p>Para ilustrar esta discusión teórica, consideraremos datos simulados. La población está dada por el siguiente proceso generador de datos:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidymodels)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(patchwork)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(gt)</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>genera_datos <span class="ot">&lt;-</span> <span class="cf">function</span>(<span class="at">n =</span> <span class="dv">500</span>, <span class="at">tipo =</span> <span class="cn">NULL</span>){</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  dat_tbl <span class="ot">&lt;-</span> <span class="fu">tibble</span>(<span class="at">nse =</span> <span class="fu">runif</span>(n, <span class="dv">0</span>, <span class="dv">100</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(estudio_años <span class="ot">=</span> <span class="fu">floor</span>(<span class="fu">rnorm</span>(n, <span class="fl">1.5</span> <span class="sc">*</span> <span class="fu">sqrt</span>(nse), <span class="dv">1</span>))) <span class="sc">|&gt;</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(estudio_años <span class="ot">=</span> <span class="fu">pmax</span>(<span class="dv">0</span>, <span class="fu">pmin</span>(<span class="dv">17</span>, estudio_años))) <span class="sc">|&gt;</span> </span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">habilidad =</span> <span class="fu">rnorm</span>(n, <span class="dv">100</span> <span class="sc">+</span> <span class="fl">0.1</span> <span class="sc">*</span> nse, <span class="dv">1</span>)) <span class="sc">|&gt;</span> </span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">z =</span> <span class="dv">100</span> <span class="sc">+</span> (habilidad<span class="sc">/</span><span class="dv">100</span>) <span class="sc">*</span> ( <span class="dv">20</span> <span class="sc">*</span> nse <span class="sc">+</span> <span class="dv">5</span> <span class="sc">*</span> (estudio_años))) <span class="sc">|&gt;</span> </span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">ingreso =</span> <span class="fu">pmax</span>(<span class="dv">0</span>, <span class="fl">0.2</span><span class="sc">*</span>(z <span class="sc">+</span> <span class="fu">rnorm</span>(n, <span class="dv">0</span>, <span class="dv">150</span>))))</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>  obs_tbl <span class="ot">&lt;-</span> dat_tbl <span class="sc">|&gt;</span> </span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">tipo =</span> tipo, <span class="at">id =</span> <span class="dv">1</span><span class="sc">:</span>n)</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>  obs_tbl <span class="sc">|&gt;</span> <span class="fu">select</span>(id, tipo, <span class="at">x =</span> estudio_años, <span class="at">y =</span> ingreso)</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Tenemos una sola entrada y una respuesta numérica, y una muestra se ve como sigue:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">1234</span>)</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>datos_tbl <span class="ot">&lt;-</span> <span class="fu">genera_datos</span>(<span class="at">n =</span> <span class="dv">500</span>, <span class="at">tipo =</span> <span class="st">"entrena"</span>)</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(datos_tbl, <span class="fu">aes</span>(<span class="at">x =</span> x, <span class="at">y =</span> y)) <span class="sc">+</span> <span class="fu">geom_jitter</span>(<span class="at">width =</span> <span class="fl">0.3</span>) <span class="sc">+</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">xlab</span>(<span class="st">"Años de estudio"</span>) <span class="sc">+</span> <span class="fu">ylab</span>(<span class="st">"Ingreso anual (miles)"</span>)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="02-principios-supervisado_files/figure-html/unnamed-chunk-3-1.png" class="img-fluid" width="384"></p>
+</div>
+</div>
+<hr>
+<p>Buscamos construir una función <span class="math inline">\(f\)</span> tal que si observamos cualquier <span class="math inline">\(x = (x_1, x_2, \ldots, x_p) \to y\)</span>, entonces nuestra predicción es</p>
+<p><span class="math display">\[\hat{y} = f(x_1, x_2, \ldots, x_p) = f(x).\]</span> Con esta regla o algoritmo <span class="math inline">\(f\)</span> queremos <strong>predecir</strong> con buena precisión el valor de <span class="math inline">\(y\)</span>. Esta <span class="math inline">\(f\)</span>, como explicamos antes, puede ser producida de muy distintas maneras (experiencia, reglas a mano, datos, etc.)</p>
+<p>Nuestra primera tarea es definir qué quiere decir <em>predecir con buena precisión</em>.</p>
+<p>Para hacer esto tenemos que introducir una medida del error, que llamamos en general <strong>función de pérdida</strong>.</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Función de pérdida y error de predicción
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Si el verdadero valor observado es <span class="math inline">\(y\)</span> y nuestra predicción es <span class="math inline">\(f(x)\)</span>, denotamos la pérdida asociada a esta observación como <span class="math display">\[L(y, f(x))\]</span> Para medir el desempeño general de la regla <span class="math inline">\(f\)</span>, consideramos su valor esperado, el <strong>error de predicción</strong>, que es el promedio sobre toda la población:</p>
+<p><span class="math display">\[Err(f) = E[L(y, f(x))]\]</span></p>
+<p>Este es el error que obtendríamos promediando las pérdidas sobre <strong>toda</strong> la población de interés.</p>
+</div>
+</div>
+<p><strong>Observación</strong>: Para fijar ideas, podríamos usar por ejemplo la pérdida absoluta <span class="math inline">\(L(y, f(x)) = |y - f(x)|\)</span> o la pérdida cuadrática <span class="math inline">\(L(y, f(x)) = (y - f(x))^2\)</span>.</p>
+<p><strong>Al menos en teoría</strong>, podemos encontrar una <span class="math inline">\(f\)</span> que minimiza esta pérdida:</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Predictor óptimo
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Para una población dada, el predictor óptimo (teórico) es</p>
+<p><span class="math display">\[f^* = \underset{f}{\mathrm{argmin}} E[L(y, f(x))].\]</span></p>
+<p>Es decir: el mínimo error posible que podemos obtener es <span class="math inline">\(Err(f^*)\)</span>. Para cualquier otro predictor <span class="math inline">\(f\)</span> tenemos que <span class="math inline">\(Err(f) \geq Err(f^*).\)</span></p>
+</div>
+</div>
+<p>Por ejemplo si usamos la pérdida cuadrática <span class="math inline">\(L(y, f(x)) = (y - f(x))^2\)</span>, entonces puede mostrarse que</p>
+<p><span class="math display">\[f^*(x) = E(y | x)\]</span> de forma que <span class="math inline">\(f^*\)</span> es la media condicional de la <span class="math inline">\(y\)</span> dado que sabemos que las entradas son <span class="math inline">\(x\)</span>. Si usáramos la pérdida absoluta <span class="math inline">\(L(y, f(x)) = |y - f(x)|\)</span> entonces <span class="math display">\[f^*(x) = \textrm{mediana}(y|x).\]</span> Distintas funciones de pérdida dan distintas soluciones teóricas. Por ejemplo, si existen valores atípicos en <span class="math inline">\(y\)</span> producidos por errores de registro o medición, usar la pérdida absoluta puede dar mejores resultados que la cuadrática, que tiende a dar mayor peso a errores grandes.</p>
+<p><strong>Observaciones</strong>:</p>
+<ul>
+<li><p>Podemos ver nuestra tarea entonces como una de ajuste de curvas: queremos aproximar tan bien como sea posible la función <span class="math inline">\(f^*(x)\)</span>.</p></li>
+<li><p>No es simple decidir qué función de pérdida debería utilizarse para un problema dado de predicción.<br>
+Generalmente es una combinación de costos/beneficios del problema que tratamos, conveniencia computacional, y cómo se comportan los errores de nuestros predictores bajo distintas pérdidas. Sin embargo, al principio del proceso de construcción de modelos es mejor escoger una métrica simple que capture a grandes rasgos el comportamiento que esperamos (pérdida cuadrática, absoluta o logarítmica por ejemplo).</p></li>
+<li><p>Muchas veces es mejor considerar el problema de selección de la pérdida desde dos ángulos: el primero es computacional y de propiedades de la predicción, y el segundo tiene que ver con costos y beneficios asociados al problema que queremos resolver. Para el primero, alguna de las pérdidas estándar (como las que vimos arriba, cuadrática y absoluta, ologarítmica) son usualmente suficiente. En el segundo enfoque, el análisis es generalmente involucra más aspectos particulares del problema y generalmente tiene que hacerse de manera ad-hoc.</p></li>
+</ul>
+</section>
+<section id="ejemplo-1" class="level3 unnumbered">
+<h3 class="unnumbered anchored" data-anchor-id="ejemplo-1">Ejemplo</h3>
+<p>Supongamos que nos interesa minimizar la pérdida cuadrática. Si tomamos una muestra muy grande (para este problema), podemos aproximar la predicción óptima directamente. Abajo graficamos nuestra muestra chica de datos junto con una buna aproximación del predictor óptimo:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>poblacion_tbl <span class="ot">&lt;-</span> <span class="fu">genera_datos</span>(<span class="at">n =</span> <span class="dv">50000</span>, <span class="at">tipo =</span> <span class="st">"poblacion"</span>)</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="co"># calcular óptimo</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>preds_graf_tbl <span class="ot">&lt;-</span> poblacion_tbl <span class="sc">|&gt;</span> </span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(x) <span class="sc">|&gt;</span> <span class="co"># condicionar a x</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">.pred =</span> <span class="fu">mean</span>(y)) <span class="sc">|&gt;</span> <span class="co"># mediana, pues usamos pérdida absoluta</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">predictor =</span> <span class="st">"_óptimo"</span>)</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="co"># graficar con una muestra grande</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(datos_tbl, <span class="fu">aes</span>(<span class="at">x =</span> x)) <span class="sc">+</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_jitter</span>(<span class="fu">aes</span>(<span class="at">y =</span> y), <span class="at">colour =</span> <span class="st">"red"</span>) <span class="sc">+</span> </span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="at">data =</span> preds_graf_tbl, <span class="fu">aes</span>(<span class="at">y =</span> .pred, <span class="at">colour =</span> predictor), <span class="at">size =</span> <span class="fl">1.1</span>) <span class="sc">+</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">xlab</span>(<span class="st">"Años de estudio"</span>) <span class="sc">+</span> <span class="fu">ylab</span>(<span class="st">"Ingreso anual (miles)"</span>)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: Using `size` aesthetic for lines was deprecated in ggplot2 3.4.0.
+ℹ Please use `linewidth` instead.</code></pre>
+</div>
+<div class="cell-output-display">
+<p><img src="02-principios-supervisado_files/figure-html/unnamed-chunk-4-1.png" class="img-fluid" width="480"></p>
+</div>
+</div>
+</section>
+</section>
+<section id="estimando-el-desempeño-y-datos-de-prueba" class="level2" data-number="2.2">
+<h2 data-number="2.2" class="anchored" data-anchor-id="estimando-el-desempeño-y-datos-de-prueba"><span class="header-section-number">2.2</span> Estimando el desempeño y datos de prueba</h2>
+<p>Para obtener una estimación de la pérdida para una función <span class="math inline">\(f\)</span> que usamos para hacer predicciones, podemos tomar una muestra de datos del proceso generador:</p>
+<p><span class="math display">\[{\mathcal T} = \{(\mathbf{x}^{(1)}, \mathbf{y}^{(1)}), (\mathbf{x}^{(2)}, \mathbf{y}^{(2)}), \ldots, (\mathbf{x}^{(m)}, \mathbf{y}^{(m)})\},\]</span></p>
+<p>Compararíamos entonces las respuestas observadas <span class="math inline">\(\mathbf{y^{(i)}}\)</span> con las predicciones <span class="math inline">\(f(\mathbf{x^{(i)}})\)</span>. Ahora resumimos evaluando el error promedio sobre los datos de prueba. El <strong>error de prueba</strong> de <span class="math inline">\(f\)</span> es</p>
+<p><span class="math display">\[ \widehat{Err}(f) = \frac{1}{m} \sum_{i=1}^m L(\mathbf{y}^{(i)} , f(\mathbf{x}^{(i)}))\]</span> Por ejemplo, si usamos la pérdida cuadrática,</p>
+<p><span class="math display">\[ \widehat{Err}(f) = \frac{1}{m} \sum_{i=1}^m (\mathbf{y}^{(i)} - f(\mathbf{x}^{(i)}))^2\]</span> Si <span class="math inline">\(m\)</span> es grande, entonces tenemos por la ley de los grandes números que <span class="math display">\[Err(f) \approx \widehat{Err} (f)\]</span> Podemos también estimar el error de estimación de <span class="math inline">\(\widehat{Err}(f)\)</span> con técnicas estándar, por ejemplo bootstrap o aproximación normal.</p>
+<p><strong>Obervación</strong>: nótese que en estos cálculos no es necesario hacer ningún supuesto acerca de <span class="math inline">\(f\)</span>, que en este argumento está fija y <strong>no</strong> utiliza la muestra de prueba.</p>
+<section id="ejemplo-óptimo" class="level3 unnumbered">
+<h3 class="unnumbered anchored" data-anchor-id="ejemplo-óptimo">Ejemplo: óptimo</h3>
+<p>Supongamos que <span class="math inline">\(f\)</span> es el predictor óptimo que obtuvimos arriba (pero esto aplica para cualquier otra función <span class="math inline">\(f\)</span> que usemos para hacer predicciones). Tomamos una muestra de prueba, y evaluamos usando la raíz de la pérdida cuadrática media:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>prueba_tbl <span class="ot">&lt;-</span> <span class="fu">genera_datos</span>(<span class="at">n =</span> <span class="dv">2000</span>, <span class="at">tipo =</span> <span class="st">"prueba"</span>)</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>eval_tbl <span class="ot">&lt;-</span> prueba_tbl <span class="sc">|&gt;</span>  </span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(preds_graf_tbl, <span class="at">by =</span> <span class="st">"x"</span>) </span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>resumen_tbl <span class="ot">&lt;-</span> eval_tbl <span class="sc">|&gt;</span>  </span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(predictor, tipo) <span class="sc">|&gt;</span> </span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rmse</span>(<span class="at">truth =</span> y, <span class="at">estimate =</span> .pred) </span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>fmt_resumen <span class="ot">&lt;-</span> <span class="cf">function</span>(resumen_tbl){</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>  resumen_tbl <span class="sc">|&gt;</span> </span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">select</span>(<span class="sc">-</span>.estimator) <span class="sc">|&gt;</span> </span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">pivot_wider</span>(<span class="at">names_from =</span> tipo, <span class="at">values_from =</span> .estimate) <span class="sc">|&gt;</span> </span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">gt</span>() <span class="sc">|&gt;</span> </span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">fmt_number</span>(<span class="fu">where</span>(is_double), <span class="at">decimals =</span> <span class="dv">0</span>)</span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a><span class="fu">fmt_resumen</span>(resumen_tbl)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+
+<div id="stjoujjaij" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<style>#stjoujjaij table {
+  font-family: system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#stjoujjaij thead, #stjoujjaij tbody, #stjoujjaij tfoot, #stjoujjaij tr, #stjoujjaij td, #stjoujjaij th {
+  border-style: none;
+}
+
+#stjoujjaij p {
+  margin: 0;
+  padding: 0;
+}
+
+#stjoujjaij .gt_table {
+  display: table;
+  border-collapse: collapse;
+  line-height: normal;
+  margin-left: auto;
+  margin-right: auto;
+  color: #333333;
+  font-size: 16px;
+  font-weight: normal;
+  font-style: normal;
+  background-color: #FFFFFF;
+  width: auto;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #A8A8A8;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #A8A8A8;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+}
+
+#stjoujjaij .gt_caption {
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+
+#stjoujjaij .gt_title {
+  color: #333333;
+  font-size: 125%;
+  font-weight: initial;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-color: #FFFFFF;
+  border-bottom-width: 0;
+}
+
+#stjoujjaij .gt_subtitle {
+  color: #333333;
+  font-size: 85%;
+  font-weight: initial;
+  padding-top: 3px;
+  padding-bottom: 5px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-color: #FFFFFF;
+  border-top-width: 0;
+}
+
+#stjoujjaij .gt_heading {
+  background-color: #FFFFFF;
+  text-align: center;
+  border-bottom-color: #FFFFFF;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#stjoujjaij .gt_bottom_border {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#stjoujjaij .gt_col_headings {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#stjoujjaij .gt_col_heading {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 6px;
+  padding-left: 5px;
+  padding-right: 5px;
+  overflow-x: hidden;
+}
+
+#stjoujjaij .gt_column_spanner_outer {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  padding-top: 0;
+  padding-bottom: 0;
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
+#stjoujjaij .gt_column_spanner_outer:first-child {
+  padding-left: 0;
+}
+
+#stjoujjaij .gt_column_spanner_outer:last-child {
+  padding-right: 0;
+}
+
+#stjoujjaij .gt_column_spanner {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  overflow-x: hidden;
+  display: inline-block;
+  width: 100%;
+}
+
+#stjoujjaij .gt_spanner_row {
+  border-bottom-style: hidden;
+}
+
+#stjoujjaij .gt_group_heading {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  text-align: left;
+}
+
+#stjoujjaij .gt_empty_group_heading {
+  padding: 0.5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: middle;
+}
+
+#stjoujjaij .gt_from_md > :first-child {
+  margin-top: 0;
+}
+
+#stjoujjaij .gt_from_md > :last-child {
+  margin-bottom: 0;
+}
+
+#stjoujjaij .gt_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  margin: 10px;
+  border-top-style: solid;
+  border-top-width: 1px;
+  border-top-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  overflow-x: hidden;
+}
+
+#stjoujjaij .gt_stub {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#stjoujjaij .gt_stub_row_group {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+  vertical-align: top;
+}
+
+#stjoujjaij .gt_row_group_first td {
+  border-top-width: 2px;
+}
+
+#stjoujjaij .gt_row_group_first th {
+  border-top-width: 2px;
+}
+
+#stjoujjaij .gt_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#stjoujjaij .gt_first_summary_row {
+  border-top-style: solid;
+  border-top-color: #D3D3D3;
+}
+
+#stjoujjaij .gt_first_summary_row.thick {
+  border-top-width: 2px;
+}
+
+#stjoujjaij .gt_last_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#stjoujjaij .gt_grand_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#stjoujjaij .gt_first_grand_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-style: double;
+  border-top-width: 6px;
+  border-top-color: #D3D3D3;
+}
+
+#stjoujjaij .gt_last_grand_summary_row_top {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-style: double;
+  border-bottom-width: 6px;
+  border-bottom-color: #D3D3D3;
+}
+
+#stjoujjaij .gt_striped {
+  background-color: rgba(128, 128, 128, 0.05);
+}
+
+#stjoujjaij .gt_table_body {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#stjoujjaij .gt_footnotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#stjoujjaij .gt_footnote {
+  margin: 0px;
+  font-size: 90%;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#stjoujjaij .gt_sourcenotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#stjoujjaij .gt_sourcenote {
+  font-size: 90%;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#stjoujjaij .gt_left {
+  text-align: left;
+}
+
+#stjoujjaij .gt_center {
+  text-align: center;
+}
+
+#stjoujjaij .gt_right {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+#stjoujjaij .gt_font_normal {
+  font-weight: normal;
+}
+
+#stjoujjaij .gt_font_bold {
+  font-weight: bold;
+}
+
+#stjoujjaij .gt_font_italic {
+  font-style: italic;
+}
+
+#stjoujjaij .gt_super {
+  font-size: 65%;
+}
+
+#stjoujjaij .gt_footnote_marks {
+  font-size: 75%;
+  vertical-align: 0.4em;
+  position: initial;
+}
+
+#stjoujjaij .gt_asterisk {
+  font-size: 100%;
+  vertical-align: 0;
+}
+
+#stjoujjaij .gt_indent_1 {
+  text-indent: 5px;
+}
+
+#stjoujjaij .gt_indent_2 {
+  text-indent: 10px;
+}
+
+#stjoujjaij .gt_indent_3 {
+  text-indent: 15px;
+}
+
+#stjoujjaij .gt_indent_4 {
+  text-indent: 20px;
+}
+
+#stjoujjaij .gt_indent_5 {
+  text-indent: 25px;
+}
+</style>
+<table class="gt_table" data-quarto-disable-processing="false" data-quarto-bootstrap="false">
+  <thead>
+    
+    <tr class="gt_col_headings">
+      <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="1" colspan="1" scope="col" id="predictor">predictor</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="1" colspan="1" scope="col" id=".metric">.metric</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="prueba">prueba</th>
+    </tr>
+  </thead>
+  <tbody class="gt_table_body">
+    <tr><td headers="predictor" class="gt_row gt_left">_óptimo</td>
+<td headers=".metric" class="gt_row gt_left">rmse</td>
+<td headers="prueba" class="gt_row gt_right">49</td></tr>
+  </tbody>
+  
+  
+</table>
+</div>
+</div>
+</div>
+<p>Este es nuestro error de prueba. Como la muestra de prueba no es muy grande, podríamos usar un método estándar para estimar su precisión, por ejemplo con bootstrap.</p>
+</section>
+<section id="ejemplo-regla" class="level3 unnumbered">
+<h3 class="unnumbered anchored" data-anchor-id="ejemplo-regla">Ejemplo: regla</h3>
+<p>Ahora probemos con otro predictor, por ejemplo, supongamos que estamos usando la regla de “cada año de escolaridad aumenta ingresos potenciales en 20 unidades”, un predictor construido con reglas manuales que es</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>f_regla <span class="ot">&lt;-</span> <span class="cf">function</span>(x){</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="dv">20</span> <span class="sc">*</span> x</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Abajo lo graficamos en comparación con el modelo óptimo:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>años_x <span class="ot">&lt;-</span> <span class="fu">tibble</span>(<span class="at">x =</span> <span class="fu">seq</span>(<span class="dv">0</span>, <span class="dv">17</span>, <span class="at">by =</span> <span class="fl">0.5</span>))</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>preds_regla_tbl <span class="ot">&lt;-</span> años_x <span class="sc">|&gt;</span> </span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">.pred =</span> <span class="fu">f_regla</span>(x), <span class="at">predictor =</span> <span class="st">"regla"</span>)</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>preds_graf_tbl <span class="ot">&lt;-</span> <span class="fu">bind_rows</span>(preds_regla_tbl, preds_graf_tbl)</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(datos_tbl, <span class="fu">aes</span>(<span class="at">x =</span> x)) <span class="sc">+</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="fu">aes</span>(<span class="at">y =</span> y), <span class="at">colour =</span> <span class="st">"red"</span>, <span class="at">alpha =</span> <span class="fl">0.2</span>) <span class="sc">+</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="at">data =</span> preds_graf_tbl, <span class="fu">aes</span>(<span class="at">y =</span> .pred, <span class="at">colour =</span> predictor), <span class="at">size =</span> <span class="fl">1.1</span>) </span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="02-principios-supervisado_files/figure-html/unnamed-chunk-7-1.png" class="img-fluid" width="480"></p>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>eval_tbl <span class="ot">&lt;-</span> prueba_tbl <span class="sc">|&gt;</span>  </span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(preds_graf_tbl, <span class="at">by =</span> <span class="st">"x"</span>) </span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning in left_join(prueba_tbl, preds_graf_tbl, by = "x"): Detected an unexpected many-to-many relationship between `x` and `y`.
+ℹ Row 1 of `x` matches multiple rows in `y`.
+ℹ Row 21 of `y` matches multiple rows in `x`.
+ℹ If a many-to-many relationship is expected, set `relationship =
+  "many-to-many"` to silence this warning.</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>resumen_tbl <span class="ot">&lt;-</span> eval_tbl <span class="sc">|&gt;</span>  </span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(predictor, tipo) <span class="sc">|&gt;</span> </span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rmse</span>(<span class="at">truth =</span> y, <span class="at">estimate =</span> .pred) </span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="fu">fmt_resumen</span>(resumen_tbl)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+
+<div id="lavhubulwh" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<style>#lavhubulwh table {
+  font-family: system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#lavhubulwh thead, #lavhubulwh tbody, #lavhubulwh tfoot, #lavhubulwh tr, #lavhubulwh td, #lavhubulwh th {
+  border-style: none;
+}
+
+#lavhubulwh p {
+  margin: 0;
+  padding: 0;
+}
+
+#lavhubulwh .gt_table {
+  display: table;
+  border-collapse: collapse;
+  line-height: normal;
+  margin-left: auto;
+  margin-right: auto;
+  color: #333333;
+  font-size: 16px;
+  font-weight: normal;
+  font-style: normal;
+  background-color: #FFFFFF;
+  width: auto;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #A8A8A8;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #A8A8A8;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+}
+
+#lavhubulwh .gt_caption {
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+
+#lavhubulwh .gt_title {
+  color: #333333;
+  font-size: 125%;
+  font-weight: initial;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-color: #FFFFFF;
+  border-bottom-width: 0;
+}
+
+#lavhubulwh .gt_subtitle {
+  color: #333333;
+  font-size: 85%;
+  font-weight: initial;
+  padding-top: 3px;
+  padding-bottom: 5px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-color: #FFFFFF;
+  border-top-width: 0;
+}
+
+#lavhubulwh .gt_heading {
+  background-color: #FFFFFF;
+  text-align: center;
+  border-bottom-color: #FFFFFF;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#lavhubulwh .gt_bottom_border {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#lavhubulwh .gt_col_headings {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#lavhubulwh .gt_col_heading {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 6px;
+  padding-left: 5px;
+  padding-right: 5px;
+  overflow-x: hidden;
+}
+
+#lavhubulwh .gt_column_spanner_outer {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  padding-top: 0;
+  padding-bottom: 0;
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
+#lavhubulwh .gt_column_spanner_outer:first-child {
+  padding-left: 0;
+}
+
+#lavhubulwh .gt_column_spanner_outer:last-child {
+  padding-right: 0;
+}
+
+#lavhubulwh .gt_column_spanner {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  overflow-x: hidden;
+  display: inline-block;
+  width: 100%;
+}
+
+#lavhubulwh .gt_spanner_row {
+  border-bottom-style: hidden;
+}
+
+#lavhubulwh .gt_group_heading {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  text-align: left;
+}
+
+#lavhubulwh .gt_empty_group_heading {
+  padding: 0.5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: middle;
+}
+
+#lavhubulwh .gt_from_md > :first-child {
+  margin-top: 0;
+}
+
+#lavhubulwh .gt_from_md > :last-child {
+  margin-bottom: 0;
+}
+
+#lavhubulwh .gt_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  margin: 10px;
+  border-top-style: solid;
+  border-top-width: 1px;
+  border-top-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  overflow-x: hidden;
+}
+
+#lavhubulwh .gt_stub {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#lavhubulwh .gt_stub_row_group {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+  vertical-align: top;
+}
+
+#lavhubulwh .gt_row_group_first td {
+  border-top-width: 2px;
+}
+
+#lavhubulwh .gt_row_group_first th {
+  border-top-width: 2px;
+}
+
+#lavhubulwh .gt_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#lavhubulwh .gt_first_summary_row {
+  border-top-style: solid;
+  border-top-color: #D3D3D3;
+}
+
+#lavhubulwh .gt_first_summary_row.thick {
+  border-top-width: 2px;
+}
+
+#lavhubulwh .gt_last_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#lavhubulwh .gt_grand_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#lavhubulwh .gt_first_grand_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-style: double;
+  border-top-width: 6px;
+  border-top-color: #D3D3D3;
+}
+
+#lavhubulwh .gt_last_grand_summary_row_top {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-style: double;
+  border-bottom-width: 6px;
+  border-bottom-color: #D3D3D3;
+}
+
+#lavhubulwh .gt_striped {
+  background-color: rgba(128, 128, 128, 0.05);
+}
+
+#lavhubulwh .gt_table_body {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#lavhubulwh .gt_footnotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#lavhubulwh .gt_footnote {
+  margin: 0px;
+  font-size: 90%;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#lavhubulwh .gt_sourcenotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#lavhubulwh .gt_sourcenote {
+  font-size: 90%;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#lavhubulwh .gt_left {
+  text-align: left;
+}
+
+#lavhubulwh .gt_center {
+  text-align: center;
+}
+
+#lavhubulwh .gt_right {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+#lavhubulwh .gt_font_normal {
+  font-weight: normal;
+}
+
+#lavhubulwh .gt_font_bold {
+  font-weight: bold;
+}
+
+#lavhubulwh .gt_font_italic {
+  font-style: italic;
+}
+
+#lavhubulwh .gt_super {
+  font-size: 65%;
+}
+
+#lavhubulwh .gt_footnote_marks {
+  font-size: 75%;
+  vertical-align: 0.4em;
+  position: initial;
+}
+
+#lavhubulwh .gt_asterisk {
+  font-size: 100%;
+  vertical-align: 0;
+}
+
+#lavhubulwh .gt_indent_1 {
+  text-indent: 5px;
+}
+
+#lavhubulwh .gt_indent_2 {
+  text-indent: 10px;
+}
+
+#lavhubulwh .gt_indent_3 {
+  text-indent: 15px;
+}
+
+#lavhubulwh .gt_indent_4 {
+  text-indent: 20px;
+}
+
+#lavhubulwh .gt_indent_5 {
+  text-indent: 25px;
+}
+</style>
+<table class="gt_table" data-quarto-disable-processing="false" data-quarto-bootstrap="false">
+  <thead>
+    
+    <tr class="gt_col_headings">
+      <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="1" colspan="1" scope="col" id="predictor">predictor</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="1" colspan="1" scope="col" id=".metric">.metric</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="prueba">prueba</th>
+    </tr>
+  </thead>
+  <tbody class="gt_table_body">
+    <tr><td headers="predictor" class="gt_row gt_left">_óptimo</td>
+<td headers=".metric" class="gt_row gt_left">rmse</td>
+<td headers="prueba" class="gt_row gt_right">49</td></tr>
+    <tr><td headers="predictor" class="gt_row gt_left">regla</td>
+<td headers=".metric" class="gt_row gt_left">rmse</td>
+<td headers="prueba" class="gt_row gt_right">91</td></tr>
+  </tbody>
+  
+  
+</table>
+</div>
+</div>
+</div>
+<p>Observa que el error es considerablemente mayor que el error que obtuvimos con el predictor óptimo del ejemplo anterior. Quisiéramos buscar algoritmos que tengan mejor desempeño <em>aprendiendo</em> de datos anteriores.</p>
+</section>
+</section>
+<section id="aprendizaje" class="level2" data-number="2.3">
+<h2 data-number="2.3" class="anchored" data-anchor-id="aprendizaje"><span class="header-section-number">2.3</span> Aprendizaje supervisado</h2>
+<p>En aprendizaje supervisado, buscamos construir la función <span class="math inline">\(f\)</span> de manera automática usando datos. Supongamos entonces que tenemos un conjunto de datos <em>etiquetados</em> (sabemos la <span class="math inline">\(y\)</span> correspondiente a cada <span class="math inline">\(x\)</span>):</p>
+<p><span class="math display">\[{\mathcal L}=\{ (x^{(1)},y^{(1)}),(x^{(2)},y^{(2)}), \ldots, (x^{(N)}, y^{(N)}) \}\]</span></p>
+<p>que llamamos <strong>conjunto de entrenamiento</strong>.</p>
+<p>Un <strong>algoritmo de aprendizaje</strong> (<strong>aprender</strong> de los datos automáticamente) es una regla que asigna a cada conjunto de entrenamiento <span class="math inline">\({\mathcal L}\)</span> una función <span class="math inline">\(\hat{f}\)</span>:</p>
+<p><span class="math display">\[{\mathcal L} \to \hat{f} = f_{\mathcal L} \]</span></p>
+<p>Una vez que construimos la función <span class="math inline">\(\hat{f}\)</span>, podemos hacer predicciones.</p>
+<p>El desempeño del predictor particular <span class="math inline">\(\hat{f}\)</span> se mide igual que antes: observamos otra muestra <span class="math inline">\({\mathcal T}\)</span>, que llamamos <strong>muestra de prueba</strong>,</p>
+<p><span class="math display">\[{\mathcal T} = \{(\mathbf{x}^{(1)}, \mathbf{y}^{(1)}), (\mathbf{x}^{(2)}, \mathbf{y}^{(2)}), \ldots, (\mathbf{x}^{(m)}, \mathbf{y}^{(m)})\},\]</span></p>
+<p>y calculamos el <strong>error de prueba</strong>. Si suponemos que <span class="math inline">\(m\)</span> es suficientemente grande:</p>
+<p><span class="math display">\[ \widehat{Err}(\hat{f}) = \frac{1}{m} \sum_{i=1}^m L(\mathbf{y}^{(i)} , \hat{f}(\mathbf{x}^{(i)})) \]</span></p>
+<p>es una buena aproximación del error de predicción <span class="math inline">\(Err(\hat{f})\)</span>.</p>
+<p>Adicionalmente, definimos otra cantidad de menor interés, el <strong>error de entrenamiento</strong>, como</p>
+<p><span class="math display">\[\overline{err} = \frac{1}{N}\sum_{i=1}^N L(y^{(i)} , \hat{f}(x^{(i)})).\]</span> que es una medida de qué tan bien se ajusta a <span class="math inline">\(\hat{f}\)</span> a los datos con los que se entrenó <span class="math inline">\(\hat{f}\)</span>. Usualmente esta cantidad no es apropiada para medir el desempeño de un predictor, pues el algoritmo <span class="math inline">\(\hat{f}\)</span> incluye las “respuestas” <span class="math inline">\(y_i\)</span> en su construcción, de forma que tiende a ser una estimación optimista del error de predicción.</p>
+<section id="ejemplo-vecinos-más-cercanos" class="level3 unnumbered">
+<h3 class="unnumbered anchored" data-anchor-id="ejemplo-vecinos-más-cercanos">Ejemplo: vecinos más cercanos</h3>
+<p>Consideremos usar un método de <span class="math inline">\(k\)</span>-vecinos más cercanos para resolver este problema. Este método es simple: si queremos hacer una predicción en las entradas <span class="math inline">\(x\)</span>, buscamos los puntos de entrenamiento con entradas <span class="math inline">\(x^{(i)}\)</span> más cercanas a <span class="math inline">\(x\)</span>, que denotamos como <span class="math inline">\(N_k(x)\)</span>. Tomamos las <span class="math inline">\(y\)</span> correspondientes a estas <span class="math inline">\(x\)</span> y las usamos para hacer nuestra predicción:</p>
+<p><span class="math display">\[f_2(x) = \frac{1}{k}\sum_{x^{(i)} \in N_k(x)} y^{(i)}\]</span></p>
+<p>Primero obtendremos una muestra de entrenamiento:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">12</span>)</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>entrena_tbl <span class="ot">&lt;-</span> <span class="fu">genera_datos</span>(<span class="at">n =</span> <span class="dv">20</span>, <span class="at">tipo =</span> <span class="st">"entrena"</span>)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>En nuestro ejemplo, en lugar de usar un número fijo de vecinos, utilizaremos 10% de los datos más cercanos al punto donde queremos predecir:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># modelo</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>modelo_kvecinos <span class="ot">&lt;-</span> <span class="fu">nearest_neighbor</span>(</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">neighbors =</span> <span class="fu">nrow</span>(entrena_tbl) <span class="sc">*</span> <span class="fl">0.1</span>, </span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">weight_func =</span> <span class="st">"gaussian"</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_mode</span>(<span class="st">"regression"</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_engine</span>(<span class="st">"kknn"</span>)</span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a><span class="co"># preprocesamiento</span></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>receta <span class="ot">&lt;-</span> <span class="fu">recipe</span>(y <span class="sc">~</span> x, <span class="at">data =</span> entrena_tbl <span class="sc">|&gt;</span> <span class="fu">select</span>(x, y))</span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a><span class="co"># flujo</span></span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>flujo <span class="ot">&lt;-</span> <span class="fu">workflow</span>() <span class="sc">|&gt;</span> </span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add_recipe</span>(receta) <span class="sc">|&gt;</span> </span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add_model</span>(modelo_kvecinos)</span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Ajustamos flujo</span></span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a>flujo_ajustado_vecinos <span class="ot">&lt;-</span> <span class="fu">fit</span>(flujo, entrena_tbl)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Hacemos predicciones y calculamos el error:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>eval_tbl <span class="ot">&lt;-</span> <span class="fu">bind_rows</span>(prueba_tbl, entrena_tbl) </span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>resumen_vmc_tbl <span class="ot">&lt;-</span> </span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">predict</span>(flujo_ajustado_vecinos, eval_tbl) <span class="sc">|&gt;</span> </span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">predictor =</span> <span class="st">"vecinos"</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">bind_cols</span>(eval_tbl) <span class="sc">|&gt;</span> </span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(predictor, tipo) <span class="sc">|&gt;</span> </span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rmse</span>(<span class="at">truth =</span> y, <span class="at">estimate =</span> .pred) </span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a><span class="fu">fmt_resumen</span>(resumen_vmc_tbl)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+
+<div id="wrmxuhwixm" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<style>#wrmxuhwixm table {
+  font-family: system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#wrmxuhwixm thead, #wrmxuhwixm tbody, #wrmxuhwixm tfoot, #wrmxuhwixm tr, #wrmxuhwixm td, #wrmxuhwixm th {
+  border-style: none;
+}
+
+#wrmxuhwixm p {
+  margin: 0;
+  padding: 0;
+}
+
+#wrmxuhwixm .gt_table {
+  display: table;
+  border-collapse: collapse;
+  line-height: normal;
+  margin-left: auto;
+  margin-right: auto;
+  color: #333333;
+  font-size: 16px;
+  font-weight: normal;
+  font-style: normal;
+  background-color: #FFFFFF;
+  width: auto;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #A8A8A8;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #A8A8A8;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+}
+
+#wrmxuhwixm .gt_caption {
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+
+#wrmxuhwixm .gt_title {
+  color: #333333;
+  font-size: 125%;
+  font-weight: initial;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-color: #FFFFFF;
+  border-bottom-width: 0;
+}
+
+#wrmxuhwixm .gt_subtitle {
+  color: #333333;
+  font-size: 85%;
+  font-weight: initial;
+  padding-top: 3px;
+  padding-bottom: 5px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-color: #FFFFFF;
+  border-top-width: 0;
+}
+
+#wrmxuhwixm .gt_heading {
+  background-color: #FFFFFF;
+  text-align: center;
+  border-bottom-color: #FFFFFF;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#wrmxuhwixm .gt_bottom_border {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#wrmxuhwixm .gt_col_headings {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#wrmxuhwixm .gt_col_heading {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 6px;
+  padding-left: 5px;
+  padding-right: 5px;
+  overflow-x: hidden;
+}
+
+#wrmxuhwixm .gt_column_spanner_outer {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  padding-top: 0;
+  padding-bottom: 0;
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
+#wrmxuhwixm .gt_column_spanner_outer:first-child {
+  padding-left: 0;
+}
+
+#wrmxuhwixm .gt_column_spanner_outer:last-child {
+  padding-right: 0;
+}
+
+#wrmxuhwixm .gt_column_spanner {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  overflow-x: hidden;
+  display: inline-block;
+  width: 100%;
+}
+
+#wrmxuhwixm .gt_spanner_row {
+  border-bottom-style: hidden;
+}
+
+#wrmxuhwixm .gt_group_heading {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  text-align: left;
+}
+
+#wrmxuhwixm .gt_empty_group_heading {
+  padding: 0.5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: middle;
+}
+
+#wrmxuhwixm .gt_from_md > :first-child {
+  margin-top: 0;
+}
+
+#wrmxuhwixm .gt_from_md > :last-child {
+  margin-bottom: 0;
+}
+
+#wrmxuhwixm .gt_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  margin: 10px;
+  border-top-style: solid;
+  border-top-width: 1px;
+  border-top-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  overflow-x: hidden;
+}
+
+#wrmxuhwixm .gt_stub {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#wrmxuhwixm .gt_stub_row_group {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+  vertical-align: top;
+}
+
+#wrmxuhwixm .gt_row_group_first td {
+  border-top-width: 2px;
+}
+
+#wrmxuhwixm .gt_row_group_first th {
+  border-top-width: 2px;
+}
+
+#wrmxuhwixm .gt_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#wrmxuhwixm .gt_first_summary_row {
+  border-top-style: solid;
+  border-top-color: #D3D3D3;
+}
+
+#wrmxuhwixm .gt_first_summary_row.thick {
+  border-top-width: 2px;
+}
+
+#wrmxuhwixm .gt_last_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#wrmxuhwixm .gt_grand_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#wrmxuhwixm .gt_first_grand_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-style: double;
+  border-top-width: 6px;
+  border-top-color: #D3D3D3;
+}
+
+#wrmxuhwixm .gt_last_grand_summary_row_top {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-style: double;
+  border-bottom-width: 6px;
+  border-bottom-color: #D3D3D3;
+}
+
+#wrmxuhwixm .gt_striped {
+  background-color: rgba(128, 128, 128, 0.05);
+}
+
+#wrmxuhwixm .gt_table_body {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#wrmxuhwixm .gt_footnotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#wrmxuhwixm .gt_footnote {
+  margin: 0px;
+  font-size: 90%;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#wrmxuhwixm .gt_sourcenotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#wrmxuhwixm .gt_sourcenote {
+  font-size: 90%;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#wrmxuhwixm .gt_left {
+  text-align: left;
+}
+
+#wrmxuhwixm .gt_center {
+  text-align: center;
+}
+
+#wrmxuhwixm .gt_right {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+#wrmxuhwixm .gt_font_normal {
+  font-weight: normal;
+}
+
+#wrmxuhwixm .gt_font_bold {
+  font-weight: bold;
+}
+
+#wrmxuhwixm .gt_font_italic {
+  font-style: italic;
+}
+
+#wrmxuhwixm .gt_super {
+  font-size: 65%;
+}
+
+#wrmxuhwixm .gt_footnote_marks {
+  font-size: 75%;
+  vertical-align: 0.4em;
+  position: initial;
+}
+
+#wrmxuhwixm .gt_asterisk {
+  font-size: 100%;
+  vertical-align: 0;
+}
+
+#wrmxuhwixm .gt_indent_1 {
+  text-indent: 5px;
+}
+
+#wrmxuhwixm .gt_indent_2 {
+  text-indent: 10px;
+}
+
+#wrmxuhwixm .gt_indent_3 {
+  text-indent: 15px;
+}
+
+#wrmxuhwixm .gt_indent_4 {
+  text-indent: 20px;
+}
+
+#wrmxuhwixm .gt_indent_5 {
+  text-indent: 25px;
+}
+</style>
+<table class="gt_table" data-quarto-disable-processing="false" data-quarto-bootstrap="false">
+  <thead>
+    
+    <tr class="gt_col_headings">
+      <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="1" colspan="1" scope="col" id="predictor">predictor</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="1" colspan="1" scope="col" id=".metric">.metric</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="entrena">entrena</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="prueba">prueba</th>
+    </tr>
+  </thead>
+  <tbody class="gt_table_body">
+    <tr><td headers="predictor" class="gt_row gt_left">vecinos</td>
+<td headers=".metric" class="gt_row gt_left">rmse</td>
+<td headers="entrena" class="gt_row gt_right">36</td>
+<td headers="prueba" class="gt_row gt_right">65</td></tr>
+  </tbody>
+  
+  
+</table>
+</div>
+</div>
+</div>
+<p>El error de prueba, que es el que nos interesa hacer chico, es considerablemente grande. Si graficamos podemos ver el problema:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>preds_vmc <span class="ot">&lt;-</span> <span class="fu">predict</span>(flujo_ajustado_vecinos, años_x) <span class="sc">|&gt;</span> </span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">bind_cols</span>(años_x) <span class="sc">|&gt;</span> <span class="fu">mutate</span>(<span class="at">predictor =</span> <span class="st">"vecinos"</span>)</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>preds_graf_tbl <span class="ot">&lt;-</span> <span class="fu">bind_rows</span>(preds_vmc, preds_graf_tbl <span class="sc">|&gt;</span> </span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(predictor <span class="sc">==</span> <span class="st">"_óptimo"</span>))</span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>g_1 <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(entrena_tbl, <span class="fu">aes</span>(<span class="at">x =</span> x)) <span class="sc">+</span></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="at">data =</span> preds_graf_tbl <span class="sc">|&gt;</span> <span class="fu">filter</span>(predictor <span class="sc">!=</span> <span class="st">"regla"</span>), </span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>            <span class="fu">aes</span>(<span class="at">y =</span> .pred, <span class="at">colour =</span> predictor), <span class="at">size =</span> <span class="fl">1.1</span>) <span class="sc">+</span></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="fu">aes</span>(<span class="at">y =</span> y), <span class="at">colour =</span> <span class="st">"red"</span>) <span class="sc">+</span></span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">subtitle =</span> <span class="st">"Óptimo vs ajustado"</span>)</span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>g_1</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="02-principios-supervisado_files/figure-html/unnamed-chunk-12-1.png" class="img-fluid" width="480"></p>
+</div>
+</div>
+<p>Donde vemos que este método intenta interpolar los datos, capturando ruido y produciendo variaciones que lo alejan del modelo óptimo. Esto lo notamos en lo siguiente:</p>
+<ul>
+<li>Hay una brecha grande entre el error de entrenamiento y el error predictivo.</li>
+<li>Esta estimación de vecinos más cercanos es muy dependiente de la muestra de entrenamiento que obtengamos, pues intenta casi interpolar los datos. Esto sugiere alta variabilidad de las predicciones dependiendo de la muestra particular de entrenamiento que utilizamos.</li>
+<li>Decimos que este predictor está <em>sobreajustado</em>.</li>
+</ul>
+</section>
+<section id="ejemplo-regresión-lineal" class="level3 unnumbered">
+<h3 class="unnumbered anchored" data-anchor-id="ejemplo-regresión-lineal">Ejemplo: regresión lineal</h3>
+<p>Ahora intentaremos con un modelo lineal. En este caso, utilizamos un predictor de la forma</p>
+<p><span class="math display">\[f(x) = \beta_0 + \beta_1x\]</span> Usamos la muestra de entrenamiento para encontrar la <span class="math inline">\(\beta_0\)</span> y <span class="math inline">\(\beta_1\)</span> que minimizar el error sobre los datos disponibles de entrenamiento, lo cual es un problema de optimización relativamente fácil. Usamos entonces <span class="math display">\[\hat{f}(x) =\hat{\beta}_0 + \hat{\beta}_1 x\]</span> para hacer nuestras predicciones.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>modelo_lineal <span class="ot">&lt;-</span> <span class="fu">linear_reg</span>() <span class="sc">|&gt;</span> </span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_mode</span>(<span class="st">"regression"</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_engine</span>(<span class="st">"lm"</span>)</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>flujo_lineal <span class="ot">&lt;-</span> <span class="fu">workflow</span>() <span class="sc">|&gt;</span> </span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add_recipe</span>(receta) <span class="sc">|&gt;</span> </span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add_model</span>(modelo_lineal)</span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Ajustamos</span></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>flujo_ajustado_lineal <span class="ot">&lt;-</span> <span class="fu">fit</span>(flujo_lineal, entrena_tbl)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Hacemos predicciones y calculamos el error:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>eval_tbl <span class="ot">&lt;-</span> <span class="fu">bind_rows</span>(prueba_tbl, entrena_tbl) </span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>resumen_lineal_tbl <span class="ot">&lt;-</span> </span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">predict</span>(flujo_ajustado_lineal, eval_tbl) <span class="sc">|&gt;</span> </span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">predictor =</span> <span class="st">"lineal"</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">bind_cols</span>(eval_tbl) <span class="sc">|&gt;</span> </span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(predictor, tipo) <span class="sc">|&gt;</span> </span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rmse</span>(<span class="at">truth =</span> y, <span class="at">estimate =</span> .pred) </span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a><span class="fu">fmt_resumen</span>(<span class="fu">bind_rows</span>(resumen_vmc_tbl, resumen_lineal_tbl))</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+
+<div id="jteglcpbqe" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<style>#jteglcpbqe table {
+  font-family: system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#jteglcpbqe thead, #jteglcpbqe tbody, #jteglcpbqe tfoot, #jteglcpbqe tr, #jteglcpbqe td, #jteglcpbqe th {
+  border-style: none;
+}
+
+#jteglcpbqe p {
+  margin: 0;
+  padding: 0;
+}
+
+#jteglcpbqe .gt_table {
+  display: table;
+  border-collapse: collapse;
+  line-height: normal;
+  margin-left: auto;
+  margin-right: auto;
+  color: #333333;
+  font-size: 16px;
+  font-weight: normal;
+  font-style: normal;
+  background-color: #FFFFFF;
+  width: auto;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #A8A8A8;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #A8A8A8;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+}
+
+#jteglcpbqe .gt_caption {
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+
+#jteglcpbqe .gt_title {
+  color: #333333;
+  font-size: 125%;
+  font-weight: initial;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-color: #FFFFFF;
+  border-bottom-width: 0;
+}
+
+#jteglcpbqe .gt_subtitle {
+  color: #333333;
+  font-size: 85%;
+  font-weight: initial;
+  padding-top: 3px;
+  padding-bottom: 5px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-color: #FFFFFF;
+  border-top-width: 0;
+}
+
+#jteglcpbqe .gt_heading {
+  background-color: #FFFFFF;
+  text-align: center;
+  border-bottom-color: #FFFFFF;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#jteglcpbqe .gt_bottom_border {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#jteglcpbqe .gt_col_headings {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#jteglcpbqe .gt_col_heading {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 6px;
+  padding-left: 5px;
+  padding-right: 5px;
+  overflow-x: hidden;
+}
+
+#jteglcpbqe .gt_column_spanner_outer {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  padding-top: 0;
+  padding-bottom: 0;
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
+#jteglcpbqe .gt_column_spanner_outer:first-child {
+  padding-left: 0;
+}
+
+#jteglcpbqe .gt_column_spanner_outer:last-child {
+  padding-right: 0;
+}
+
+#jteglcpbqe .gt_column_spanner {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  overflow-x: hidden;
+  display: inline-block;
+  width: 100%;
+}
+
+#jteglcpbqe .gt_spanner_row {
+  border-bottom-style: hidden;
+}
+
+#jteglcpbqe .gt_group_heading {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  text-align: left;
+}
+
+#jteglcpbqe .gt_empty_group_heading {
+  padding: 0.5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: middle;
+}
+
+#jteglcpbqe .gt_from_md > :first-child {
+  margin-top: 0;
+}
+
+#jteglcpbqe .gt_from_md > :last-child {
+  margin-bottom: 0;
+}
+
+#jteglcpbqe .gt_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  margin: 10px;
+  border-top-style: solid;
+  border-top-width: 1px;
+  border-top-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  overflow-x: hidden;
+}
+
+#jteglcpbqe .gt_stub {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#jteglcpbqe .gt_stub_row_group {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+  vertical-align: top;
+}
+
+#jteglcpbqe .gt_row_group_first td {
+  border-top-width: 2px;
+}
+
+#jteglcpbqe .gt_row_group_first th {
+  border-top-width: 2px;
+}
+
+#jteglcpbqe .gt_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#jteglcpbqe .gt_first_summary_row {
+  border-top-style: solid;
+  border-top-color: #D3D3D3;
+}
+
+#jteglcpbqe .gt_first_summary_row.thick {
+  border-top-width: 2px;
+}
+
+#jteglcpbqe .gt_last_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#jteglcpbqe .gt_grand_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#jteglcpbqe .gt_first_grand_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-style: double;
+  border-top-width: 6px;
+  border-top-color: #D3D3D3;
+}
+
+#jteglcpbqe .gt_last_grand_summary_row_top {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-style: double;
+  border-bottom-width: 6px;
+  border-bottom-color: #D3D3D3;
+}
+
+#jteglcpbqe .gt_striped {
+  background-color: rgba(128, 128, 128, 0.05);
+}
+
+#jteglcpbqe .gt_table_body {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#jteglcpbqe .gt_footnotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#jteglcpbqe .gt_footnote {
+  margin: 0px;
+  font-size: 90%;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#jteglcpbqe .gt_sourcenotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#jteglcpbqe .gt_sourcenote {
+  font-size: 90%;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#jteglcpbqe .gt_left {
+  text-align: left;
+}
+
+#jteglcpbqe .gt_center {
+  text-align: center;
+}
+
+#jteglcpbqe .gt_right {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+#jteglcpbqe .gt_font_normal {
+  font-weight: normal;
+}
+
+#jteglcpbqe .gt_font_bold {
+  font-weight: bold;
+}
+
+#jteglcpbqe .gt_font_italic {
+  font-style: italic;
+}
+
+#jteglcpbqe .gt_super {
+  font-size: 65%;
+}
+
+#jteglcpbqe .gt_footnote_marks {
+  font-size: 75%;
+  vertical-align: 0.4em;
+  position: initial;
+}
+
+#jteglcpbqe .gt_asterisk {
+  font-size: 100%;
+  vertical-align: 0;
+}
+
+#jteglcpbqe .gt_indent_1 {
+  text-indent: 5px;
+}
+
+#jteglcpbqe .gt_indent_2 {
+  text-indent: 10px;
+}
+
+#jteglcpbqe .gt_indent_3 {
+  text-indent: 15px;
+}
+
+#jteglcpbqe .gt_indent_4 {
+  text-indent: 20px;
+}
+
+#jteglcpbqe .gt_indent_5 {
+  text-indent: 25px;
+}
+</style>
+<table class="gt_table" data-quarto-disable-processing="false" data-quarto-bootstrap="false">
+  <thead>
+    
+    <tr class="gt_col_headings">
+      <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="1" colspan="1" scope="col" id="predictor">predictor</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="1" colspan="1" scope="col" id=".metric">.metric</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="entrena">entrena</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="prueba">prueba</th>
+    </tr>
+  </thead>
+  <tbody class="gt_table_body">
+    <tr><td headers="predictor" class="gt_row gt_left">vecinos</td>
+<td headers=".metric" class="gt_row gt_left">rmse</td>
+<td headers="entrena" class="gt_row gt_right">36</td>
+<td headers="prueba" class="gt_row gt_right">65</td></tr>
+    <tr><td headers="predictor" class="gt_row gt_left">lineal</td>
+<td headers=".metric" class="gt_row gt_left">rmse</td>
+<td headers="entrena" class="gt_row gt_right">49</td>
+<td headers="prueba" class="gt_row gt_right">56</td></tr>
+  </tbody>
+  
+  
+</table>
+</div>
+</div>
+</div>
+<p>Y el desempeño de este método es mejor que vecinos más cercanos (ver columna de prueba).</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>preds_1 <span class="ot">&lt;-</span> <span class="fu">predict</span>(flujo_ajustado_lineal, <span class="fu">tibble</span>(<span class="at">x =</span> <span class="dv">0</span><span class="sc">:</span><span class="dv">17</span>)) <span class="sc">|&gt;</span> </span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">bind_cols</span>(<span class="fu">tibble</span>(<span class="at">x =</span> <span class="dv">0</span><span class="sc">:</span><span class="dv">17</span>, <span class="at">predictor =</span> <span class="st">"lineal"</span>))</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>preds_graf_tbl <span class="ot">&lt;-</span> <span class="fu">bind_rows</span>(preds_1, preds_graf_tbl)</span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>g_1 <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(datos_tbl, <span class="fu">aes</span>(<span class="at">x =</span> x)) <span class="sc">+</span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="fu">aes</span>(<span class="at">y =</span> y), <span class="at">colour =</span> <span class="st">"red"</span>, <span class="at">alpha =</span> <span class="fl">0.1</span>) <span class="sc">+</span></span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="at">data =</span> preds_graf_tbl <span class="sc">|&gt;</span> <span class="fu">filter</span>(predictor <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"_óptimo"</span>, <span class="st">"lineal"</span>)), </span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>            <span class="fu">aes</span>(<span class="at">y =</span> .pred, <span class="at">colour =</span> predictor), <span class="at">size =</span> <span class="fl">1.1</span>) <span class="sc">+</span></span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">subtitle =</span> <span class="st">"Óptimo vs ajustado"</span>)</span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>g_1</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="02-principios-supervisado_files/figure-html/unnamed-chunk-15-1.png" class="img-fluid" width="480"></p>
+</div>
+</div>
+<p>En este caso:</p>
+<ul>
+<li>No hay brecha tan grande entre el error de entrenamiento y el error predictivo</li>
+<li>Observamos patrones claros de desajuste: el predictor lineal no captura el patrón curvo que presentan los datos: en la parte media de las <span class="math inline">\(x\)</span> tiende a producir predicciones demasiado altas y lo contario ocurre en los extremos</li>
+<li>Decimos que esté modelo presenta <em>subajuste</em>.</li>
+</ul>
+</section>
+</section>
+<section id="entendiendo-el-error-de-predicción" class="level2" data-number="2.4">
+<h2 data-number="2.4" class="anchored" data-anchor-id="entendiendo-el-error-de-predicción"><span class="header-section-number">2.4</span> Entendiendo el error de predicción</h2>
+<p>Estos dos ejemplos de predictores tienen mal desempeño (comparado con el óptimo por distintas razones. Para entender qué pasa, consideramos los residuales de cada ajuste, para un caso de prueba:</p>
+<p><span class="math display">\[\mathbf{y} - \hat{f_{\mathcal{L}}}(\mathbf{x})\]</span> Esta cantidad puede tener un valor positivo o negativo grande, lo que indica errores grandes. Sea <span class="math inline">\(f^*\)</span> el predictor óptimo que explicamos arriba. Entonces, en primer lugar:</p>
+<p><span class="math display">\[\mathbf{y} - \hat{f_{\mathcal{L}}}(\mathbf{x}) = \underbrace{(f^* (\mathbf{x}) - \hat{f_{\mathcal{L}}}(\mathbf{x}))}_\text{reducible} + \underbrace{(\mathbf{y}- f^*(\mathbf{x}))}_\text{irreducible}.\]</span> donde vemos que si las dos cantidades de la derecha están cercanas a cero, entonces el residual es cercano a cero (la predicción es precisa):</p>
+<ul>
+<li><strong>Error irreducible</strong>: no depende de nuestro algoritmo, sino de la información que tenemos en <span class="math inline">\(x\)</span> para predecir <span class="math inline">\(y\)</span>. Si queremos hacer esté error más chico, necesitamos incluir otras variables <span class="math inline">\(x\)</span> relevantes para predecir <span class="math inline">\(y\)</span>.</li>
+<li><strong>Error reducible</strong>: qué tan lejos nuestro método está del óptimo. Podemos mejorar este error seleccionando nuestra muestra de entrenamiento y método de predicción <span class="math inline">\(\hat{f}\)</span> de manera adecuada.</li>
+</ul>
+<p>En nuestros dos ejemplos anteriores, el error reducible era considerablemente grande (como podemos verificar comparando con el predictor óptimo, que sólo sufre de error irreducible). Pero la razón por la que ese error reducible es grande es diferente en cada caso.</p>
+<p>Para explicar la diferencia, podemos considerar <span class="math inline">\(f_{lim},\)</span> el predictor que obtendríamos con nuestro método si ajustáramos nuestro método <em>con la población completa</em>, de manera que <span class="math inline">\(\hat{f_{\mathcal{L}}}\to f_{\lim}\)</span> cuando el tamaño de la muestra de entrenamiento <span class="math inline">\({\mathcal{L}}\)</span> se hace muy grande.</p>
+<p>Podemos refinar nuestra descomposición y escribir:</p>
+<p><span class="math display">\[\mathbf{y} - \hat{f_{\mathcal{L}}}(\mathbf{x}) = \underbrace{f^* (\mathbf{x}) - f_{\lim}(\mathbf{x})}_\text{sesgo-especificacion} +
+  \underbrace{f_{\lim}(\mathbf{x}) - \hat{f_{\mathcal{L}}}(\mathbf{x})}_\text{error-estimacion} +
+  \underbrace{y - f^*(\mathbf{x})}_\text{irreducible}.\]</span></p>
+<p>El error reducible ahora se descompone en dos partes:</p>
+<ul>
+<li>El <strong>sesgo de especificacion</strong>: que se debe a la incapacidad de nuestro modelo de capturar la forma del predictor óptimo, incluso conociendo toda la población. Este término no depende de la muestra de entrenamiento: depende de la capacidad de nuestro método para aprender en condiciones ideales.</li>
+<li>El <strong>error de estimación</strong>: este error resulta de que tenemos información limitada de la población, y nuestro ajuste se aleja de lo que obtendríamos con información completa. Esta parte del error varía dependiendo de la muestra particular de entrenamiento que utilizamos.</li>
+</ul>
+<p>En nuestros dos ejemplos, intuímos que vecinos más cercanos sufre más de error de estimación y regresión lineal de sesgo de especificación, lo cual verificamos más adelante.</p>
+<p>Podemos refinar aún más nuestra descomposición considerando qué pasa con distintas muestras del mismo tamaño para entender mejor el error de estimación. Si consideramos el valor esperado de nuestra predicción a lo largo de las posibles muestras <span class="math inline">\(\mathcal L\)</span> que podemos extraer, descomponemos el segundo término como:</p>
+<p><span class="math display">\[\hat{f_{\mathcal{L}}}(\mathbf{x}) - f_{\lim}(\mathbf{x})  = \hat{f_{\mathcal{L}}}(\mathbf{x}) -  E(\hat{f_{\mathcal{L}}}(\mathbf{x})) + E(\hat{f_{\mathcal{L}}}(\mathbf{x})) - f_{\lim}(\mathbf{x}) \]</span> donde el valor esperado es sobre todas las muestras de entrenamiento de un tamaño fijo <span class="math inline">\(n\)</span> que podríamos obtener. El primer término puede llamarse variabilidad, mientras que el segundo es el sesgo que obtenemos al usar una muestra <span class="math inline">\(n\)</span> finita (para algunos métodos, el segundo término puede ser igual a cero). Desde este punto de vista, podemos hacer también la descomposición:</p>
+<p><span class="math display">\[\mathbf{y} - \hat{f_{\mathcal{L}}}(\mathbf{x}) = \underbrace{f^* (\mathbf{x}) - f_{lim}(\mathbf{x})}_\text{sesgo-especificacion}  + \underbrace{f_{lim}(\mathbf{x}) - E(\hat{f_{\mathcal{L}}}(\mathbf{x}))}_\text{sesgo-estimacion} +   \underbrace{E(\hat{f_{\mathcal{L}}}(\mathbf{x})) - \hat{f_{\mathcal{L}}}(\mathbf{x})}_\text{variabilidad} + \underbrace{ \mathbf{y} - f^*(\mathbf{x})}_\text{irreducible}.\]</span></p>
+<p>Tenemos entonces cuatro términos:</p>
+<ul>
+<li>El sesgo de especificación mide la capacidad del modelo de utilizar datos de muestras cada vez más grandes. No depende de una muestra particular ni su tamaño.</li>
+<li>El sesgo de estimación mide en promedio qué tan lejos está la estimación del ideal con datos completos, y depende de la naturaleza de la muestra de entrenamiento, incluyendo su tamaño.</li>
+<li>La variabilidad es el único término que depende de la muestra particular que usamos. También depende del tamaño de muestra que utilizamos.</li>
+</ul>
+<p>Los dos primeros términos usualmente se agrupan en un sólo término de sesgo, y obtenemos la siguiente definición usual:</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Descomposición sesgo-varianza
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>El error total (la diferencia entre observado y nuestra predicción) se descompone como:</p>
+<p><span class="math display">\[\mathbf{y} - \hat{f_{\mathcal{L}}}(\mathbf{x}) = \underbrace{f^* (\mathbf{x}) - E(\hat{f_{\mathcal{L}}}(\mathbf{x}))}_\text{sesgo} +   \underbrace{E(\hat{f_{\mathcal{L}}}(\mathbf{x})) - \hat{f_{\mathcal{L}}}(\mathbf{x})}_\text{variabilidad} + \underbrace{y - f^*(\mathbf{x})}_\text{irreducible}.\]</span></p>
+</div>
+</div>
+<p>Que explica qué sucede con distintas posibles muestras de entrenamiento de tamaño fijo. El <em>sesgo</em> en este caso significa en promedio qué tan lejos nuestro predictor está del óptimo, y la variabilidad qué tanto puede variar nuestra predicción con respecto al promedio.</p>
+</section>
+<section id="ejemplo-fuentes-de-error" class="level2" data-number="2.5">
+<h2 data-number="2.5" class="anchored" data-anchor-id="ejemplo-fuentes-de-error"><span class="header-section-number">2.5</span> Ejemplo: fuentes de error</h2>
+<p>Vamos a ver qué sucede con nuestros dos métodos si utilizamos una muestra grande:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>muestra_grande_tbl <span class="ot">&lt;-</span> <span class="fu">sample_n</span>(poblacion_tbl, <span class="dv">10000</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">tipo =</span> <span class="st">"entrena"</span>)</span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>modelo_kvecinos <span class="ot">&lt;-</span> <span class="fu">nearest_neighbor</span>(</span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">neighbors =</span> <span class="fu">nrow</span>(muestra_grande_tbl) <span class="sc">*</span> <span class="fl">0.10</span>, </span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">weight_func =</span> <span class="st">"gaussian"</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_mode</span>(<span class="st">"regression"</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_engine</span>(<span class="st">"kknn"</span>)</span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Ajustamos (no es necesario usar la población completa para este ejemplo)</span></span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a>flujo_vecinos <span class="ot">&lt;-</span> <span class="fu">workflow</span>() <span class="sc">|&gt;</span> </span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add_recipe</span>(receta) <span class="sc">|&gt;</span> </span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add_model</span>(modelo_kvecinos)</span>
+<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a>flujo_ajustado_vecinos_limite <span class="ot">&lt;-</span> <span class="fu">fit</span>(flujo_vecinos, muestra_grande_tbl)</span>
+<span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a>flujo_ajustado_lineal_limite <span class="ot">&lt;-</span> <span class="fu">fit</span>(flujo_lineal, muestra_grande_tbl)</span>
+<span id="cb18-14"><a href="#cb18-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-15"><a href="#cb18-15" aria-hidden="true" tabindex="-1"></a>eval_tbl <span class="ot">&lt;-</span> <span class="fu">bind_rows</span>(prueba_tbl, muestra_grande_tbl)</span>
+<span id="cb18-16"><a href="#cb18-16" aria-hidden="true" tabindex="-1"></a>resumen_vecinos_lim_tbl <span class="ot">&lt;-</span> </span>
+<span id="cb18-17"><a href="#cb18-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">predict</span>(flujo_ajustado_vecinos_limite, eval_tbl) <span class="sc">|&gt;</span> </span>
+<span id="cb18-18"><a href="#cb18-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">predictor =</span> <span class="st">"vecinos_limite"</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb18-19"><a href="#cb18-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">bind_cols</span>(eval_tbl) <span class="sc">|&gt;</span> </span>
+<span id="cb18-20"><a href="#cb18-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(predictor, tipo) <span class="sc">|&gt;</span> </span>
+<span id="cb18-21"><a href="#cb18-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rmse</span>(<span class="at">truth =</span> y, <span class="at">estimate =</span> .pred) </span>
+<span id="cb18-22"><a href="#cb18-22" aria-hidden="true" tabindex="-1"></a>resumen_lineal_lim_tbl <span class="ot">&lt;-</span> </span>
+<span id="cb18-23"><a href="#cb18-23" aria-hidden="true" tabindex="-1"></a>  <span class="fu">predict</span>(flujo_ajustado_lineal_limite, eval_tbl) <span class="sc">|&gt;</span> </span>
+<span id="cb18-24"><a href="#cb18-24" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">predictor =</span> <span class="st">"lineal_limite"</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb18-25"><a href="#cb18-25" aria-hidden="true" tabindex="-1"></a>  <span class="fu">bind_cols</span>(eval_tbl) <span class="sc">|&gt;</span> </span>
+<span id="cb18-26"><a href="#cb18-26" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(predictor, tipo) <span class="sc">|&gt;</span> </span>
+<span id="cb18-27"><a href="#cb18-27" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rmse</span>(<span class="at">truth =</span> y, <span class="at">estimate =</span> .pred) </span>
+<span id="cb18-28"><a href="#cb18-28" aria-hidden="true" tabindex="-1"></a><span class="fu">fmt_resumen</span>(<span class="fu">bind_rows</span>(resumen_vmc_tbl, </span>
+<span id="cb18-29"><a href="#cb18-29" aria-hidden="true" tabindex="-1"></a>  resumen_lineal_tbl, </span>
+<span id="cb18-30"><a href="#cb18-30" aria-hidden="true" tabindex="-1"></a>  resumen_vecinos_lim_tbl, </span>
+<span id="cb18-31"><a href="#cb18-31" aria-hidden="true" tabindex="-1"></a>  resumen_lineal_lim_tbl) <span class="sc">|&gt;</span> <span class="fu">arrange</span>(predictor))</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+
+<div id="fkmyioypct" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<style>#fkmyioypct table {
+  font-family: system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#fkmyioypct thead, #fkmyioypct tbody, #fkmyioypct tfoot, #fkmyioypct tr, #fkmyioypct td, #fkmyioypct th {
+  border-style: none;
+}
+
+#fkmyioypct p {
+  margin: 0;
+  padding: 0;
+}
+
+#fkmyioypct .gt_table {
+  display: table;
+  border-collapse: collapse;
+  line-height: normal;
+  margin-left: auto;
+  margin-right: auto;
+  color: #333333;
+  font-size: 16px;
+  font-weight: normal;
+  font-style: normal;
+  background-color: #FFFFFF;
+  width: auto;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #A8A8A8;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #A8A8A8;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+}
+
+#fkmyioypct .gt_caption {
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+
+#fkmyioypct .gt_title {
+  color: #333333;
+  font-size: 125%;
+  font-weight: initial;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-color: #FFFFFF;
+  border-bottom-width: 0;
+}
+
+#fkmyioypct .gt_subtitle {
+  color: #333333;
+  font-size: 85%;
+  font-weight: initial;
+  padding-top: 3px;
+  padding-bottom: 5px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-color: #FFFFFF;
+  border-top-width: 0;
+}
+
+#fkmyioypct .gt_heading {
+  background-color: #FFFFFF;
+  text-align: center;
+  border-bottom-color: #FFFFFF;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#fkmyioypct .gt_bottom_border {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#fkmyioypct .gt_col_headings {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#fkmyioypct .gt_col_heading {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 6px;
+  padding-left: 5px;
+  padding-right: 5px;
+  overflow-x: hidden;
+}
+
+#fkmyioypct .gt_column_spanner_outer {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  padding-top: 0;
+  padding-bottom: 0;
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
+#fkmyioypct .gt_column_spanner_outer:first-child {
+  padding-left: 0;
+}
+
+#fkmyioypct .gt_column_spanner_outer:last-child {
+  padding-right: 0;
+}
+
+#fkmyioypct .gt_column_spanner {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  overflow-x: hidden;
+  display: inline-block;
+  width: 100%;
+}
+
+#fkmyioypct .gt_spanner_row {
+  border-bottom-style: hidden;
+}
+
+#fkmyioypct .gt_group_heading {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  text-align: left;
+}
+
+#fkmyioypct .gt_empty_group_heading {
+  padding: 0.5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: middle;
+}
+
+#fkmyioypct .gt_from_md > :first-child {
+  margin-top: 0;
+}
+
+#fkmyioypct .gt_from_md > :last-child {
+  margin-bottom: 0;
+}
+
+#fkmyioypct .gt_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  margin: 10px;
+  border-top-style: solid;
+  border-top-width: 1px;
+  border-top-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  overflow-x: hidden;
+}
+
+#fkmyioypct .gt_stub {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#fkmyioypct .gt_stub_row_group {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+  vertical-align: top;
+}
+
+#fkmyioypct .gt_row_group_first td {
+  border-top-width: 2px;
+}
+
+#fkmyioypct .gt_row_group_first th {
+  border-top-width: 2px;
+}
+
+#fkmyioypct .gt_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#fkmyioypct .gt_first_summary_row {
+  border-top-style: solid;
+  border-top-color: #D3D3D3;
+}
+
+#fkmyioypct .gt_first_summary_row.thick {
+  border-top-width: 2px;
+}
+
+#fkmyioypct .gt_last_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#fkmyioypct .gt_grand_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#fkmyioypct .gt_first_grand_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-style: double;
+  border-top-width: 6px;
+  border-top-color: #D3D3D3;
+}
+
+#fkmyioypct .gt_last_grand_summary_row_top {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-style: double;
+  border-bottom-width: 6px;
+  border-bottom-color: #D3D3D3;
+}
+
+#fkmyioypct .gt_striped {
+  background-color: rgba(128, 128, 128, 0.05);
+}
+
+#fkmyioypct .gt_table_body {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#fkmyioypct .gt_footnotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#fkmyioypct .gt_footnote {
+  margin: 0px;
+  font-size: 90%;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#fkmyioypct .gt_sourcenotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#fkmyioypct .gt_sourcenote {
+  font-size: 90%;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#fkmyioypct .gt_left {
+  text-align: left;
+}
+
+#fkmyioypct .gt_center {
+  text-align: center;
+}
+
+#fkmyioypct .gt_right {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+#fkmyioypct .gt_font_normal {
+  font-weight: normal;
+}
+
+#fkmyioypct .gt_font_bold {
+  font-weight: bold;
+}
+
+#fkmyioypct .gt_font_italic {
+  font-style: italic;
+}
+
+#fkmyioypct .gt_super {
+  font-size: 65%;
+}
+
+#fkmyioypct .gt_footnote_marks {
+  font-size: 75%;
+  vertical-align: 0.4em;
+  position: initial;
+}
+
+#fkmyioypct .gt_asterisk {
+  font-size: 100%;
+  vertical-align: 0;
+}
+
+#fkmyioypct .gt_indent_1 {
+  text-indent: 5px;
+}
+
+#fkmyioypct .gt_indent_2 {
+  text-indent: 10px;
+}
+
+#fkmyioypct .gt_indent_3 {
+  text-indent: 15px;
+}
+
+#fkmyioypct .gt_indent_4 {
+  text-indent: 20px;
+}
+
+#fkmyioypct .gt_indent_5 {
+  text-indent: 25px;
+}
+</style>
+<table class="gt_table" data-quarto-disable-processing="false" data-quarto-bootstrap="false">
+  <thead>
+    
+    <tr class="gt_col_headings">
+      <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="1" colspan="1" scope="col" id="predictor">predictor</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="1" colspan="1" scope="col" id=".metric">.metric</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="entrena">entrena</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="prueba">prueba</th>
+    </tr>
+  </thead>
+  <tbody class="gt_table_body">
+    <tr><td headers="predictor" class="gt_row gt_left">lineal</td>
+<td headers=".metric" class="gt_row gt_left">rmse</td>
+<td headers="entrena" class="gt_row gt_right">49</td>
+<td headers="prueba" class="gt_row gt_right">56</td></tr>
+    <tr><td headers="predictor" class="gt_row gt_left">lineal_limite</td>
+<td headers=".metric" class="gt_row gt_left">rmse</td>
+<td headers="entrena" class="gt_row gt_right">54</td>
+<td headers="prueba" class="gt_row gt_right">54</td></tr>
+    <tr><td headers="predictor" class="gt_row gt_left">vecinos</td>
+<td headers=".metric" class="gt_row gt_left">rmse</td>
+<td headers="entrena" class="gt_row gt_right">36</td>
+<td headers="prueba" class="gt_row gt_right">65</td></tr>
+    <tr><td headers="predictor" class="gt_row gt_left">vecinos_limite</td>
+<td headers=".metric" class="gt_row gt_left">rmse</td>
+<td headers="entrena" class="gt_row gt_right">49</td>
+<td headers="prueba" class="gt_row gt_right">49</td></tr>
+  </tbody>
+  
+  
+</table>
+</div>
+</div>
+</div>
+<p>¿Qué patrones ves en esta tabla? Podemos también graficar para entender mejor qué está pasando:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>preds_1 <span class="ot">&lt;-</span> <span class="fu">predict</span>(flujo_ajustado_vecinos_limite, <span class="fu">tibble</span>(<span class="at">x =</span> <span class="dv">0</span><span class="sc">:</span><span class="dv">17</span>)) <span class="sc">|&gt;</span> </span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">bind_cols</span>(<span class="fu">tibble</span>(<span class="at">x =</span> <span class="dv">0</span><span class="sc">:</span><span class="dv">17</span>, <span class="at">predictor =</span> <span class="st">"vecinos_limite"</span>))</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>preds_2 <span class="ot">&lt;-</span> <span class="fu">predict</span>(flujo_ajustado_lineal_limite, <span class="fu">tibble</span>(<span class="at">x =</span> <span class="dv">0</span><span class="sc">:</span><span class="dv">17</span>)) <span class="sc">|&gt;</span> </span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">bind_cols</span>(<span class="fu">tibble</span>(<span class="at">x =</span> <span class="dv">0</span><span class="sc">:</span><span class="dv">17</span>, <span class="at">predictor =</span> <span class="st">"lineal_limite"</span>))</span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>preds_graf_tbl <span class="ot">&lt;-</span> <span class="fu">bind_rows</span>(preds_1, preds_2, preds_graf_tbl) <span class="sc">|&gt;</span> </span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">predictor =</span> <span class="fu">factor</span>(predictor))</span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>g_1 <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(datos_tbl, <span class="fu">aes</span>(<span class="at">x =</span> x)) <span class="sc">+</span></span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="at">data =</span> preds_graf_tbl <span class="sc">|&gt;</span> </span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a>            <span class="fu">filter</span>(<span class="fu">str_detect</span>(predictor, <span class="st">"vecinos|_óptimo"</span>)), </span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a>            <span class="fu">aes</span>(<span class="at">y =</span> .pred, <span class="at">colour =</span> predictor), <span class="at">size =</span> <span class="fl">1.1</span>) <span class="sc">+</span></span>
+<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">subtitle =</span> <span class="st">"Vecinos"</span>) </span>
+<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a>g_2 <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(datos_tbl, <span class="fu">aes</span>(<span class="at">x =</span> x)) <span class="sc">+</span></span>
+<span id="cb19-13"><a href="#cb19-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="at">data =</span> preds_graf_tbl <span class="sc">|&gt;</span> </span>
+<span id="cb19-14"><a href="#cb19-14" aria-hidden="true" tabindex="-1"></a>            <span class="fu">filter</span>(<span class="fu">str_detect</span>(predictor, <span class="st">"lineal|_óptimo"</span>)), </span>
+<span id="cb19-15"><a href="#cb19-15" aria-hidden="true" tabindex="-1"></a>            <span class="fu">aes</span>(<span class="at">y =</span> .pred, <span class="at">colour =</span> predictor), <span class="at">size =</span> <span class="fl">1.1</span>) <span class="sc">+</span></span>
+<span id="cb19-16"><a href="#cb19-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">subtitle =</span> <span class="st">"Lineal"</span>) </span>
+<span id="cb19-17"><a href="#cb19-17" aria-hidden="true" tabindex="-1"></a>g_1 <span class="sc">+</span> g_2 <span class="sc">+</span> <span class="fu">plot_layout</span>(<span class="at">guides =</span> <span class="st">'collect'</span>)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="02-principios-supervisado_files/figure-html/unnamed-chunk-17-1.png" class="img-fluid" width="864"></p>
+</div>
+</div>
+<p>Esto patrón sugiere que:</p>
+<ul>
+<li><p>Nuestro método de vecinos más cercanos no tiene errores por sesgo, sino más bien por sobreajuste o variabilidad.</p></li>
+<li><p>Nuestro método lineal no tiene mucha variabilidad (el estimado con una muestra grande es casi igual al de la muestra de entrenamiento), sino más bien por sesgo</p></li>
+<li><p>El error por sesgo se reduce usando métodos más flexibles o menos restringidos que puedan capturar patrones claros en los datos.</p></li>
+<li><p>Para reducir la variabilidad podemos usar métodos más simples o restringidos que no capturen tanto ruido.</p></li>
+<li><p>El error irreducible se puede reducir incorporando información adicional relevante a las entradas.</p></li>
+</ul>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Complejidad y error de predicción
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<ul>
+<li>Métodos de predicción más flexibles o complejos tienden a sufrir más de error por variabilidad, pues dependen fuertemente de la muestra utilizada.</li>
+<li>Métodos de predicción más rígidos o simples tienden a sufrir más error por sesgo, pues dependen menos de la muestra utilizada.</li>
+</ul>
+</div>
+</div>
+</section>
+<section id="agregando-más-información-y-error-irreducible" class="level2" data-number="2.6">
+<h2 data-number="2.6" class="anchored" data-anchor-id="agregando-más-información-y-error-irreducible"><span class="header-section-number">2.6</span> Agregando más información y error irreducible</h2>
+<p>Podemos ver qué sucede cuando tenemos disponibles más variables relevantes. En este caso, probaremos con dos entradas:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>genera_datos_2 <span class="ot">&lt;-</span> <span class="cf">function</span>(<span class="at">n =</span> <span class="dv">500</span>, <span class="at">tipo =</span> <span class="cn">NULL</span>){</span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>  dat_tbl <span class="ot">&lt;-</span> <span class="fu">tibble</span>(<span class="at">nse =</span> <span class="fu">runif</span>(n, <span class="dv">0</span>, <span class="dv">100</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(estudio_años <span class="ot">=</span> <span class="fu">floor</span>(<span class="fu">rnorm</span>(n, <span class="fl">1.5</span> <span class="sc">*</span> <span class="fu">sqrt</span>(nse), <span class="dv">1</span>))) <span class="sc">|&gt;</span></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(estudio_años <span class="ot">=</span> <span class="fu">pmax</span>(<span class="dv">0</span>, <span class="fu">pmin</span>(<span class="dv">17</span>, estudio_años))) <span class="sc">|&gt;</span> </span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">habilidad =</span> <span class="fu">rnorm</span>(n, <span class="dv">100</span> <span class="sc">+</span> <span class="fl">0.1</span> <span class="sc">*</span> nse, <span class="dv">1</span>)) <span class="sc">|&gt;</span> </span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">z =</span> <span class="dv">100</span> <span class="sc">+</span> (habilidad<span class="sc">/</span><span class="dv">100</span>) <span class="sc">*</span> ( <span class="dv">20</span> <span class="sc">*</span> nse <span class="sc">+</span> <span class="dv">5</span> <span class="sc">*</span> (estudio_años))) <span class="sc">|&gt;</span> </span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">ingreso =</span> <span class="fu">pmax</span>(<span class="dv">0</span>, <span class="fl">0.2</span><span class="sc">*</span>(z <span class="sc">+</span> <span class="fu">rnorm</span>(n, <span class="dv">0</span>, <span class="dv">150</span>))))</span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a>  obs_tbl <span class="ot">&lt;-</span> dat_tbl <span class="sc">|&gt;</span> </span>
+<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">tipo =</span> tipo, <span class="at">id =</span> <span class="dv">1</span><span class="sc">:</span>n)</span>
+<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a>  obs_tbl <span class="sc">|&gt;</span> <span class="fu">select</span>(id, tipo, <span class="at">x_1 =</span> estudio_años, <span class="at">x_2 =</span> nse,  <span class="at">y =</span> ingreso)</span>
+<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>entrena_tbl <span class="ot">&lt;-</span> <span class="fu">genera_datos_2</span>(<span class="dv">20</span>, <span class="at">tipo =</span> <span class="st">"entrena"</span>)</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>prueba_tbl <span class="ot">&lt;-</span> <span class="fu">genera_datos_2</span>(<span class="dv">500</span>, <span class="at">tipo =</span> <span class="st">"prueba"</span>)</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>receta_2 <span class="ot">&lt;-</span> <span class="fu">recipe</span>(y <span class="sc">~</span> x_1 <span class="sc">+</span> x_2, <span class="at">data =</span> entrena_tbl)</span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>flujo_lineal <span class="ot">&lt;-</span> <span class="fu">workflow</span>() <span class="sc">|&gt;</span> </span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add_recipe</span>(receta_2) <span class="sc">|&gt;</span> </span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add_model</span>(modelo_lineal)</span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Ajustamos</span></span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a>flujo_ajustado_lineal <span class="ot">&lt;-</span> <span class="fu">fit</span>(flujo_lineal, entrena_tbl)</span>
+<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a><span class="fu">predict</span>(flujo_ajustado_lineal, <span class="fu">bind_rows</span>(entrena_tbl, prueba_tbl)) <span class="sc">|&gt;</span> </span>
+<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">bind_cols</span>(<span class="fu">bind_rows</span>(entrena_tbl, prueba_tbl)) <span class="sc">|&gt;</span></span>
+<span id="cb21-11"><a href="#cb21-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(tipo) <span class="sc">|&gt;</span> </span>
+<span id="cb21-12"><a href="#cb21-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rmse</span>(<span class="at">truth =</span> y, <span class="at">estimate =</span> .pred) <span class="sc">|&gt;</span> <span class="fu">gt</span>() <span class="sc">|&gt;</span> </span>
+<span id="cb21-13"><a href="#cb21-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">fmt_number</span>(.estimate, <span class="at">decimals =</span> <span class="dv">1</span>)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+
+<div id="pllrikurop" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<style>#pllrikurop table {
+  font-family: system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#pllrikurop thead, #pllrikurop tbody, #pllrikurop tfoot, #pllrikurop tr, #pllrikurop td, #pllrikurop th {
+  border-style: none;
+}
+
+#pllrikurop p {
+  margin: 0;
+  padding: 0;
+}
+
+#pllrikurop .gt_table {
+  display: table;
+  border-collapse: collapse;
+  line-height: normal;
+  margin-left: auto;
+  margin-right: auto;
+  color: #333333;
+  font-size: 16px;
+  font-weight: normal;
+  font-style: normal;
+  background-color: #FFFFFF;
+  width: auto;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #A8A8A8;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #A8A8A8;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+}
+
+#pllrikurop .gt_caption {
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+
+#pllrikurop .gt_title {
+  color: #333333;
+  font-size: 125%;
+  font-weight: initial;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-color: #FFFFFF;
+  border-bottom-width: 0;
+}
+
+#pllrikurop .gt_subtitle {
+  color: #333333;
+  font-size: 85%;
+  font-weight: initial;
+  padding-top: 3px;
+  padding-bottom: 5px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-color: #FFFFFF;
+  border-top-width: 0;
+}
+
+#pllrikurop .gt_heading {
+  background-color: #FFFFFF;
+  text-align: center;
+  border-bottom-color: #FFFFFF;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#pllrikurop .gt_bottom_border {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#pllrikurop .gt_col_headings {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#pllrikurop .gt_col_heading {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 6px;
+  padding-left: 5px;
+  padding-right: 5px;
+  overflow-x: hidden;
+}
+
+#pllrikurop .gt_column_spanner_outer {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  padding-top: 0;
+  padding-bottom: 0;
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
+#pllrikurop .gt_column_spanner_outer:first-child {
+  padding-left: 0;
+}
+
+#pllrikurop .gt_column_spanner_outer:last-child {
+  padding-right: 0;
+}
+
+#pllrikurop .gt_column_spanner {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  overflow-x: hidden;
+  display: inline-block;
+  width: 100%;
+}
+
+#pllrikurop .gt_spanner_row {
+  border-bottom-style: hidden;
+}
+
+#pllrikurop .gt_group_heading {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  text-align: left;
+}
+
+#pllrikurop .gt_empty_group_heading {
+  padding: 0.5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: middle;
+}
+
+#pllrikurop .gt_from_md > :first-child {
+  margin-top: 0;
+}
+
+#pllrikurop .gt_from_md > :last-child {
+  margin-bottom: 0;
+}
+
+#pllrikurop .gt_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  margin: 10px;
+  border-top-style: solid;
+  border-top-width: 1px;
+  border-top-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  overflow-x: hidden;
+}
+
+#pllrikurop .gt_stub {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#pllrikurop .gt_stub_row_group {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+  vertical-align: top;
+}
+
+#pllrikurop .gt_row_group_first td {
+  border-top-width: 2px;
+}
+
+#pllrikurop .gt_row_group_first th {
+  border-top-width: 2px;
+}
+
+#pllrikurop .gt_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#pllrikurop .gt_first_summary_row {
+  border-top-style: solid;
+  border-top-color: #D3D3D3;
+}
+
+#pllrikurop .gt_first_summary_row.thick {
+  border-top-width: 2px;
+}
+
+#pllrikurop .gt_last_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#pllrikurop .gt_grand_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#pllrikurop .gt_first_grand_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-style: double;
+  border-top-width: 6px;
+  border-top-color: #D3D3D3;
+}
+
+#pllrikurop .gt_last_grand_summary_row_top {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-style: double;
+  border-bottom-width: 6px;
+  border-bottom-color: #D3D3D3;
+}
+
+#pllrikurop .gt_striped {
+  background-color: rgba(128, 128, 128, 0.05);
+}
+
+#pllrikurop .gt_table_body {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#pllrikurop .gt_footnotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#pllrikurop .gt_footnote {
+  margin: 0px;
+  font-size: 90%;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#pllrikurop .gt_sourcenotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#pllrikurop .gt_sourcenote {
+  font-size: 90%;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#pllrikurop .gt_left {
+  text-align: left;
+}
+
+#pllrikurop .gt_center {
+  text-align: center;
+}
+
+#pllrikurop .gt_right {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+#pllrikurop .gt_font_normal {
+  font-weight: normal;
+}
+
+#pllrikurop .gt_font_bold {
+  font-weight: bold;
+}
+
+#pllrikurop .gt_font_italic {
+  font-style: italic;
+}
+
+#pllrikurop .gt_super {
+  font-size: 65%;
+}
+
+#pllrikurop .gt_footnote_marks {
+  font-size: 75%;
+  vertical-align: 0.4em;
+  position: initial;
+}
+
+#pllrikurop .gt_asterisk {
+  font-size: 100%;
+  vertical-align: 0;
+}
+
+#pllrikurop .gt_indent_1 {
+  text-indent: 5px;
+}
+
+#pllrikurop .gt_indent_2 {
+  text-indent: 10px;
+}
+
+#pllrikurop .gt_indent_3 {
+  text-indent: 15px;
+}
+
+#pllrikurop .gt_indent_4 {
+  text-indent: 20px;
+}
+
+#pllrikurop .gt_indent_5 {
+  text-indent: 25px;
+}
+</style>
+<table class="gt_table" data-quarto-disable-processing="false" data-quarto-bootstrap="false">
+  <thead>
+    
+    <tr class="gt_col_headings">
+      <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="1" colspan="1" scope="col" id="tipo">tipo</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="1" colspan="1" scope="col" id=".metric">.metric</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="1" colspan="1" scope="col" id=".estimator">.estimator</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id=".estimate">.estimate</th>
+    </tr>
+  </thead>
+  <tbody class="gt_table_body">
+    <tr><td headers="tipo" class="gt_row gt_left">entrena</td>
+<td headers=".metric" class="gt_row gt_left">rmse</td>
+<td headers=".estimator" class="gt_row gt_left">standard</td>
+<td headers=".estimate" class="gt_row gt_right">27.1</td></tr>
+    <tr><td headers="tipo" class="gt_row gt_left">prueba</td>
+<td headers=".metric" class="gt_row gt_left">rmse</td>
+<td headers=".estimator" class="gt_row gt_left">standard</td>
+<td headers=".estimate" class="gt_row gt_right">31.5</td></tr>
+  </tbody>
+  
+  
+</table>
+</div>
+</div>
+</div>
+<p>Y vemos cómo inmediatamente redujimos el error de predicción: en este caso, aunque la variabilidad aumentó un poco (tenemos más parámetros que estimar vs el modelo con una sola variable), la reducción en el sesgo y en el error irreducible es tan grande que el desempeño es muy superior. Examina el caso de vecinos más cercanos.</p>
+</section>
+<section id="acerca-de-la-estimación-del-error-de-predicción" class="level2" data-number="2.7">
+<h2 data-number="2.7" class="anchored" data-anchor-id="acerca-de-la-estimación-del-error-de-predicción"><span class="header-section-number">2.7</span> Acerca de la estimación del error de predicción</h2>
+<p>Cuando usamos una muestra de prueba limitada, podemos evaluar la precisión de nuestra estimación del error de predicción usando por ejemplo el bootstrap. En nuestro ejemplo anterior podríamos hacer los siguiente:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(infer)</span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>preds <span class="ot">&lt;-</span> <span class="fu">predict</span>(flujo_ajustado_lineal, <span class="fu">bind_rows</span>(prueba_tbl)) <span class="sc">|&gt;</span> </span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">bind_cols</span>(prueba_tbl) </span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>preds <span class="sc">|&gt;</span> </span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">generate</span>(<span class="at">reps =</span> <span class="dv">1000</span>, <span class="at">type =</span> <span class="st">"bootstrap"</span>, <span class="at">variables =</span> id) <span class="sc">|&gt;</span> </span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(replicate, tipo) <span class="sc">|&gt;</span> </span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rmse</span>(<span class="at">truth =</span> y, <span class="at">estimate =</span> .pred) <span class="sc">|&gt;</span> </span>
+<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(replicate, tipo, <span class="at">stat =</span> .estimate) <span class="sc">|&gt;</span></span>
+<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">get_ci</span>(<span class="at">level =</span> <span class="fl">0.90</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb22-10"><a href="#cb22-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">gt</span>() <span class="sc">|&gt;</span> <span class="fu">fmt_number</span>(<span class="fu">where</span>(is_double), <span class="at">decimals =</span> <span class="dv">1</span>)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: The `variables` argument is only relevant for the "permute" generation
+type and will be ignored.</code></pre>
+</div>
+<div class="cell-output-display">
+
+<div id="dyaekdyjhc" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<style>#dyaekdyjhc table {
+  font-family: system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#dyaekdyjhc thead, #dyaekdyjhc tbody, #dyaekdyjhc tfoot, #dyaekdyjhc tr, #dyaekdyjhc td, #dyaekdyjhc th {
+  border-style: none;
+}
+
+#dyaekdyjhc p {
+  margin: 0;
+  padding: 0;
+}
+
+#dyaekdyjhc .gt_table {
+  display: table;
+  border-collapse: collapse;
+  line-height: normal;
+  margin-left: auto;
+  margin-right: auto;
+  color: #333333;
+  font-size: 16px;
+  font-weight: normal;
+  font-style: normal;
+  background-color: #FFFFFF;
+  width: auto;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #A8A8A8;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #A8A8A8;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+}
+
+#dyaekdyjhc .gt_caption {
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+
+#dyaekdyjhc .gt_title {
+  color: #333333;
+  font-size: 125%;
+  font-weight: initial;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-color: #FFFFFF;
+  border-bottom-width: 0;
+}
+
+#dyaekdyjhc .gt_subtitle {
+  color: #333333;
+  font-size: 85%;
+  font-weight: initial;
+  padding-top: 3px;
+  padding-bottom: 5px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-color: #FFFFFF;
+  border-top-width: 0;
+}
+
+#dyaekdyjhc .gt_heading {
+  background-color: #FFFFFF;
+  text-align: center;
+  border-bottom-color: #FFFFFF;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#dyaekdyjhc .gt_bottom_border {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#dyaekdyjhc .gt_col_headings {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#dyaekdyjhc .gt_col_heading {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 6px;
+  padding-left: 5px;
+  padding-right: 5px;
+  overflow-x: hidden;
+}
+
+#dyaekdyjhc .gt_column_spanner_outer {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  padding-top: 0;
+  padding-bottom: 0;
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
+#dyaekdyjhc .gt_column_spanner_outer:first-child {
+  padding-left: 0;
+}
+
+#dyaekdyjhc .gt_column_spanner_outer:last-child {
+  padding-right: 0;
+}
+
+#dyaekdyjhc .gt_column_spanner {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  overflow-x: hidden;
+  display: inline-block;
+  width: 100%;
+}
+
+#dyaekdyjhc .gt_spanner_row {
+  border-bottom-style: hidden;
+}
+
+#dyaekdyjhc .gt_group_heading {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  text-align: left;
+}
+
+#dyaekdyjhc .gt_empty_group_heading {
+  padding: 0.5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: middle;
+}
+
+#dyaekdyjhc .gt_from_md > :first-child {
+  margin-top: 0;
+}
+
+#dyaekdyjhc .gt_from_md > :last-child {
+  margin-bottom: 0;
+}
+
+#dyaekdyjhc .gt_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  margin: 10px;
+  border-top-style: solid;
+  border-top-width: 1px;
+  border-top-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  overflow-x: hidden;
+}
+
+#dyaekdyjhc .gt_stub {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#dyaekdyjhc .gt_stub_row_group {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+  vertical-align: top;
+}
+
+#dyaekdyjhc .gt_row_group_first td {
+  border-top-width: 2px;
+}
+
+#dyaekdyjhc .gt_row_group_first th {
+  border-top-width: 2px;
+}
+
+#dyaekdyjhc .gt_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#dyaekdyjhc .gt_first_summary_row {
+  border-top-style: solid;
+  border-top-color: #D3D3D3;
+}
+
+#dyaekdyjhc .gt_first_summary_row.thick {
+  border-top-width: 2px;
+}
+
+#dyaekdyjhc .gt_last_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#dyaekdyjhc .gt_grand_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#dyaekdyjhc .gt_first_grand_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-style: double;
+  border-top-width: 6px;
+  border-top-color: #D3D3D3;
+}
+
+#dyaekdyjhc .gt_last_grand_summary_row_top {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-style: double;
+  border-bottom-width: 6px;
+  border-bottom-color: #D3D3D3;
+}
+
+#dyaekdyjhc .gt_striped {
+  background-color: rgba(128, 128, 128, 0.05);
+}
+
+#dyaekdyjhc .gt_table_body {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#dyaekdyjhc .gt_footnotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#dyaekdyjhc .gt_footnote {
+  margin: 0px;
+  font-size: 90%;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#dyaekdyjhc .gt_sourcenotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#dyaekdyjhc .gt_sourcenote {
+  font-size: 90%;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#dyaekdyjhc .gt_left {
+  text-align: left;
+}
+
+#dyaekdyjhc .gt_center {
+  text-align: center;
+}
+
+#dyaekdyjhc .gt_right {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+#dyaekdyjhc .gt_font_normal {
+  font-weight: normal;
+}
+
+#dyaekdyjhc .gt_font_bold {
+  font-weight: bold;
+}
+
+#dyaekdyjhc .gt_font_italic {
+  font-style: italic;
+}
+
+#dyaekdyjhc .gt_super {
+  font-size: 65%;
+}
+
+#dyaekdyjhc .gt_footnote_marks {
+  font-size: 75%;
+  vertical-align: 0.4em;
+  position: initial;
+}
+
+#dyaekdyjhc .gt_asterisk {
+  font-size: 100%;
+  vertical-align: 0;
+}
+
+#dyaekdyjhc .gt_indent_1 {
+  text-indent: 5px;
+}
+
+#dyaekdyjhc .gt_indent_2 {
+  text-indent: 10px;
+}
+
+#dyaekdyjhc .gt_indent_3 {
+  text-indent: 15px;
+}
+
+#dyaekdyjhc .gt_indent_4 {
+  text-indent: 20px;
+}
+
+#dyaekdyjhc .gt_indent_5 {
+  text-indent: 25px;
+}
+</style>
+<table class="gt_table" data-quarto-disable-processing="false" data-quarto-bootstrap="false">
+  <thead>
+    
+    <tr class="gt_col_headings">
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="lower_ci">lower_ci</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="upper_ci">upper_ci</th>
+    </tr>
+  </thead>
+  <tbody class="gt_table_body">
+    <tr><td headers="lower_ci" class="gt_row gt_right">29.9</td>
+<td headers="upper_ci" class="gt_row gt_right">33.0</td></tr>
+  </tbody>
+  
+  
+</table>
+</div>
+</div>
+</div>
+</section>
+<section id="resumen" class="level2" data-number="2.8">
+<h2 data-number="2.8" class="anchored" data-anchor-id="resumen"><span class="header-section-number">2.8</span> Resumen</h2>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Tarea fundamental del análisis supervisado
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<ul>
+<li>Usando datos de entrenamiento <span class="math inline">\({\mathcal L}\)</span>, construimos una funcion <span class="math inline">\(\hat{f}\)</span> para predecir. Estas funciones se ajustan usualmente intentando estimar directamente el predictor óptimo <span class="math inline">\(f^*(x)\)</span> (si lo conocemos teóricamente), o indirectamente intentando minimizar la pérdida sobre el conjunto de entrenamiento.</li>
+<li>Si observamos nuevos valores <span class="math inline">\(\mathbf{x}\)</span>, nuestra predicción es <span class="math inline">\(\hat{y} = \hat{f}(\mathbf{x})\)</span>.</li>
+<li>Buscamos que cuando observemos <strong>nuevos</strong> casos para predecir, nuestro error de predicción sea bajo en promedio (<span class="math inline">\(Err\)</span> sea bajo).</li>
+<li>Usualmente estimamos <span class="math inline">\(Err\)</span> mediante una muestra de prueba o validación <span class="math inline">\({\mathcal T}\)</span>.</li>
+<li>Nos interesan métodos de construir <span class="math inline">\(\hat{f}\)</span> que produzcan errores de predicción bajos.</li>
+</ul>
+</div>
+</div>
+<ul>
+<li>Nótese que el error de entrenamiento se calcula sobre la muestra <span class="math inline">\({\mathcal L}\)</span> que se usó para construir <span class="math inline">\(\hat{f}\)</span>, mientras que el error de predicción se estima usando una muestra independiente <span class="math inline">\({\mathcal T}\)</span>.</li>
+<li><span class="math inline">\(\hat{Err}\)</span> es una estimación razonable de el error de predicción <span class="math inline">\(Err\)</span> (por ejemplo, <span class="math inline">\(\hat{Err} \to Err\)</span> cuando el tamaño de la muestra de prueba crece), pero <span class="math inline">\(\overline{err}\)</span> típicamente es <strong>una estimación mala del error de predicción</strong>.</li>
+</ul>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Reduciendo el error de predicción
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Para reducir el error de predicción, podemos:</p>
+<ol type="1">
+<li>Incluir variables relevantes que reduzcan el error irreducible</li>
+<li>Reducir variabilidad usando métodos más estables o menos complejos</li>
+<li>Reducir sesgo usando métodos más flexibles</li>
+<li>Usar métodos con la estructura adecuada para el problema</li>
+</ol>
+<p>Generalmente 2 y 3 están en contraposición, a lo que muchas veces se le llama <strong>equilibrio de varianza y sesgo</strong>. Los puntos 1 y 4 generalmente mejoran los resultados reduciendo tanto sesgo como variabilidad.</p>
+</div>
+</div>
+</section>
+<section id="qué-cosas-no-veremos-en-este-curso" class="level2" data-number="2.9">
+<h2 data-number="2.9" class="anchored" data-anchor-id="qué-cosas-no-veremos-en-este-curso"><span class="header-section-number">2.9</span> Qué cosas no veremos en este curso</h2>
+<p>En este curso nos concentraremos en la construcción, evaluación y mejora de modelos predictivos. Para que estas ideas funcionen en problemas reales, hay más aspectos a considerar que no discutiremos con detalle (y muchas veces son considerablemente más difíciles de la teoría y los algoritmos):</p>
+<ul>
+<li><p>Para entender exactamente cuál es <strong>el problema</strong> que queremos resolver se requiere trabajo analítico considerable, y también trabajo en entender aspectos del área o negocio donde nos interesa usar aprendizaje máquina. Muchas veces es fácil resolver un problema muy preciso, que tenemos a la mano, pero que más adelante nos damos cuenta de que no es útil.</p></li>
+<li><p>Estos dos puntos incluyen indentificar las <strong>métricas</strong> que queremos mejorar, lo cual no siempre se claro. Optimizar métricas incorrectas es poco útil en el mejor de los casos, y en los peores pueden causar daños. Evitar esto requiere monitoreo constante de varios aspectos del funcionamiento de nuestros modelos y sus consecuencias.</p></li>
+<li><p>¿Cómo poner en <strong>producción</strong> modelos y mantenerlos? Un flujo apropiado de trabajo, que comienza con pipelines de preproceso y heurísticas simples, para después utilizar modelos de aprendizaje automático, seguido de monitoreo y entrenamiento continuo son cruciales para tener éxito con este enfoque.</p></li>
+</ul>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copiado");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copiado");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="./01-introduccion.html" class="pagination-link">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Introducción</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./03-metodos-locales.html" class="pagination-link">
+        <span class="nav-page-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Métodos locales no estructurados</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+</body></html>
