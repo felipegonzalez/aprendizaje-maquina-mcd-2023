@@ -7,6 +7,8 @@ book:
   chapters:
     - index.qmd
     - 01-introduccion.qmd
+    - 02-principios-supervisado.qmd
+    - 03-metodos-locales.qmd
     - 99-referencias.qmd
 
 bibliography: referencias/book.bib
