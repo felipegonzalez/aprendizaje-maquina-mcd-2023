@@ -3,21 +3,21 @@
 **Todas las notas y material del curso estarán en este** [repositorio](https://github.com/felipegonzalez/aprendizaje-maquina-mcd-2023).
 
 - Introducción al aprendizaje máquina
-- Métodos locales y regresión lineal
-- Ingeniería de variables de entrada 
-- Regularización
-- Problemas de clasificación y regresión logística
+- Métodos locales y estructurados. Ingeniería de variables de entrada. 
+- Principios de Regularización
+- Problemas de clasificación, métricas y evaluación
 - Métodos de remuestreo y validación cruzada
 - Redes neuronales
 - Árboles, bosques aleatorios y boosting
 - Diagnóstico y mejora en problemas de aprendizaje supervisado
-- Componentes principales y análisis de conglomerados
+- Reducción de dimensionalidad: Embeddings, descomposición en valores singulares, componentes principales
+- Análisis de conglomerados
 
 ### Evaluación {-}
 
-- Tareas semanales (20%)
-- Examen parcial (30% práctico, 20% teórico)
-- Un examen final (30% práctico)
+- Tareas semanales (20%) para discutir en clase.
+- Examen parcial (40% práctico), con una componente oral.
+- Un examen final (20% práctico), con una componente oral.
 
 ### Material {-}
 
@@ -37,7 +37,7 @@ incluyendo ejemplos, ejercicios y tareas.
 - [The Elements of Statistical Learning](https://web.stanford.edu/~hastie/ElemStatLearn/), @ESL
 - [Predicción conforme](https://people.eecs.berkeley.edu/~angelopoulos/blog/posts/gentle-intro/)
 
-### Software: R y Rstudio {-}
+### Software {-}
 
 Para hacer las tareas y exámenes pueden usar cualquier lenguaje o flujo de trabajo
 que les convenga (R o Python, por ejemplo) - el único requisito esté basado en código y no

@@ -162,7 +162,8 @@ preds_graf_tbl <- poblacion_tbl |>
 # graficar con una muestra grande
 ggplot(datos_tbl, aes(x = x)) +
   geom_jitter(aes(y = y), colour = "red") + 
-  geom_line(data = preds_graf_tbl, aes(y = .pred, colour = predictor), size = 1.1) +
+  geom_line(data = preds_graf_tbl, aes(y = .pred, colour = predictor), 
+    linewidth = 1.1) +
   xlab("Años de estudio") + ylab("Ingreso anual (miles)")
 ```
 
