@@ -150,7 +150,7 @@ y generalmente tiene que hacerse de manera ad-hoc.
 Supongamos que nos interesa minimizar la pérdida cuadrática. Si tomamos
 una muestra muy grande (para este problema), podemos aproximar la predicción óptima directamente.
 Abajo graficamos nuestra muestra chica de datos junto con una
-buna aproximación del predictor óptimo:
+buena aproximación del predictor óptimo:
 
 ```{r, fig.width=5, fig.height=3}
 poblacion_tbl <- genera_datos(n = 50000, tipo = "poblacion")

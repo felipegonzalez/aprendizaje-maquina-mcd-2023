@@ -360,7 +360,6 @@ ggplot(casas_entrena |>
       colour = calidad_grupo)) +
   geom_point() +
   geom_smooth(method = "lm", se = FALSE, formula = "y ~ x")
-g_1
 ```
 
 Vemos que estas dos variables que hemos usado explican buena parte de la
