@@ -339,12 +339,15 @@ puede ser alta porque
 promediamos relativamente pocos vecinos.
 
 Métodos con más estructura global,  apropiada para el problema, 
-logran explotar apropiadamente
-información de puntos que no están tan cerca del lugar donde queremos predecir. 
+logran explotar información de puntos que no están tan cerca del lugar donde queremos predecir. 
 :::
 
 Muchas veces el éxito en la predicción depende de establecer esas estructuras 
-apropiadas (por ejemplo, efectos lineales cuando variables tienen efectos aproximadamente
+apropiadas ya sea mediante:
+
+- **Estructura** en nuestros modelos (por ejemplo, efectos lineales cuando variables tienen efectos aproximadamente
 lineales, árboles cuando hay algunas interacciones, redes convolucionales
 para procesamiento de imágenes y señales, dependencia del contexto inmediato en modelos
 de lenguaje, etc.)
+- **Reducción de dimensionalidad** apropiada (por ejemplo, 
+*embeddings* basados en otros modelos, o técnicas como componentes principales/descompocisión en valores singulares, etc.).

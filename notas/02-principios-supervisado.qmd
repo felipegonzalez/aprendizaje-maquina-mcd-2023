@@ -718,11 +718,12 @@ reduciendo tanto sesgo como variabilidad.
 
 
 
-## Qué cosas no veremos en este curso
+## Resolver problemas con aprendizaje automático
 
 En este curso nos concentraremos en la construcción, evaluación y mejora de 
 modelos predictivos. Para que estas ideas funcionen en problemas reales, hay
-más aspectos a considerar que no discutiremos con detalle (y muchas veces son
+más aspectos a considerar que no discutiremos con tanto detalle, pues en
+general están muy ligados al problema particular de predicción que nos interesa (y muchas veces son
 considerablemente más difíciles de la teoría y los algoritmos):
 
 
@@ -733,8 +734,8 @@ aspectos del área o negocio donde nos interesa usar aprendizaje máquina. Mucha
 veces es fácil resolver un problema muy preciso, que tenemos a la mano,
 pero que más adelante nos damos cuenta de que no es útil.
 
-- Estos dos puntos incluyen indentificar las **métricas** que queremos mejorar,
-lo cual no siempre se claro. Optimizar métricas incorrectas es poco útil en el
+- Estos dos puntos incluyen indentificar las **métricas** que queremos monitorear y mejorar,
+lo cual no siempre es claro. Optimizar métricas incorrectas es poco útil en el
 mejor de los casos, y en los peores pueden causar daños. Evitar esto requiere
 monitoreo constante de varios aspectos del funcionamiento de nuestros modelos y sus
 consecuencias.
