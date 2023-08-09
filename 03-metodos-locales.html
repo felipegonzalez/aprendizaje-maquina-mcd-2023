@@ -968,10 +968,14 @@ Métodos locales sin estructura
 <li>El sesgo es alto, pues promediamos puntos muy lejanos al lugar donde queremos predecir (aunque tomemos pocos vecinos cercanos).</li>
 <li>En el caso de que encontremos unos pocos puntos cercanos, la varianza también puede ser alta porque promediamos relativamente pocos vecinos.</li>
 </ul>
-<p>Métodos con más estructura global, apropiada para el problema, logran explotar apropiadamente información de puntos que no están tan cerca del lugar donde queremos predecir.</p>
+<p>Métodos con más estructura global, apropiada para el problema, logran explotar información de puntos que no están tan cerca del lugar donde queremos predecir.</p>
 </div>
 </div>
-<p>Muchas veces el éxito en la predicción depende de establecer esas estructuras apropiadas (por ejemplo, efectos lineales cuando variables tienen efectos aproximadamente lineales, árboles cuando hay algunas interacciones, redes convolucionales para procesamiento de imágenes y señales, dependencia del contexto inmediato en modelos de lenguaje, etc.)</p>
+<p>Muchas veces el éxito en la predicción depende de establecer esas estructuras apropiadas ya sea mediante:</p>
+<ul>
+<li><strong>Estructura</strong> en nuestros modelos (por ejemplo, efectos lineales cuando variables tienen efectos aproximadamente lineales, árboles cuando hay algunas interacciones, redes convolucionales para procesamiento de imágenes y señales, dependencia del contexto inmediato en modelos de lenguaje, etc.)</li>
+<li><strong>Reducción de dimensionalidad</strong> apropiada (por ejemplo, <em>embeddings</em> basados en otros modelos, o técnicas como componentes principales/descompocisión en valores singulares, etc.).</li>
+</ul>
 
 
 </section>
