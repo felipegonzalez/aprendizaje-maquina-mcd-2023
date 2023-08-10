@@ -17,7 +17,7 @@
 
 - Tareas semanales (20%) para discutir en clase, compartidas en el repositorio y en nuestro espacio de trabajo de Posit Cloud.
 - Examen parcial (40% práctico), con una componente oral.
-- Un examen final (20% práctico), con una componente oral.
+- Un examen final (40% práctico), con una componente oral.
 
 ### Material {-}
 
