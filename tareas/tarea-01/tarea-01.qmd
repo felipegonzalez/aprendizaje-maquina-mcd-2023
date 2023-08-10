@@ -1,0 +1,182 @@
+---
+title: "Tarea 1"
+format: html
+---
+
+
+**Pregunta 1**: Corre el siguiente código y examina el html resultante (por ejemplo
+usando el botón *render* arriba de esta ventana.
+
+```{r}
+library(tidyverse)
+library(tidymodels)
+```
+
+Función para generar datos que utilizamos en clase:
+
+```{r}
+genera_datos <- function(n = 500, tipo = NULL){
+  dat_tbl <- tibble(nse = runif(n, 0, 100)) |>
+    mutate(estudio_años = rnorm(n, 1.5 * sqrt(nse), 1)) |>
+    mutate(estudio_años = pmax(0, pmin(17, estudio_años))) |> 
+    mutate(habilidad = rnorm(n, 100 + 0.1 * nse, 1)) |> 
+    mutate(z = 100 + (habilidad/100) * ( 20 * nse + 5 * (estudio_años))) |> 
+    mutate(ingreso = pmax(0, 0.2*(z + rnorm(n, 0, 150))))
+  obs_tbl <- dat_tbl |> 
+    mutate(tipo = tipo, id = 1:n)
+  obs_tbl |> select(id, tipo, x = estudio_años, y = ingreso)
+}
+```
+
+## Muestra de entrenamiento y prueba
+
+Creamos una muestra de entrenamiento y otra de prueba generados
+por el proceso generador de arriba:
+
+```{r generar-datos}
+set.seed(12)
+entrena_tbl <- genera_datos(n = 20, tipo = "entrena")
+prueba_tbl <- genera_datos(n = 2000, tipo = "prueba")
+```
+
+## Vecinos más cercanos
+
+Hacemos k-vecinos más cercanos usando, para estimar cada predicción,
+el 10% de los datos más cercanos (en este caso, 2-vecinos más cercanos):
+
+```{r}
+# definir el modelo
+modelo_kvecinos <- nearest_neighbor(
+    neighbors = nrow(entrena_tbl) * 0.1, 
+    weight_func = "gaussian") |> 
+  set_mode("regression") |> 
+  set_engine("kknn")
+# definir preprocesamiento
+receta <- recipe(y ~ x, data = entrena_tbl |> select(x, y))
+# el flujo incluye preprocesamiento y ajuste
+flujo_vecinos <- workflow() |> 
+  add_recipe(receta) |> 
+  add_model(modelo_kvecinos)
+# Ajustamos flujo a los datos de entrenamiento
+flujo_ajustado_vecinos <- fit(flujo_vecinos, entrena_tbl)
+```
+
+Evaluación con la muestra de prueba:
+
+
+```{r}
+eval_tbl <- bind_rows(prueba_tbl, entrena_tbl) 
+resumen_vmc_tbl <- 
+  predict(flujo_ajustado_vecinos, eval_tbl) |> 
+  mutate(predictor = "vecinos") |> 
+  bind_cols(eval_tbl) |> 
+  group_by(predictor, tipo) |> 
+  rmse(truth = y, estimate = .pred) 
+resumen_vmc_tbl
+```
+
+En este caso, podemos graficar cómo se comporta nuestra predicción
+para cada valor de la variable $x$ de entrada:
+
+```{r}
+años_x <- tibble(x = seq(0, 17, by = 0.5))
+preds_vmc <- predict(flujo_ajustado_vecinos, años_x) |> 
+  bind_cols(años_x) |> mutate(predictor = "vecinos")
+preds_graf_tbl <- preds_vmc
+ggplot(entrena_tbl, aes(x = x)) +
+  geom_line(data = preds_graf_tbl, 
+            aes(y = .pred, group = predictor), linewidth = 1.1) +
+  geom_point(aes(y = y), colour = "red") 
+```
+
+
+## Regresión lineal
+
+```{r}
+modelo_lineal <- linear_reg() |> 
+  set_mode("regression") |> 
+  set_engine("lm")
+flujo_lineal <- workflow() |> 
+  add_recipe(receta) |> 
+  add_model(modelo_lineal)
+# Ajustamos
+flujo_ajustado_lineal <- fit(flujo_lineal, entrena_tbl)
+```
+
+Hacemos predicciones y calculamos el error:
+
+```{r}
+eval_tbl <- bind_rows(prueba_tbl, entrena_tbl) 
+resumen_lineal_tbl <- 
+  predict(flujo_ajustado_lineal, eval_tbl) |> 
+  mutate(predictor = "lineal") |> 
+  bind_cols(eval_tbl) |> 
+  group_by(predictor, tipo) |> 
+  rmse(truth = y, estimate = .pred) 
+resumen_lineal_tbl
+```
+
+```{r}
+preds_1 <- predict(flujo_ajustado_lineal, tibble(x = 0:17)) |> 
+  bind_cols(tibble(x = 0:17, predictor = "lineal"))
+preds_graf_tbl <- bind_rows(preds_1, preds_graf_tbl)
+ggplot(entrena_tbl, aes(x = x)) +
+  geom_point(aes(y = y), colour = "red") +
+  geom_line(data = preds_graf_tbl |> filter(predictor %in% c("lineal")), 
+            aes(y = .pred, group = predictor), linewidth = 1.1) 
+```
+
+## Diagnosticando los métodos
+
+**Pregunta 2**: ¿qué método se desempeña mejor para esta muestra de
+entrenamiento? ¿Cuál es el problema más visible en el método de 2-vecinos
+más cercanos que utilizamos aquí?
+
+
+**Pregunta 3**: Confirma tus observaciones de la pregunta anterior ajustando
+vecinos más cercanos para distintas muestras de entrenamiento (al menos cinco),
+cambiando la semilla en la línea 37. ¿Qué tanto varían las predicciones
+de 2-vecinos más cercanos? ¿Qué tanto varía la recta ajustada?
+
+## Incrementando el tamaño de muestra
+
+**Pregunta 4**: supongamos que usamos una muestra más grande de entrenamiento.
+Utiliza el siguiente código para evaluar distintas muestras, y explica qué tanto
+varian las predicciones de k-vecinos más cercanos de muestra a muestra. ¿Cuántos
+vecinos se están usando en este ejemplo para estimar cada predicción?
+
+```{r}
+set.seed(3412)
+entrena_tbl <- genera_datos(n = 2000, tipo = "entrena")
+# ajustar el mismo flujo con otra muestra
+flujo_ajustado_vecinos_grande <- fit(flujo_vecinos, entrena_tbl)
+# graficar
+años_x <- tibble(x = seq(0, 17, by = 0.5))
+preds_vmc <- predict(flujo_ajustado_vecinos_grande, años_x) |> 
+  bind_cols(años_x) |> mutate(predictor = "vecinos")
+preds_graf_tbl <- preds_vmc
+ggplot(entrena_tbl, aes(x = x)) +
+  geom_line(data = preds_graf_tbl, 
+            aes(y = .pred, group = predictor), linewidth = 1.1) +
+  geom_point(aes(y = y), colour = "red", alpha = 0.2) 
+```
+
+**Pregunta 5**: Verifica que el desempeño es mejor. ¿Dónde notas que
+este modelo no sobreajusta, comparado con la muestra de tamaño 20 que
+vimos arriba?
+
+```{r}
+eval_tbl <- bind_rows(prueba_tbl, entrena_tbl) 
+resumen_vmc_tbl <- 
+  predict(flujo_ajustado_vecinos_grande, eval_tbl) |> 
+  mutate(predictor = "vecinos") |> 
+  bind_cols(eval_tbl) |> 
+  group_by(predictor, tipo) |> 
+  rmse(truth = y, estimate = .pred) 
+resumen_vmc_tbl
+```
+
+**Pregunta 6**: ¿Qué tanto crees que cambie el método lineal si incrementamos
+el tamaño de muestra? ¿Crees que el desempeño en la muestra de prueba mejorará
+considerablemente en el método lineal? ¿Crees que las rectas ajustadas van a ser muy diferentes
+comparados con el caso donde la muestra de entrenamiento es de tamaño 20?
