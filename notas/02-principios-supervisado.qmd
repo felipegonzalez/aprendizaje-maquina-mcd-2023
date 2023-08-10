@@ -157,7 +157,7 @@ poblacion_tbl <- genera_datos(n = 50000, tipo = "poblacion")
 # calcular óptimo
 preds_graf_tbl <- poblacion_tbl |> 
   group_by(x) |> # condicionar a x
-  summarise(.pred = mean(y)) |> # mediana, pues usamos pérdida absoluta
+  summarise(.pred = mean(y)) |> # media en cada grupo
   mutate(predictor = "_óptimo")
 # graficar con una muestra grande
 ggplot(datos_tbl, aes(x = x)) +
