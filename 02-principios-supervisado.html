@@ -311,7 +311,7 @@ Generalmente es una combinación de costos/beneficios del problema que tratamos,
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="co"># calcular óptimo</span></span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>preds_graf_tbl <span class="ot">&lt;-</span> poblacion_tbl <span class="sc">|&gt;</span> </span>
 <span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(x) <span class="sc">|&gt;</span> <span class="co"># condicionar a x</span></span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">.pred =</span> <span class="fu">mean</span>(y)) <span class="sc">|&gt;</span> <span class="co"># mediana, pues usamos pérdida absoluta</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">.pred =</span> <span class="fu">mean</span>(y)) <span class="sc">|&gt;</span> <span class="co"># media en cada grupo</span></span>
 <span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">predictor =</span> <span class="st">"_óptimo"</span>)</span>
 <span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="co"># graficar con una muestra grande</span></span>
 <span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(datos_tbl, <span class="fu">aes</span>(<span class="at">x =</span> x)) <span class="sc">+</span></span>
