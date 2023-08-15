@@ -2958,10 +2958,11 @@ Descomposición sesgo-varianza
 </div>
 <p>Esto patrón sugiere que:</p>
 <ul>
-<li><p>Nuestro método de vecinos más cercanos no tiene errores por sesgo, sino más bien por sobreajuste o variabilidad.</p></li>
-<li><p>Nuestro método lineal no tiene mucha variabilidad (el estimado con una muestra grande es casi igual al de la muestra de entrenamiento), sino más bien por sesgo</p></li>
+<li><p>Nuestro método de vecinos más cercanos tiene errores bajos por sesgo, pero tiene error considerable por sobreajuste o variabilidad.</p></li>
+<li><p>Nuestro método lineal no tiene mucha variabilidad (el estimado con una muestra grande es casi igual al de la muestra de entrenamiento), sino más bien por sesgo.</p></li>
 <li><p>El error por sesgo se reduce usando métodos más flexibles o menos restringidos que puedan capturar patrones claros en los datos.</p></li>
 <li><p>Para reducir la variabilidad podemos usar métodos más simples o restringidos que no capturen tanto ruido.</p></li>
+<li><p>El balance de complejidad correcto depende del tamaño de muestra de entrenamiento.</p></li>
 <li><p>El error irreducible se puede reducir incorporando información adicional relevante a las entradas.</p></li>
 </ul>
 <div class="callout callout-style-default callout-note callout-titled">
@@ -2974,6 +2975,7 @@ Complejidad y error de predicción
 </div>
 </div>
 <div class="callout-body-container callout-body">
+<p>Para un tamaño de muestra de entrenamiento fijo,</p>
 <ul>
 <li>Métodos de predicción más flexibles o complejos tienden a sufrir más de error por variabilidad, pues dependen fuertemente de la muestra utilizada.</li>
 <li>Métodos de predicción más rígidos o simples tienden a sufrir más error por sesgo, pues dependen menos de la muestra utilizada.</li>
@@ -3984,6 +3986,7 @@ Tarea fundamental del análisis supervisado
 <ul>
 <li>Nótese que el error de entrenamiento se calcula sobre la muestra <span class="math inline">\({\mathcal L}\)</span> que se usó para construir <span class="math inline">\(\hat{f}\)</span>, mientras que el error de predicción se estima usando una muestra independiente <span class="math inline">\({\mathcal T}\)</span>.</li>
 <li><span class="math inline">\(\hat{Err}\)</span> es una estimación razonable de el error de predicción <span class="math inline">\(Err\)</span> (por ejemplo, <span class="math inline">\(\hat{Err} \to Err\)</span> cuando el tamaño de la muestra de prueba crece), pero <span class="math inline">\(\overline{err}\)</span> típicamente es <strong>una estimación mala del error de predicción</strong>.</li>
+<li>Nótese también que aunque generalmente podemos ajustar reduciendo el error de <em>entrenamiento</em>, lo que queremos es reducir el error de <em>prueba</em>: es decir, el error <em>fuera</em> de la muestra de entrenamiento.</li>
 </ul>
 <div class="callout callout-style-default callout-note callout-titled">
 <div class="callout-header d-flex align-content-center">
