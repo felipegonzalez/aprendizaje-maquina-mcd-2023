@@ -1,0 +1,2197 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="es" xml:lang="es"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.3.353">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Aprendizaje Máquina - 5&nbsp; Regularización y variabilidad</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./81-apendice-descenso.html" rel="next">
+<link href="./04-lineales-ingenieria.html" rel="prev">
+<script src="site_libs/quarto-html/quarto.js"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 20,
+  "language": {
+    "search-no-results-text": "Sin resultados",
+    "search-matching-documents-text": "documentos encontrados",
+    "search-copy-link-title": "Copiar el enlace en la búsqueda",
+    "search-hide-matches-text": "Ocultar resultados adicionales",
+    "search-more-match-text": "resultado adicional en este documento",
+    "search-more-matches-text": "resultados adicionales en este documento",
+    "search-clear-button-title": "Borrar",
+    "search-detached-cancel-button-title": "Cancelar",
+    "search-submit-button-title": "Enviar"
+  }
+}</script>
+
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+</head>
+
+<body class="nav-sidebar floating">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Alternar barra lateral" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+      <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./05-regularizacion-1.html"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Regularización y variabilidad</span></a></li></ol></nav>
+      <a class="flex-grow-1" role="button" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Alternar barra lateral" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+      </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Buscar" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./">Aprendizaje Máquina</a> 
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Buscar"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Temario y referencias</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./01-introduccion.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Introducción</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./02-principios-supervisado.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Principios de aprendizaje supervisado</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./03-metodos-locales.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Métodos locales no estructurados</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./04-lineales-ingenieria.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Métodos lineales e ingenería de entradas</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./05-regularizacion-1.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Regularización y variabilidad</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-expanded="true">
+ <span class="menu-text">Appendices</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-expanded="true" aria-label="Alternar sección">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./81-apendice-descenso.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">A</span>&nbsp; <span class="chapter-title">Apéndice 1: descenso en gradiente</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./82-apendice-descenso-estocastico.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">B</span>&nbsp; <span class="chapter-title">Apéndice 2: Descenso estocástico</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./99-referencias.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Referencias</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Tabla de contenidos</h2>
+   
+  <ul>
+  <li><a href="#ejemplo-datos-simulados-y-varianza" id="toc-ejemplo-datos-simulados-y-varianza" class="nav-link active" data-scroll-target="#ejemplo-datos-simulados-y-varianza"><span class="header-section-number">5.1</span> Ejemplo: datos simulados y varianza</a></li>
+  <li><a href="#ejemplo-controlando-la-varianza" id="toc-ejemplo-controlando-la-varianza" class="nav-link" data-scroll-target="#ejemplo-controlando-la-varianza"><span class="header-section-number">5.2</span> Ejemplo: controlando la varianza</a></li>
+  <li><a href="#ejemplo-2-penalización-y-estimaciones-ruidosas" id="toc-ejemplo-2-penalización-y-estimaciones-ruidosas" class="nav-link" data-scroll-target="#ejemplo-2-penalización-y-estimaciones-ruidosas"><span class="header-section-number">5.3</span> Ejemplo 2: penalización y estimaciones ruidosas</a></li>
+  <li><a href="#regresión-ridge-escogiendo-el-parámetro-de-complejidad" id="toc-regresión-ridge-escogiendo-el-parámetro-de-complejidad" class="nav-link" data-scroll-target="#regresión-ridge-escogiendo-el-parámetro-de-complejidad"><span class="header-section-number">5.4</span> Regresión ridge: escogiendo el parámetro de complejidad</a></li>
+  <li><a href="#regresión-lasso" id="toc-regresión-lasso" class="nav-link" data-scroll-target="#regresión-lasso"><span class="header-section-number">5.5</span> Regresión lasso</a></li>
+  <li><a href="#lasso-vs-ridge" id="toc-lasso-vs-ridge" class="nav-link" data-scroll-target="#lasso-vs-ridge"><span class="header-section-number">5.6</span> Lasso vs Ridge</a></li>
+  <li><a href="#regularización-con-descenso-en-gradiente" id="toc-regularización-con-descenso-en-gradiente" class="nav-link" data-scroll-target="#regularización-con-descenso-en-gradiente"><span class="header-section-number">5.7</span> Regularización con descenso en gradiente</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Regularización y variabilidad</span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+</header>
+
+<p>Como vimos en el ejemplo anterior, en algunos casos podemos construir modelos lineales de complejidad considerable (por ejemplo, transformando variables, incluyendo interacciones). De manera que aún cuando muchas veces se considera un modelo lineal como “simple” o de “baja complejidad”, es posible que la variabilidad de las estimaciones sea grande y sobreajustar.</p>
+<p>Veamos primero un ejemplo simulado.</p>
+<section id="ejemplo-datos-simulados-y-varianza" class="level2" data-number="5.1">
+<h2 data-number="5.1" class="anchored" data-anchor-id="ejemplo-datos-simulados-y-varianza"><span class="header-section-number">5.1</span> Ejemplo: datos simulados y varianza</h2>
+<p>Consideremos un problema donde tenemos unas 100 entradas con 120 casos. Supondremos que la función verdadera es</p>
+<p><span class="math display">\[f(x) = \sum_{j=1}^{100} \beta_j x_j\]</span></p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(gt)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">28015</span>)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>beta_vec <span class="ot">&lt;-</span> <span class="fu">rnorm</span>(<span class="dv">100</span>, <span class="dv">0</span>, <span class="fl">0.2</span>)</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>p <span class="ot">&lt;-</span> <span class="fu">length</span>(beta_vec)</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>beta <span class="ot">&lt;-</span> <span class="fu">tibble</span>(<span class="at">term =</span> <span class="fu">str_c</span>(<span class="st">'V'</span>, <span class="dv">1</span><span class="sc">:</span>p), <span class="at">valor =</span> beta_vec)</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(beta)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 6 × 2
+  term     valor
+  &lt;chr&gt;    &lt;dbl&gt;
+1 V1    -0.121  
+2 V2     0.0374 
+3 V3    -0.129  
+4 V4     0.240  
+5 V5    -0.00962
+6 V6    -0.0443 </code></pre>
+</div>
+</div>
+<p>Simulamos datos:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>sim_datos <span class="ot">&lt;-</span> <span class="cf">function</span>(n, beta){</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  p <span class="ot">&lt;-</span> <span class="fu">nrow</span>(beta)</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  mat_x <span class="ot">&lt;-</span> <span class="fu">matrix</span>(<span class="fu">rnorm</span>(n <span class="sc">*</span> p, <span class="dv">0</span>, <span class="dv">1</span>), n, p) <span class="sc">+</span> <span class="fu">rnorm</span>(n, <span class="dv">0</span>, <span class="dv">5</span>) </span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">colnames</span>(mat_x) <span class="ot">&lt;-</span> beta <span class="sc">|&gt;</span> <span class="fu">pull</span>(term)</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  beta_vec <span class="ot">&lt;-</span> beta <span class="sc">|&gt;</span> <span class="fu">pull</span>(valor)</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  f_x <span class="ot">&lt;-</span> mat_x <span class="sc">%*%</span> beta_vec </span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  y <span class="ot">&lt;-</span> <span class="fu">as.numeric</span>(f_x) <span class="sc">+</span> <span class="fu">rnorm</span>(n, <span class="dv">0</span>, <span class="dv">1</span>)</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>  datos <span class="ot">&lt;-</span> <span class="fu">as_tibble</span>(mat_x) </span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>  datos <span class="sc">|&gt;</span> <span class="fu">mutate</span>(<span class="at">y =</span> y)</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>datos <span class="ot">&lt;-</span> <span class="fu">sim_datos</span>(<span class="at">n =</span> <span class="dv">4000</span>, <span class="at">beta =</span> beta)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Separamos datos de entrenamiento y prueba y definimos y ajustamos un predictor lineal:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidymodels)</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">994</span>)</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>n_entrena <span class="ot">&lt;-</span> <span class="fu">nrow</span>(datos) <span class="sc">*</span> <span class="fl">0.03</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>separacion <span class="ot">&lt;-</span> <span class="fu">initial_split</span>(datos, <span class="fl">0.03</span>)</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>dat_ent <span class="ot">&lt;-</span> <span class="fu">training</span>(separacion)</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>modelo <span class="ot">&lt;-</span>  <span class="fu">linear_reg</span>() <span class="sc">|&gt;</span> <span class="fu">set_engine</span>(<span class="st">"lm"</span>)</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>receta <span class="ot">&lt;-</span> <span class="fu">recipe</span>(y <span class="sc">~</span> ., dat_ent)</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>flujo <span class="ot">&lt;-</span> <span class="fu">workflow</span>() <span class="sc">|&gt;</span> </span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add_model</span>(modelo) <span class="sc">|&gt;</span> </span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add_recipe</span>(receta)</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>flujo_ajustado <span class="ot">&lt;-</span> <span class="fu">fit</span>(flujo, dat_ent)</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>mod_1  <span class="ot">&lt;-</span> flujo_ajustado <span class="sc">|&gt;</span> <span class="fu">extract_fit_engine</span>()</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Extraemos los coeficientes y graficamos ajustados contra verdaderos:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>coefs_1 <span class="ot">&lt;-</span> <span class="fu">tidy</span>(mod_1) <span class="sc">|&gt;</span> </span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(beta, <span class="at">by =</span> <span class="st">"term"</span>)</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(coefs_1 <span class="sc">|&gt;</span> <span class="fu">filter</span>(term <span class="sc">!=</span> <span class="st">"(Intercept)"</span>), </span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>       <span class="fu">aes</span>(<span class="at">x =</span> valor, <span class="at">y =</span> estimate)) <span class="sc">+</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>() <span class="sc">+</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">xlab</span>(<span class="st">'Coeficientes verdaderos'</span>) <span class="sc">+</span> </span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ylab</span>(<span class="st">'Coeficientes estimados'</span>) <span class="sc">+</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_abline</span>() </span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="05-regularizacion-1_files/figure-html/unnamed-chunk-5-1.png" class="img-fluid" width="384"></p>
+</div>
+</div>
+<p>Y notamos que las estimaciones no son buenas. Podemos hacer otra simulación para confirmar que el problema es que las estimaciones son muy variables.</p>
+<p>Con otra muestra de entrenamiento, vemos que las estimaciones tienen varianza alta.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>datos_ent_2 <span class="ot">&lt;-</span> <span class="fu">sim_datos</span>(<span class="at">n =</span> <span class="dv">120</span>, <span class="at">beta =</span> beta)</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>mod_2 <span class="ot">&lt;-</span> <span class="fu">fit</span>(flujo, datos_ent_2) <span class="sc">|&gt;</span> <span class="fu">extract_fit_engine</span>()</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>coefs_2 <span class="ot">&lt;-</span> <span class="fu">tidy</span>(mod_2)</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="fu">qplot</span>(coefs_1<span class="sc">$</span>estimate, coefs_2<span class="sc">$</span>estimate) <span class="sc">+</span> <span class="fu">xlab</span>(<span class="st">'Coeficientes mod 1'</span>) <span class="sc">+</span> </span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ylab</span>(<span class="st">'Coeficientes mod 2'</span>) <span class="sc">+</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_abline</span>(<span class="at">intercept=</span><span class="dv">0</span>, <span class="at">slope =</span><span class="dv">1</span>)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: `qplot()` was deprecated in ggplot2 3.4.0.</code></pre>
+</div>
+<div class="cell-output-display">
+<p><img src="05-regularizacion-1_files/figure-html/unnamed-chunk-6-1.png" class="img-fluid" width="384"></p>
+</div>
+</div>
+<p>En la práctica, nosotros tenemos una sola muestra de entrenamiento. Así que, con una muestra de tamaño<br>
+<span class="math inline">\(n=120\)</span> como en este ejemplo, obtendremos típicamente resultados no muy buenos. Estos coeficientes ruidosos afectan nuestras predicciones de manera negativa, aún cuando el modelo ajustado parece reproducir razonablemente bien la variable respuesta:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(patchwork)</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>dat_pr <span class="ot">&lt;-</span> <span class="fu">testing</span>(separacion)</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>preds_entrena <span class="ot">&lt;-</span> <span class="fu">predict</span>(flujo_ajustado, dat_ent) <span class="sc">|&gt;</span> </span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">bind_cols</span>(dat_ent <span class="sc">|&gt;</span> <span class="fu">select</span>(y))</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>preds_prueba <span class="ot">&lt;-</span> <span class="fu">predict</span>(flujo_ajustado, dat_pr) <span class="sc">|&gt;</span> </span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">bind_cols</span>(dat_pr <span class="sc">|&gt;</span> <span class="fu">select</span>(y))</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>g_1 <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(preds_entrena, <span class="fu">aes</span>(<span class="at">x =</span> .pred, <span class="at">y =</span> y)) <span class="sc">+</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_abline</span>(<span class="at">colour =</span> <span class="st">"red"</span>) <span class="sc">+</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>() <span class="sc">+</span> </span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">xlab</span>(<span class="st">"Predicción"</span>) <span class="sc">+</span> <span class="fu">ylab</span>(<span class="st">"y"</span>) <span class="sc">+</span></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">subtitle =</span> <span class="st">"Muestra de entrenamiento"</span>)</span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>g_2 <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(preds_prueba, <span class="fu">aes</span>(<span class="at">x =</span> .pred, <span class="at">y =</span> y)) <span class="sc">+</span> </span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_abline</span>(<span class="at">colour =</span> <span class="st">"red"</span>) <span class="sc">+</span></span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>() <span class="sc">+</span> </span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">xlab</span>(<span class="st">"Predicción"</span>) <span class="sc">+</span> <span class="fu">ylab</span>(<span class="st">"y"</span>) <span class="sc">+</span></span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">subtitle =</span> <span class="st">"Muestra de prueba"</span>)</span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>g_1 <span class="sc">+</span> g_2</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="05-regularizacion-1_files/figure-html/unnamed-chunk-7-1.png" class="img-fluid" width="864"></p>
+</div>
+</div>
+</section>
+<section id="ejemplo-controlando-la-varianza" class="level2" data-number="5.2">
+<h2 data-number="5.2" class="anchored" data-anchor-id="ejemplo-controlando-la-varianza"><span class="header-section-number">5.2</span> Ejemplo: controlando la varianza</h2>
+<p>Como el problema es la variabilidad de los coeficientes (en este ejemplo sabemos que no hay sesgo pues conocemos el modelo verdadero), podemos atacar este problema poniendo restricciones a los coeficientes, de manera que caigan en rangos más aceptables.</p>
+<p>Una manera de hacer esto es restringir el rango de los coeficientes cambiando la función que minimizamos para ajustar el modelo lineal. Recordamos que la cantidad que queremos minimizar es</p>
+<p><span class="math display">\[D(\beta) = D(a_0, \beta_1, \ldots, \beta_p) = \sum_{i=1}^N (y^{(i)} - f_\beta (x^{(i)}))^2 = \sum_{i=1}^N (y^{(i)} - \beta_0 - \beta_1 x_1^{(i)}-\beta_2x_2^{(i)} - \cdots - \beta_px_p^{(i)})^2\]</span></p>
+<p>donde la suma es sobre los datos de entrenamiento. Queremos encontrar <span class="math inline">\(a =(\beta_0, \beta_1, \ldots, \beta_p)\)</span> para resolver</p>
+<p><span class="math display">\[\min_\beta D(\beta)\]</span></p>
+<p>En el ejemplo que estamos considerando, vemos que existe mucha variación en los coeficientes obtenidos de muestra de entrenamiento a muestra de entrenamiento, y que algunos de ellos toman valores muy grandes positivos o negativos. Podemos entonces intentar resolver mejor el problema penalizado</p>
+<p><span class="math display">\[\min_\beta D(\beta) + \lambda \sum_{j=1}^p \beta_j^2\]</span></p>
+<p>Si escogemos un valor relativamente grande de <span class="math inline">\(\lambda &gt; 0\)</span>, entonces terminaremos con una solución donde los coeficientes<br>
+no pueden alejarse mucho de 0, y esto previene parte del sobreajuste que observamos en nuestro primer ajuste. Otra manera de decir esto es: intentamos minimizar cuadrados, pero no permitimos que los coeficientes se alejen demasiado de cero, o ponemos un costo a soluciones que intentan “mover” mucho los coeficientes para ajustar mejor al conjunto de entrenamiento.</p>
+<ul>
+<li>Normalmente normalizamos las variables de entrada <span class="math inline">\(x\)</span> para que tenga sentido normalizar todos los coeficientes con una misma <span class="math inline">\(\lambda\)</span>.</li>
+<li>También es posible poner restricciones sobre el tamaño de <span class="math inline">\(\sum_j \beta_j^2\)</span>, lo cual es equivalente al problema de penalización.</li>
+<li>Usualmente no penalizamos la constante <span class="math inline">\(\beta_0\)</span>, de forma que si <span class="math inline">\(\lambda\)</span> es muy grande, nuestro modelo ajustado predice simplemente la media de los datos de entrenamiento.</li>
+<li>Este tipo de penalización se llama muchas veces <span class="math inline">\(L_2\)</span>, o penalización <em>ridge</em>.</li>
+</ul>
+<p>En este caso obtenemos:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>modelo_reg <span class="ot">&lt;-</span>  <span class="fu">linear_reg</span>(<span class="at">mixture =</span> <span class="dv">0</span>, <span class="at">penalty =</span> <span class="fl">0.1</span>) <span class="sc">|&gt;</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_engine</span>(<span class="st">"glmnet"</span>, <span class="at">lambda.min.ratio =</span> <span class="dv">0</span>)</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>flujo_reg <span class="ot">&lt;-</span> <span class="fu">workflow</span>() <span class="sc">|&gt;</span> </span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add_model</span>(modelo_reg) <span class="sc">|&gt;</span> </span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add_recipe</span>(receta)</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>flujo_reg <span class="ot">&lt;-</span> <span class="fu">fit</span>(flujo_reg, dat_ent)</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>mod_reg  <span class="ot">&lt;-</span> flujo_reg <span class="sc">|&gt;</span> <span class="fu">extract_fit_parsnip</span>()</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Los coeficientes del modelo penalizado son:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>coefs_penalizado <span class="ot">&lt;-</span> <span class="fu">tidy</span>(mod_reg) </span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Loading required package: Matrix</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>
+Attaching package: 'Matrix'</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>The following objects are masked from 'package:tidyr':
+
+    expand, pack, unpack</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Loaded glmnet 4.1-7</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>coefs_penalizado</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 101 × 3
+   term        estimate penalty
+   &lt;chr&gt;          &lt;dbl&gt;   &lt;dbl&gt;
+ 1 (Intercept)  -0.236      0.1
+ 2 V1           -0.0774     0.1
+ 3 V2            0.0340     0.1
+ 4 V3           -0.0405     0.1
+ 5 V4            0.151      0.1
+ 6 V5            0.150      0.1
+ 7 V6            0.114      0.1
+ 8 V7           -0.207      0.1
+ 9 V8            0.0148     0.1
+10 V9            0.191      0.1
+# ℹ 91 more rows</code></pre>
+</div>
+</div>
+<p>Nótese que efectivamente la suma de cuadrados de los coeficientes penalizados es considerablemente más chica que las del modelo no penalizado:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sum</span>(coefs_penalizado<span class="sc">$</span>estimate[<span class="sc">-</span><span class="dv">1</span>]<span class="sc">^</span><span class="dv">2</span>)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 1.957447</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sum</span>(coefs_1<span class="sc">$</span>estimate[<span class="sc">-</span><span class="dv">1</span>]<span class="sc">^</span><span class="dv">2</span>)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 12.59754</code></pre>
+</div>
+</div>
+<p>Los nuevos coeficientes estimados tienen menor variación, y están más cercanos a los valores reales:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="fu">qplot</span>(coefs_1<span class="sc">$</span>valor[<span class="sc">-</span><span class="dv">1</span>], coefs_penalizado<span class="sc">$</span>estimate[<span class="sc">-</span><span class="dv">1</span>]) <span class="sc">+</span> </span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">xlab</span>(<span class="st">'Coeficientes'</span>) <span class="sc">+</span> </span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ylab</span>(<span class="st">'Coeficientes estimados'</span>) <span class="sc">+</span></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_abline</span>()</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="05-regularizacion-1_files/figure-html/unnamed-chunk-12-1.png" class="img-fluid" width="384"></p>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>preds_prueba_2 <span class="ot">&lt;-</span> <span class="fu">predict</span>(mod_reg, dat_pr) <span class="sc">|&gt;</span> </span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">bind_cols</span>(dat_pr <span class="sc">|&gt;</span> <span class="fu">select</span>(y))</span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>preds_prueba_ambas <span class="ot">&lt;-</span> <span class="fu">bind_rows</span>(</span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>          preds_prueba <span class="sc">|&gt;</span> <span class="fu">mutate</span>(<span class="at">tipo =</span> <span class="st">"sin penalizar"</span>),</span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>          preds_prueba_2 <span class="sc">|&gt;</span> <span class="fu">mutate</span>(<span class="at">tipo =</span> <span class="st">"penalizado"</span>))</span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(preds_prueba_ambas, <span class="fu">aes</span>(<span class="at">x =</span> y, <span class="at">y =</span> .pred)) <span class="sc">+</span></span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_abline</span>(<span class="at">colour =</span> <span class="st">"red"</span>) <span class="sc">+</span></span>
+<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">alpha =</span> <span class="fl">0.3</span>) <span class="sc">+</span> </span>
+<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">xlab</span>(<span class="st">"Predicción"</span>) <span class="sc">+</span> <span class="fu">ylab</span>(<span class="st">"y"</span>) <span class="sc">+</span></span>
+<span id="cb22-10"><a href="#cb22-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_wrap</span>(<span class="sc">~</span> tipo, <span class="at">nrow =</span> <span class="dv">1</span>) <span class="sc">+</span> </span>
+<span id="cb22-11"><a href="#cb22-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">subtitle =</span> <span class="st">"Muestra de prueba"</span>) </span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="05-regularizacion-1_files/figure-html/unnamed-chunk-13-1.png" class="img-fluid" width="768"></p>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>metricas <span class="ot">&lt;-</span> <span class="fu">metric_set</span>(mae, rmse)</span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>res_1 <span class="ot">&lt;-</span> <span class="fu">metricas</span>(preds_prueba, <span class="at">truth =</span> y, <span class="at">estimate =</span> .pred) <span class="sc">|&gt;</span> </span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">tipo =</span> <span class="st">"no penalizado"</span>)</span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>res_2 <span class="ot">&lt;-</span> <span class="fu">metricas</span>(preds_prueba_2, <span class="at">truth =</span> y, <span class="at">estimate =</span> .pred) <span class="sc">|&gt;</span> </span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">tipo =</span> <span class="st">"penalizado"</span>)</span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a><span class="fu">bind_rows</span>(res_1, res_2) <span class="sc">|&gt;</span></span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(.metric) <span class="sc">|&gt;</span> </span>
+<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">gt</span>() <span class="sc">|&gt;</span> <span class="fu">fmt_number</span>(.estimate, <span class="at">decimals =</span> <span class="dv">2</span>)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+
+<div id="bbunkxdhkd" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<style>#bbunkxdhkd table {
+  font-family: system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#bbunkxdhkd thead, #bbunkxdhkd tbody, #bbunkxdhkd tfoot, #bbunkxdhkd tr, #bbunkxdhkd td, #bbunkxdhkd th {
+  border-style: none;
+}
+
+#bbunkxdhkd p {
+  margin: 0;
+  padding: 0;
+}
+
+#bbunkxdhkd .gt_table {
+  display: table;
+  border-collapse: collapse;
+  line-height: normal;
+  margin-left: auto;
+  margin-right: auto;
+  color: #333333;
+  font-size: 16px;
+  font-weight: normal;
+  font-style: normal;
+  background-color: #FFFFFF;
+  width: auto;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #A8A8A8;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #A8A8A8;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+}
+
+#bbunkxdhkd .gt_caption {
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+
+#bbunkxdhkd .gt_title {
+  color: #333333;
+  font-size: 125%;
+  font-weight: initial;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-color: #FFFFFF;
+  border-bottom-width: 0;
+}
+
+#bbunkxdhkd .gt_subtitle {
+  color: #333333;
+  font-size: 85%;
+  font-weight: initial;
+  padding-top: 3px;
+  padding-bottom: 5px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-color: #FFFFFF;
+  border-top-width: 0;
+}
+
+#bbunkxdhkd .gt_heading {
+  background-color: #FFFFFF;
+  text-align: center;
+  border-bottom-color: #FFFFFF;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#bbunkxdhkd .gt_bottom_border {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#bbunkxdhkd .gt_col_headings {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#bbunkxdhkd .gt_col_heading {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 6px;
+  padding-left: 5px;
+  padding-right: 5px;
+  overflow-x: hidden;
+}
+
+#bbunkxdhkd .gt_column_spanner_outer {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  padding-top: 0;
+  padding-bottom: 0;
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
+#bbunkxdhkd .gt_column_spanner_outer:first-child {
+  padding-left: 0;
+}
+
+#bbunkxdhkd .gt_column_spanner_outer:last-child {
+  padding-right: 0;
+}
+
+#bbunkxdhkd .gt_column_spanner {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  overflow-x: hidden;
+  display: inline-block;
+  width: 100%;
+}
+
+#bbunkxdhkd .gt_spanner_row {
+  border-bottom-style: hidden;
+}
+
+#bbunkxdhkd .gt_group_heading {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  text-align: left;
+}
+
+#bbunkxdhkd .gt_empty_group_heading {
+  padding: 0.5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: middle;
+}
+
+#bbunkxdhkd .gt_from_md > :first-child {
+  margin-top: 0;
+}
+
+#bbunkxdhkd .gt_from_md > :last-child {
+  margin-bottom: 0;
+}
+
+#bbunkxdhkd .gt_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  margin: 10px;
+  border-top-style: solid;
+  border-top-width: 1px;
+  border-top-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  overflow-x: hidden;
+}
+
+#bbunkxdhkd .gt_stub {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#bbunkxdhkd .gt_stub_row_group {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+  vertical-align: top;
+}
+
+#bbunkxdhkd .gt_row_group_first td {
+  border-top-width: 2px;
+}
+
+#bbunkxdhkd .gt_row_group_first th {
+  border-top-width: 2px;
+}
+
+#bbunkxdhkd .gt_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#bbunkxdhkd .gt_first_summary_row {
+  border-top-style: solid;
+  border-top-color: #D3D3D3;
+}
+
+#bbunkxdhkd .gt_first_summary_row.thick {
+  border-top-width: 2px;
+}
+
+#bbunkxdhkd .gt_last_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#bbunkxdhkd .gt_grand_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#bbunkxdhkd .gt_first_grand_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-style: double;
+  border-top-width: 6px;
+  border-top-color: #D3D3D3;
+}
+
+#bbunkxdhkd .gt_last_grand_summary_row_top {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-style: double;
+  border-bottom-width: 6px;
+  border-bottom-color: #D3D3D3;
+}
+
+#bbunkxdhkd .gt_striped {
+  background-color: rgba(128, 128, 128, 0.05);
+}
+
+#bbunkxdhkd .gt_table_body {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#bbunkxdhkd .gt_footnotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#bbunkxdhkd .gt_footnote {
+  margin: 0px;
+  font-size: 90%;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#bbunkxdhkd .gt_sourcenotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#bbunkxdhkd .gt_sourcenote {
+  font-size: 90%;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#bbunkxdhkd .gt_left {
+  text-align: left;
+}
+
+#bbunkxdhkd .gt_center {
+  text-align: center;
+}
+
+#bbunkxdhkd .gt_right {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+#bbunkxdhkd .gt_font_normal {
+  font-weight: normal;
+}
+
+#bbunkxdhkd .gt_font_bold {
+  font-weight: bold;
+}
+
+#bbunkxdhkd .gt_font_italic {
+  font-style: italic;
+}
+
+#bbunkxdhkd .gt_super {
+  font-size: 65%;
+}
+
+#bbunkxdhkd .gt_footnote_marks {
+  font-size: 75%;
+  vertical-align: 0.4em;
+  position: initial;
+}
+
+#bbunkxdhkd .gt_asterisk {
+  font-size: 100%;
+  vertical-align: 0;
+}
+
+#bbunkxdhkd .gt_indent_1 {
+  text-indent: 5px;
+}
+
+#bbunkxdhkd .gt_indent_2 {
+  text-indent: 10px;
+}
+
+#bbunkxdhkd .gt_indent_3 {
+  text-indent: 15px;
+}
+
+#bbunkxdhkd .gt_indent_4 {
+  text-indent: 20px;
+}
+
+#bbunkxdhkd .gt_indent_5 {
+  text-indent: 25px;
+}
+</style>
+<table class="gt_table" data-quarto-disable-processing="false" data-quarto-bootstrap="false">
+  <thead>
+    
+    <tr class="gt_col_headings">
+      <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="1" colspan="1" scope="col" id=".metric">.metric</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="1" colspan="1" scope="col" id=".estimator">.estimator</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id=".estimate">.estimate</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="1" colspan="1" scope="col" id="tipo">tipo</th>
+    </tr>
+  </thead>
+  <tbody class="gt_table_body">
+    <tr><td headers=".metric" class="gt_row gt_left">mae</td>
+<td headers=".estimator" class="gt_row gt_left">standard</td>
+<td headers=".estimate" class="gt_row gt_right">2.34</td>
+<td headers="tipo" class="gt_row gt_left">no penalizado</td></tr>
+    <tr><td headers=".metric" class="gt_row gt_left">mae</td>
+<td headers=".estimator" class="gt_row gt_left">standard</td>
+<td headers=".estimate" class="gt_row gt_right">1.27</td>
+<td headers="tipo" class="gt_row gt_left">penalizado</td></tr>
+    <tr><td headers=".metric" class="gt_row gt_left">rmse</td>
+<td headers=".estimator" class="gt_row gt_left">standard</td>
+<td headers=".estimate" class="gt_row gt_right">2.95</td>
+<td headers="tipo" class="gt_row gt_left">no penalizado</td></tr>
+    <tr><td headers=".metric" class="gt_row gt_left">rmse</td>
+<td headers=".estimator" class="gt_row gt_left">standard</td>
+<td headers=".estimate" class="gt_row gt_right">1.60</td>
+<td headers="tipo" class="gt_row gt_left">penalizado</td></tr>
+  </tbody>
+  
+  
+</table>
+</div>
+</div>
+</div>
+<p>Y vemos que los errores de predicción se reducen considerablemente.</p>
+<ul>
+<li>Obsérvese que esta mejora en varianza tiene un costo: un aumento en el sesgo (observa en los extremos de las predicciones regularizadas).</li>
+<li>Sin embargo, lo que nos importa principalmente es reducir el error de predicción, y eso lo logramos escogiendo un balance sesgo-varianza apropiado para los datos y el problema.</li>
+</ul>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Regularización L2
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Cuando agregamos el término de penalización tipo ridge al error de entrenamiento como objetivo a minimizar en el ajuste, los coeficientes de la solución penalizada están <em>encogidos</em> con respecto a los no penalizados.</p>
+<p>Regularizar reduce la varianza de los coeficientes a lo largo de distintas muestras de entrenamiiento, lo que reduce la posibilidad de sobreajuste.</p>
+<p>Utilizamos regularización para reducir el error de predicción cuando el problema es variabilidad grande de los coeficientes (coeficientes ruidosos) en modelos relativamente grandes o con pocos datos de entrenamiento.</p>
+</div>
+</div>
+<p>En general, a métodos donde restringimos el espacio de modelos o penalizamos ajustes complejos en la función de pérdida que nos interesa se llaman métodos con regularización. Un ejemplos es todos los modelos donde en lugar de considerar la función de perdida <span class="math inline">\(L\)</span> solamente, consideramos minimizar</p>
+<p><span class="math display">\[L(f) + \Omega(f),\]</span> donde <span class="math inline">\(f\)</span> es una medida de la complejidad, como puede ser: que la función <span class="math inline">\(f\)</span> tiene oscilaciones grandes o pendientes grandes, tiene un número grande de discontinuidades, etc.</p>
+</section>
+<section id="ejemplo-2-penalización-y-estimaciones-ruidosas" class="level2" data-number="5.3">
+<h2 data-number="5.3" class="anchored" data-anchor-id="ejemplo-2-penalización-y-estimaciones-ruidosas"><span class="header-section-number">5.3</span> Ejemplo 2: penalización y estimaciones ruidosas</h2>
+<p>Consideremos los siguientes datos clásicos de Radiación Solar, Temperatura, Velocidad del Viento y Ozono para distintos días en Nueva York (<span class="citation" data-cites="chambers83">Chambers et&nbsp;al. (<a href="99-referencias.html#ref-chambers83" role="doc-biblioref">1983</a>)</span>):</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>air_data <span class="ot">&lt;-</span> airquality <span class="sc">|&gt;</span> </span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">Wind_cat =</span> <span class="fu">cut</span>(Wind, <span class="fu">quantile</span>(Wind, <span class="fu">c</span>(<span class="dv">0</span>, <span class="fl">0.33</span>, <span class="fl">0.66</span>, <span class="dv">1</span>)), </span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>                          <span class="at">include.lowest =</span> T)) <span class="sc">|&gt;</span> </span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(Ozone) <span class="sc">&amp;</span> <span class="sc">!</span><span class="fu">is.na</span>(Solar.R))</span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>air <span class="ot">&lt;-</span> air_data</span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(air, <span class="fu">aes</span>(<span class="at">x =</span> Solar.R, <span class="at">y =</span> Ozone,  <span class="at">colour =</span> Temp)) <span class="sc">+</span> </span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>() <span class="sc">+</span></span>
+<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_wrap</span>(<span class="sc">~</span>Wind_cat, <span class="at">ncol =</span> <span class="dv">3</span>) <span class="sc">+</span> </span>
+<span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_colour_gradientn</span>(<span class="at">colours =</span> <span class="fu">rainbow</span>(<span class="dv">2</span>, <span class="at">rev =</span> <span class="cn">TRUE</span>))</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="05-regularizacion-1_files/figure-html/unnamed-chunk-15-1.png" class="img-fluid" width="576"></p>
+</div>
+</div>
+<p>La gráfica muestra algunas interacciones y relaciones no lineales. Formulamos un modelo lineal como sigue:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>receta_ozono <span class="ot">&lt;-</span> <span class="fu">recipe</span>(Ozone <span class="sc">~</span> Temp <span class="sc">+</span> Wind <span class="sc">+</span> Solar.R,</span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>                       <span class="at">data =</span> air) <span class="sc">|&gt;</span> </span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_ns</span>(Temp, Wind, Solar.R, <span class="at">deg_free =</span> <span class="dv">2</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_interact</span>(<span class="at">terms =</span> <span class="sc">~</span> <span class="fu">starts_with</span>(<span class="st">"Temp_ns"</span>)<span class="sc">:</span><span class="fu">starts_with</span>(<span class="st">"Wind_ns"</span>)) <span class="sc">|&gt;</span> </span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_interact</span>(<span class="at">terms =</span> <span class="sc">~</span> <span class="fu">starts_with</span>(<span class="st">"Temp_ns"</span>)<span class="sc">:</span><span class="fu">starts_with</span>(<span class="st">"Solar.R_ns"</span>))</span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a>ajuste_ozono <span class="ot">&lt;-</span> <span class="fu">workflow</span>() <span class="sc">|&gt;</span> </span>
+<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add_recipe</span>(receta_ozono) <span class="sc">|&gt;</span> </span>
+<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add_model</span>(<span class="fu">linear_reg</span>() <span class="sc">|&gt;</span> <span class="fu">set_engine</span>(<span class="st">"lm"</span>)) <span class="sc">|&gt;</span> </span>
+<span id="cb25-9"><a href="#cb25-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">fit</span>(air)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Y el ajuste se ve como sigue:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>pred_grid <span class="ot">&lt;-</span> <span class="fu">expand_grid</span>(<span class="at">Wind =</span> <span class="fu">c</span>(<span class="dv">5</span>,<span class="dv">10</span>,<span class="dv">15</span>), </span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>                         <span class="at">Temp =</span> <span class="fu">seq</span>(<span class="dv">60</span>, <span class="dv">90</span>, <span class="dv">10</span>), </span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>                         <span class="at">Solar.R =</span> <span class="fu">seq</span>(<span class="dv">20</span>, <span class="dv">300</span>, <span class="at">by =</span> <span class="dv">10</span>)) <span class="sc">|&gt;</span> </span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">Wind_cat =</span> <span class="fu">cut</span>(Wind, </span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>           <span class="fu">quantile</span>(airquality<span class="sc">$</span>Wind, <span class="fu">c</span>(<span class="dv">0</span>, <span class="fl">0.33</span>, <span class="fl">0.66</span>, <span class="dv">1</span>)), </span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a>           <span class="at">include.lowest =</span> T))</span>
+<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a>pred_grid <span class="ot">&lt;-</span> pred_grid <span class="sc">|&gt;</span> </span>
+<span id="cb26-8"><a href="#cb26-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">bind_cols</span>(<span class="fu">predict</span>(ajuste_ozono, pred_grid))</span>
+<span id="cb26-9"><a href="#cb26-9" aria-hidden="true" tabindex="-1"></a>g_lineal <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(air, <span class="fu">aes</span>(<span class="at">x =</span> Solar.R, <span class="at">colour =</span> Temp)) <span class="sc">+</span> </span>
+<span id="cb26-10"><a href="#cb26-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_point</span>(<span class="fu">aes</span>(<span class="at">y =</span> Ozone)) <span class="sc">+</span></span>
+<span id="cb26-11"><a href="#cb26-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">facet_wrap</span>( <span class="sc">~</span> Wind_cat) <span class="sc">+</span> </span>
+<span id="cb26-12"><a href="#cb26-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">scale_colour_gradientn</span>(<span class="at">colours =</span> <span class="fu">rainbow</span>(<span class="dv">2</span>, <span class="at">rev =</span> <span class="cn">TRUE</span>)) <span class="sc">+</span></span>
+<span id="cb26-13"><a href="#cb26-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_line</span>(<span class="at">data =</span> pred_grid, </span>
+<span id="cb26-14"><a href="#cb26-14" aria-hidden="true" tabindex="-1"></a>      <span class="fu">aes</span>(<span class="at">y =</span> .pred, <span class="at">group =</span> <span class="fu">interaction</span>(Temp, Wind_cat)), <span class="at">size =</span> <span class="dv">1</span>) <span class="sc">+</span></span>
+<span id="cb26-15"><a href="#cb26-15" aria-hidden="true" tabindex="-1"></a>    <span class="fu">labs</span>(<span class="at">subtitle =</span> <span class="st">"Curvas de modelo lineal, para viento = 5, 10, 15"</span>) </span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: Using `size` aesthetic for lines was deprecated in ggplot2 3.4.0.
+ℹ Please use `linewidth` instead.</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>g_lineal</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="05-regularizacion-1_files/figure-html/unnamed-chunk-17-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+<p>Nótese que algunos aspectos de este modelo parecen ser muy ruidosos: por ejemplo, el comportamiento de las curvas para el primer pánel (donde hay pocos datos de temperatura baja), el hecho de que en algunos casos parece haber curvaturas decrecientes e incluso predicciones negativas. No deberíamos dar mucho crédito a las predicciones de este modelo, y tiene peligro de producir predicciones desastrosas.</p>
+<p>Sin embargo, si usamos algo de regularización:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>ajuste_ozono <span class="ot">&lt;-</span> <span class="fu">workflow</span>() <span class="sc">|&gt;</span> </span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add_recipe</span>(receta_ozono) <span class="sc">|&gt;</span> </span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add_model</span>(<span class="fu">linear_reg</span>(<span class="at">mixture =</span> <span class="dv">0</span>, <span class="at">penalty =</span> <span class="fl">3.0</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a>              <span class="fu">set_engine</span>(<span class="st">"glmnet"</span>, <span class="at">lambda.min.ratio =</span> <span class="dv">0</span>)) <span class="sc">|&gt;</span> </span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">fit</span>(air)</span>
+<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a><span class="co"># nota: normalmente no es necesario usar lambda.min.ratio</span></span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Y el ajuste se ve como sigue:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>pred_grid <span class="ot">&lt;-</span> <span class="fu">expand_grid</span>(<span class="at">Wind =</span> <span class="fu">c</span>(<span class="dv">5</span>,<span class="dv">10</span>,<span class="dv">15</span>), </span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>                         <span class="at">Temp =</span> <span class="fu">seq</span>(<span class="dv">60</span>, <span class="dv">90</span>, <span class="dv">10</span>), </span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a>                         <span class="at">Solar.R =</span> <span class="fu">seq</span>(<span class="dv">10</span>, <span class="dv">320</span>, <span class="at">by =</span> <span class="dv">10</span>)) <span class="sc">|&gt;</span> </span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">Wind_cat =</span> </span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a>           <span class="fu">cut</span>(Wind, <span class="fu">quantile</span>(airquality<span class="sc">$</span>Wind, <span class="fu">c</span>(<span class="dv">0</span>, <span class="fl">0.33</span>, <span class="fl">0.66</span>, <span class="dv">1</span>)), </span>
+<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a>               <span class="at">include.lowest =</span> T))</span>
+<span id="cb30-7"><a href="#cb30-7" aria-hidden="true" tabindex="-1"></a>pred_grid <span class="ot">&lt;-</span> pred_grid <span class="sc">|&gt;</span> </span>
+<span id="cb30-8"><a href="#cb30-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">bind_cols</span>(<span class="fu">predict</span>(ajuste_ozono, pred_grid))</span>
+<span id="cb30-9"><a href="#cb30-9" aria-hidden="true" tabindex="-1"></a>g_lineal <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(air, <span class="fu">aes</span>(<span class="at">x =</span> Solar.R, <span class="at">colour =</span> Temp)) <span class="sc">+</span> </span>
+<span id="cb30-10"><a href="#cb30-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_point</span>(<span class="fu">aes</span>(<span class="at">y =</span> Ozone)) <span class="sc">+</span></span>
+<span id="cb30-11"><a href="#cb30-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">facet_wrap</span>( <span class="sc">~</span> Wind_cat) <span class="sc">+</span> </span>
+<span id="cb30-12"><a href="#cb30-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">scale_colour_gradientn</span>(<span class="at">colours =</span> <span class="fu">rainbow</span>(<span class="dv">2</span>, <span class="at">rev =</span> <span class="cn">TRUE</span>)) <span class="sc">+</span></span>
+<span id="cb30-13"><a href="#cb30-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_line</span>(<span class="at">data =</span> pred_grid, <span class="fu">aes</span>(<span class="at">y =</span> .pred, <span class="at">group =</span> <span class="fu">interaction</span>(Temp, Wind_cat)), <span class="at">size =</span> <span class="dv">1</span>) <span class="sc">+</span></span>
+<span id="cb30-14"><a href="#cb30-14" aria-hidden="true" tabindex="-1"></a>    <span class="fu">labs</span>(<span class="at">subtitle =</span> <span class="st">"Curvas de modelo lineal, para viento = 5, 10, 15"</span>) </span>
+<span id="cb30-15"><a href="#cb30-15" aria-hidden="true" tabindex="-1"></a>g_lineal</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="05-regularizacion-1_files/figure-html/unnamed-chunk-19-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+<p>Este ajuste se ve mucho más razonable.</p>
+</section>
+<section id="regresión-ridge-escogiendo-el-parámetro-de-complejidad" class="level2" data-number="5.4">
+<h2 data-number="5.4" class="anchored" data-anchor-id="regresión-ridge-escogiendo-el-parámetro-de-complejidad"><span class="header-section-number">5.4</span> Regresión ridge: escogiendo el parámetro de complejidad</h2>
+<p>Como vimos antes, no es posible seleccionar el parámetro <span class="math inline">\(\lambda\)</span> usando la muestra de entrenamiento (¿con qué <span class="math inline">\(\lambda\)</span> cómo se obtiene el menor error cuadrático medio sobre la muestra de entrenamiento). Usaremos un conjunto de validación relativamente grande</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">191</span>)</span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(<span class="st">"../R/casas_traducir_geo.R"</span>)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Rows: 1460 Columns: 81
+── Column specification ────────────────────────────────────────────────────────
+Delimiter: ","
+chr (43): MSZoning, Street, Alley, LotShape, LandContour, Utilities, LotConf...
+dbl (38): Id, MSSubClass, LotFrontage, LotArea, OverallQual, OverallCond, Ye...
+
+ℹ Use `spec()` to retrieve the full column specification for this data.
+ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+Rows: 27 Columns: 3
+── Column specification ────────────────────────────────────────────────────────
+Delimiter: ","
+chr (1): Neighborhood
+dbl (2): lat, long
+
+ℹ Use `spec()` to retrieve the full column specification for this data.
+ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="co"># esta proporción es para ejemplificar</span></span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>casas_split <span class="ot">&lt;-</span> <span class="fu">initial_split</span>(casas, <span class="at">prop =</span> <span class="fl">0.25</span>) </span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>casas_entrena <span class="ot">&lt;-</span> <span class="fu">training</span>(casas_split)</span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a>receta_casas <span class="ot">&lt;-</span> </span>
+<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">recipe</span>(precio_miles <span class="sc">~</span> calidad_gral <span class="sc">+</span></span>
+<span id="cb33-6"><a href="#cb33-6" aria-hidden="true" tabindex="-1"></a>           area_hab_m2 <span class="sc">+</span> area_garage_m2 <span class="sc">+</span> area_sotano_m2 <span class="sc">+</span> </span>
+<span id="cb33-7"><a href="#cb33-7" aria-hidden="true" tabindex="-1"></a>           area_2o_piso_m2 <span class="sc">+</span> </span>
+<span id="cb33-8"><a href="#cb33-8" aria-hidden="true" tabindex="-1"></a>           año_construccion <span class="sc">+</span> año_venta <span class="sc">+</span> condicion_venta <span class="sc">+</span></span>
+<span id="cb33-9"><a href="#cb33-9" aria-hidden="true" tabindex="-1"></a>           nombre_zona <span class="sc">+</span> </span>
+<span id="cb33-10"><a href="#cb33-10" aria-hidden="true" tabindex="-1"></a>           condicion_gral <span class="sc">+</span> </span>
+<span id="cb33-11"><a href="#cb33-11" aria-hidden="true" tabindex="-1"></a>           condicion_exteriores <span class="sc">+</span> </span>
+<span id="cb33-12"><a href="#cb33-12" aria-hidden="true" tabindex="-1"></a>           tipo_sotano <span class="sc">+</span> calidad_sotano <span class="sc">+</span></span>
+<span id="cb33-13"><a href="#cb33-13" aria-hidden="true" tabindex="-1"></a>           baños_completos <span class="sc">+</span>  num_coches <span class="sc">+</span></span>
+<span id="cb33-14"><a href="#cb33-14" aria-hidden="true" tabindex="-1"></a>           aire_acondicionado <span class="sc">+</span> </span>
+<span id="cb33-15"><a href="#cb33-15" aria-hidden="true" tabindex="-1"></a>           tipo_edificio <span class="sc">+</span> estilo, </span>
+<span id="cb33-16"><a href="#cb33-16" aria-hidden="true" tabindex="-1"></a>         <span class="at">data =</span> casas_entrena) <span class="sc">|&gt;</span> </span>
+<span id="cb33-17"><a href="#cb33-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_filter</span>(condicion_venta <span class="sc">==</span> <span class="st">"Normal"</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb33-18"><a href="#cb33-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_select</span>(<span class="sc">-</span>condicion_venta, <span class="at">skip =</span> <span class="cn">TRUE</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb33-19"><a href="#cb33-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_cut</span>(calidad_gral, <span class="at">breaks =</span> <span class="fu">c</span>(<span class="dv">3</span>, <span class="dv">5</span>, <span class="dv">7</span>, <span class="dv">8</span>), </span>
+<span id="cb33-20"><a href="#cb33-20" aria-hidden="true" tabindex="-1"></a>           <span class="at">include_outside_range =</span> <span class="cn">TRUE</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb33-21"><a href="#cb33-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_cut</span>(condicion_gral, <span class="at">breaks =</span> <span class="fu">c</span>(<span class="dv">3</span>, <span class="dv">5</span>, <span class="dv">7</span>, <span class="dv">8</span>), </span>
+<span id="cb33-22"><a href="#cb33-22" aria-hidden="true" tabindex="-1"></a>           <span class="at">include_outside_range =</span> <span class="cn">TRUE</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb33-23"><a href="#cb33-23" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_mutate</span>(<span class="at">sin_piso_2 =</span> <span class="fu">as.numeric</span>(area_2o_piso_m2 <span class="sc">==</span> <span class="dv">0</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb33-24"><a href="#cb33-24" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_novel</span>(tipo_sotano, calidad_sotano) <span class="sc">|&gt;</span> </span>
+<span id="cb33-25"><a href="#cb33-25" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_novel</span>(condicion_exteriores, tipo_edificio, estilo) <span class="sc">|&gt;</span> </span>
+<span id="cb33-26"><a href="#cb33-26" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_unknown</span>(tipo_sotano, calidad_sotano, <span class="at">new_level =</span> <span class="st">"sin_sotano"</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb33-27"><a href="#cb33-27" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_unknown</span>(condicion_exteriores) <span class="sc">|&gt;</span> </span>
+<span id="cb33-28"><a href="#cb33-28" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_other</span>(nombre_zona, <span class="at">threshold =</span> <span class="fl">0.05</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb33-29"><a href="#cb33-29" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_dummy</span>(calidad_gral, condicion_gral, </span>
+<span id="cb33-30"><a href="#cb33-30" aria-hidden="true" tabindex="-1"></a>             nombre_zona, aire_acondicionado,</span>
+<span id="cb33-31"><a href="#cb33-31" aria-hidden="true" tabindex="-1"></a>             calidad_sotano, tipo_sotano, condicion_exteriores, </span>
+<span id="cb33-32"><a href="#cb33-32" aria-hidden="true" tabindex="-1"></a>             tipo_edificio, estilo) <span class="sc">|&gt;</span> </span>
+<span id="cb33-33"><a href="#cb33-33" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_interact</span>(<span class="at">terms =</span> <span class="sc">~</span> <span class="fu">c</span>(area_hab_m2, area_garage_m2, </span>
+<span id="cb33-34"><a href="#cb33-34" aria-hidden="true" tabindex="-1"></a>    area_sotano_m2, area_2o_piso_m2)<span class="sc">:</span><span class="fu">starts_with</span>(<span class="st">"calidad_gral"</span>)) <span class="sc">|&gt;</span> </span>
+<span id="cb33-35"><a href="#cb33-35" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_interact</span>(<span class="at">terms =</span> <span class="sc">~</span> area_sotano_m2<span class="sc">:</span><span class="fu">starts_with</span>(<span class="st">"calidad_sotano"</span>)) <span class="sc">|&gt;</span> </span>
+<span id="cb33-36"><a href="#cb33-36" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_interact</span>(<span class="at">terms =</span> <span class="sc">~</span> <span class="fu">c</span>(area_hab_m2, area_garage_m2, </span>
+<span id="cb33-37"><a href="#cb33-37" aria-hidden="true" tabindex="-1"></a>    area_sotano_m2, area_2o_piso_m2)<span class="sc">:</span><span class="fu">starts_with</span>(<span class="st">"condicion_gral"</span>)) <span class="sc">|&gt;</span> </span>
+<span id="cb33-38"><a href="#cb33-38" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_interact</span>(<span class="at">terms =</span> <span class="sc">~</span> <span class="fu">c</span>(area_hab_m2, area_garage_m2, </span>
+<span id="cb33-39"><a href="#cb33-39" aria-hidden="true" tabindex="-1"></a>    area_sotano_m2, area_2o_piso_m2)<span class="sc">:</span><span class="fu">starts_with</span>(<span class="st">"nombre_zona"</span>)) <span class="sc">|&gt;</span> </span>
+<span id="cb33-40"><a href="#cb33-40" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_zv</span>(<span class="fu">all_predictors</span>())</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Para ver el número de entradas de este modelo:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb34"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="fu">prep</span>(receta_casas) <span class="sc">|&gt;</span> <span class="fu">juice</span>() <span class="sc">|&gt;</span> <span class="fu">dim</span>()</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 289 108</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb36"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a>modelo_penalizado <span class="ot">&lt;-</span> <span class="fu">linear_reg</span>(<span class="at">mixture =</span> <span class="fl">0.0</span>, <span class="at">penalty =</span> <span class="fu">tune</span>()) <span class="sc">|&gt;</span> </span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_engine</span>(<span class="st">"glmnet"</span>, <span class="at">lambda.min.ratio =</span> <span class="dv">0</span>)</span>
+<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a>flujo_casas <span class="ot">&lt;-</span> <span class="fu">workflow</span>() <span class="sc">|&gt;</span> </span>
+<span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add_recipe</span>(receta_casas) <span class="sc">|&gt;</span> </span>
+<span id="cb36-5"><a href="#cb36-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add_model</span>(modelo_penalizado)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Construimos manualmente el conjunto de validación:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="co"># creamos un objeto con datos de entrenamiento y de prueba</span></span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>val_split <span class="ot">&lt;-</span> <span class="fu">manual_rset</span>(casas_split <span class="sc">|&gt;</span> <span class="fu">list</span>(), <span class="st">"validación"</span>)</span>
+<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a>lambda_params <span class="ot">&lt;-</span> <span class="fu">parameters</span>(<span class="fu">penalty</span>(<span class="at">range =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="dv">3</span>, <span class="dv">3</span>), </span>
+<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a>                                    <span class="at">trans =</span> <span class="fu">log10_trans</span>()))</span>
+<span id="cb37-5"><a href="#cb37-5" aria-hidden="true" tabindex="-1"></a>lambda_grid <span class="ot">&lt;-</span> <span class="fu">grid_regular</span>(lambda_params, <span class="at">levels =</span> <span class="dv">20</span>)</span>
+<span id="cb37-6"><a href="#cb37-6" aria-hidden="true" tabindex="-1"></a>lambda_grid</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 20 × 1
+      penalty
+        &lt;dbl&gt;
+ 1    0.001  
+ 2    0.00207
+ 3    0.00428
+ 4    0.00886
+ 5    0.0183 
+ 6    0.0379 
+ 7    0.0785 
+ 8    0.162  
+ 9    0.336  
+10    0.695  
+11    1.44   
+12    2.98   
+13    6.16   
+14   12.7    
+15   26.4    
+16   54.6    
+17  113.     
+18  234.     
+19  483.     
+20 1000      </code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb39"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a>mis_metricas <span class="ot">&lt;-</span> <span class="fu">metric_set</span>(rmse)</span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a>eval_tbl <span class="ot">&lt;-</span> <span class="fu">tune_grid</span>(flujo_casas,</span>
+<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a>                      <span class="at">resamples =</span> val_split,</span>
+<span id="cb39-4"><a href="#cb39-4" aria-hidden="true" tabindex="-1"></a>                      <span class="at">grid =</span> lambda_grid,</span>
+<span id="cb39-5"><a href="#cb39-5" aria-hidden="true" tabindex="-1"></a>                      <span class="at">metrics =</span> mis_metricas) </span>
+<span id="cb39-6"><a href="#cb39-6" aria-hidden="true" tabindex="-1"></a>ridge_ajustes_tbl <span class="ot">&lt;-</span> eval_tbl <span class="sc">|&gt;</span></span>
+<span id="cb39-7"><a href="#cb39-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">unnest</span>(<span class="at">cols =</span> <span class="fu">c</span>(.metrics)) <span class="sc">|&gt;</span> </span>
+<span id="cb39-8"><a href="#cb39-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(id, penalty, .metric, .estimate)</span>
+<span id="cb39-9"><a href="#cb39-9" aria-hidden="true" tabindex="-1"></a>ridge_ajustes_tbl <span class="sc">|&gt;</span> <span class="fu">gt</span>()</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+
+<div id="qizadfhrbl" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<style>#qizadfhrbl table {
+  font-family: system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#qizadfhrbl thead, #qizadfhrbl tbody, #qizadfhrbl tfoot, #qizadfhrbl tr, #qizadfhrbl td, #qizadfhrbl th {
+  border-style: none;
+}
+
+#qizadfhrbl p {
+  margin: 0;
+  padding: 0;
+}
+
+#qizadfhrbl .gt_table {
+  display: table;
+  border-collapse: collapse;
+  line-height: normal;
+  margin-left: auto;
+  margin-right: auto;
+  color: #333333;
+  font-size: 16px;
+  font-weight: normal;
+  font-style: normal;
+  background-color: #FFFFFF;
+  width: auto;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #A8A8A8;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #A8A8A8;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+}
+
+#qizadfhrbl .gt_caption {
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+
+#qizadfhrbl .gt_title {
+  color: #333333;
+  font-size: 125%;
+  font-weight: initial;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-color: #FFFFFF;
+  border-bottom-width: 0;
+}
+
+#qizadfhrbl .gt_subtitle {
+  color: #333333;
+  font-size: 85%;
+  font-weight: initial;
+  padding-top: 3px;
+  padding-bottom: 5px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-color: #FFFFFF;
+  border-top-width: 0;
+}
+
+#qizadfhrbl .gt_heading {
+  background-color: #FFFFFF;
+  text-align: center;
+  border-bottom-color: #FFFFFF;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#qizadfhrbl .gt_bottom_border {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#qizadfhrbl .gt_col_headings {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#qizadfhrbl .gt_col_heading {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 6px;
+  padding-left: 5px;
+  padding-right: 5px;
+  overflow-x: hidden;
+}
+
+#qizadfhrbl .gt_column_spanner_outer {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  padding-top: 0;
+  padding-bottom: 0;
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
+#qizadfhrbl .gt_column_spanner_outer:first-child {
+  padding-left: 0;
+}
+
+#qizadfhrbl .gt_column_spanner_outer:last-child {
+  padding-right: 0;
+}
+
+#qizadfhrbl .gt_column_spanner {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  overflow-x: hidden;
+  display: inline-block;
+  width: 100%;
+}
+
+#qizadfhrbl .gt_spanner_row {
+  border-bottom-style: hidden;
+}
+
+#qizadfhrbl .gt_group_heading {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  text-align: left;
+}
+
+#qizadfhrbl .gt_empty_group_heading {
+  padding: 0.5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: middle;
+}
+
+#qizadfhrbl .gt_from_md > :first-child {
+  margin-top: 0;
+}
+
+#qizadfhrbl .gt_from_md > :last-child {
+  margin-bottom: 0;
+}
+
+#qizadfhrbl .gt_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  margin: 10px;
+  border-top-style: solid;
+  border-top-width: 1px;
+  border-top-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  overflow-x: hidden;
+}
+
+#qizadfhrbl .gt_stub {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#qizadfhrbl .gt_stub_row_group {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+  vertical-align: top;
+}
+
+#qizadfhrbl .gt_row_group_first td {
+  border-top-width: 2px;
+}
+
+#qizadfhrbl .gt_row_group_first th {
+  border-top-width: 2px;
+}
+
+#qizadfhrbl .gt_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#qizadfhrbl .gt_first_summary_row {
+  border-top-style: solid;
+  border-top-color: #D3D3D3;
+}
+
+#qizadfhrbl .gt_first_summary_row.thick {
+  border-top-width: 2px;
+}
+
+#qizadfhrbl .gt_last_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#qizadfhrbl .gt_grand_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#qizadfhrbl .gt_first_grand_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-style: double;
+  border-top-width: 6px;
+  border-top-color: #D3D3D3;
+}
+
+#qizadfhrbl .gt_last_grand_summary_row_top {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-style: double;
+  border-bottom-width: 6px;
+  border-bottom-color: #D3D3D3;
+}
+
+#qizadfhrbl .gt_striped {
+  background-color: rgba(128, 128, 128, 0.05);
+}
+
+#qizadfhrbl .gt_table_body {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#qizadfhrbl .gt_footnotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#qizadfhrbl .gt_footnote {
+  margin: 0px;
+  font-size: 90%;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#qizadfhrbl .gt_sourcenotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#qizadfhrbl .gt_sourcenote {
+  font-size: 90%;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#qizadfhrbl .gt_left {
+  text-align: left;
+}
+
+#qizadfhrbl .gt_center {
+  text-align: center;
+}
+
+#qizadfhrbl .gt_right {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+#qizadfhrbl .gt_font_normal {
+  font-weight: normal;
+}
+
+#qizadfhrbl .gt_font_bold {
+  font-weight: bold;
+}
+
+#qizadfhrbl .gt_font_italic {
+  font-style: italic;
+}
+
+#qizadfhrbl .gt_super {
+  font-size: 65%;
+}
+
+#qizadfhrbl .gt_footnote_marks {
+  font-size: 75%;
+  vertical-align: 0.4em;
+  position: initial;
+}
+
+#qizadfhrbl .gt_asterisk {
+  font-size: 100%;
+  vertical-align: 0;
+}
+
+#qizadfhrbl .gt_indent_1 {
+  text-indent: 5px;
+}
+
+#qizadfhrbl .gt_indent_2 {
+  text-indent: 10px;
+}
+
+#qizadfhrbl .gt_indent_3 {
+  text-indent: 15px;
+}
+
+#qizadfhrbl .gt_indent_4 {
+  text-indent: 20px;
+}
+
+#qizadfhrbl .gt_indent_5 {
+  text-indent: 25px;
+}
+</style>
+<table class="gt_table" data-quarto-disable-processing="false" data-quarto-bootstrap="false">
+  <thead>
+    
+    <tr class="gt_col_headings">
+      <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="1" colspan="1" scope="col" id="id">id</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="penalty">penalty</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="1" colspan="1" scope="col" id=".metric">.metric</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id=".estimate">.estimate</th>
+    </tr>
+  </thead>
+  <tbody class="gt_table_body">
+    <tr><td headers="id" class="gt_row gt_left">validación</td>
+<td headers="penalty" class="gt_row gt_right">1.000000e-03</td>
+<td headers=".metric" class="gt_row gt_left">rmse</td>
+<td headers=".estimate" class="gt_row gt_right">35.36721</td></tr>
+    <tr><td headers="id" class="gt_row gt_left">validación</td>
+<td headers="penalty" class="gt_row gt_right">2.069138e-03</td>
+<td headers=".metric" class="gt_row gt_left">rmse</td>
+<td headers=".estimate" class="gt_row gt_right">35.36721</td></tr>
+    <tr><td headers="id" class="gt_row gt_left">validación</td>
+<td headers="penalty" class="gt_row gt_right">4.281332e-03</td>
+<td headers=".metric" class="gt_row gt_left">rmse</td>
+<td headers=".estimate" class="gt_row gt_right">35.36721</td></tr>
+    <tr><td headers="id" class="gt_row gt_left">validación</td>
+<td headers="penalty" class="gt_row gt_right">8.858668e-03</td>
+<td headers=".metric" class="gt_row gt_left">rmse</td>
+<td headers=".estimate" class="gt_row gt_right">35.36721</td></tr>
+    <tr><td headers="id" class="gt_row gt_left">validación</td>
+<td headers="penalty" class="gt_row gt_right">1.832981e-02</td>
+<td headers=".metric" class="gt_row gt_left">rmse</td>
+<td headers=".estimate" class="gt_row gt_right">35.36721</td></tr>
+    <tr><td headers="id" class="gt_row gt_left">validación</td>
+<td headers="penalty" class="gt_row gt_right">3.792690e-02</td>
+<td headers=".metric" class="gt_row gt_left">rmse</td>
+<td headers=".estimate" class="gt_row gt_right">35.36721</td></tr>
+    <tr><td headers="id" class="gt_row gt_left">validación</td>
+<td headers="penalty" class="gt_row gt_right">7.847600e-02</td>
+<td headers=".metric" class="gt_row gt_left">rmse</td>
+<td headers=".estimate" class="gt_row gt_right">34.88798</td></tr>
+    <tr><td headers="id" class="gt_row gt_left">validación</td>
+<td headers="penalty" class="gt_row gt_right">1.623777e-01</td>
+<td headers=".metric" class="gt_row gt_left">rmse</td>
+<td headers=".estimate" class="gt_row gt_right">33.64199</td></tr>
+    <tr><td headers="id" class="gt_row gt_left">validación</td>
+<td headers="penalty" class="gt_row gt_right">3.359818e-01</td>
+<td headers=".metric" class="gt_row gt_left">rmse</td>
+<td headers=".estimate" class="gt_row gt_right">32.41837</td></tr>
+    <tr><td headers="id" class="gt_row gt_left">validación</td>
+<td headers="penalty" class="gt_row gt_right">6.951928e-01</td>
+<td headers=".metric" class="gt_row gt_left">rmse</td>
+<td headers=".estimate" class="gt_row gt_right">31.22570</td></tr>
+    <tr><td headers="id" class="gt_row gt_left">validación</td>
+<td headers="penalty" class="gt_row gt_right">1.438450e+00</td>
+<td headers=".metric" class="gt_row gt_left">rmse</td>
+<td headers=".estimate" class="gt_row gt_right">30.26859</td></tr>
+    <tr><td headers="id" class="gt_row gt_left">validación</td>
+<td headers="penalty" class="gt_row gt_right">2.976351e+00</td>
+<td headers=".metric" class="gt_row gt_left">rmse</td>
+<td headers=".estimate" class="gt_row gt_right">29.62744</td></tr>
+    <tr><td headers="id" class="gt_row gt_left">validación</td>
+<td headers="penalty" class="gt_row gt_right">6.158482e+00</td>
+<td headers=".metric" class="gt_row gt_left">rmse</td>
+<td headers=".estimate" class="gt_row gt_right">29.45135</td></tr>
+    <tr><td headers="id" class="gt_row gt_left">validación</td>
+<td headers="penalty" class="gt_row gt_right">1.274275e+01</td>
+<td headers=".metric" class="gt_row gt_left">rmse</td>
+<td headers=".estimate" class="gt_row gt_right">29.65517</td></tr>
+    <tr><td headers="id" class="gt_row gt_left">validación</td>
+<td headers="penalty" class="gt_row gt_right">2.636651e+01</td>
+<td headers=".metric" class="gt_row gt_left">rmse</td>
+<td headers=".estimate" class="gt_row gt_right">30.23900</td></tr>
+    <tr><td headers="id" class="gt_row gt_left">validación</td>
+<td headers="penalty" class="gt_row gt_right">5.455595e+01</td>
+<td headers=".metric" class="gt_row gt_left">rmse</td>
+<td headers=".estimate" class="gt_row gt_right">31.52315</td></tr>
+    <tr><td headers="id" class="gt_row gt_left">validación</td>
+<td headers="penalty" class="gt_row gt_right">1.128838e+02</td>
+<td headers=".metric" class="gt_row gt_left">rmse</td>
+<td headers=".estimate" class="gt_row gt_right">34.17121</td></tr>
+    <tr><td headers="id" class="gt_row gt_left">validación</td>
+<td headers="penalty" class="gt_row gt_right">2.335721e+02</td>
+<td headers=".metric" class="gt_row gt_left">rmse</td>
+<td headers=".estimate" class="gt_row gt_right">38.82727</td></tr>
+    <tr><td headers="id" class="gt_row gt_left">validación</td>
+<td headers="penalty" class="gt_row gt_right">4.832930e+02</td>
+<td headers=".metric" class="gt_row gt_left">rmse</td>
+<td headers=".estimate" class="gt_row gt_right">45.67700</td></tr>
+    <tr><td headers="id" class="gt_row gt_left">validación</td>
+<td headers="penalty" class="gt_row gt_right">1.000000e+03</td>
+<td headers=".metric" class="gt_row gt_left">rmse</td>
+<td headers=".estimate" class="gt_row gt_right">54.01752</td></tr>
+  </tbody>
+  
+  
+</table>
+</div>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb40"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(ridge_ajustes_tbl, </span>
+<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a>    <span class="fu">aes</span>(<span class="at">x =</span> penalty, <span class="at">y =</span> .estimate, <span class="at">colour =</span> .metric)) <span class="sc">+</span> </span>
+<span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>() <span class="sc">+</span> <span class="fu">geom_line</span>() <span class="sc">+</span> <span class="fu">scale_x_log10</span>() </span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="05-regularizacion-1_files/figure-html/unnamed-chunk-25-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+<p>Y vemos que con una penalización alrededor de <span class="math inline">\(\lambda = 1\)</span> podemos obtener mejor desempeño que con el modelo no regularizado.</p>
+<p><strong>Pregunta</strong>: en qué partes de la gráfica es relativamente grande la varianza? ¿en qué parte es relativamente grande el sesgo?</p>
+</section>
+<section id="regresión-lasso" class="level2" data-number="5.5">
+<h2 data-number="5.5" class="anchored" data-anchor-id="regresión-lasso"><span class="header-section-number">5.5</span> Regresión lasso</h2>
+<p>Se puede controlar la varianza de mínimos cuadrados de otras maneras. Cuando la varianza proviene también de la inclusión de variables que no necesariamente están relacionadas con la respuesta, podemos usar <strong>métodos de selección de variables</strong>, como en <a href="https://en.wikipedia.org/wiki/Stepwise_regression#:~:text=In%20statistics%2C%20stepwise%20regression%20is,based%20on%20some%20prespecified%20criterion.">stepwise regression</a>, por ejemplo.</p>
+<p>Otra manera interesante de lograr mejor desempeño predictivo con modelos más parsimoniosos resulta de usar un término de penalización distinto al de ridge. En ridge, el problema que resolvemos es minimizar el objetivo</p>
+<p><span class="math display">\[D(\beta) + \lambda \sum_{j=1}^p \beta_j^2\]</span></p>
+<p>En <strong>regresión lasso</strong>, usamos una penalización de tipo <span class="math inline">\(L_1\)</span>:</p>
+<p><span class="math display">\[D(a) + \lambda \sum_{j=1}^p |\beta_j|\]</span> En un principio, no parece ser muy diferente a <em>ridge</em>. Veremos sin embargo que usar esta penalización también se puede ver como un proceso de selección de variables.</p>
+</section>
+<section id="lasso-vs-ridge" class="level2" data-number="5.6">
+<h2 data-number="5.6" class="anchored" data-anchor-id="lasso-vs-ridge"><span class="header-section-number">5.6</span> Lasso vs Ridge</h2>
+<p>Consideramos cómo predecir el porcentaje de grasa corporal a partir de distintas mediciones de dimensiones corporales:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb41"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a>dat_grasa <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="at">file =</span> <span class="st">'../datos/bodyfat.csv'</span>) </span>
+<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">183</span>)</span>
+<span id="cb41-3"><a href="#cb41-3" aria-hidden="true" tabindex="-1"></a>grasa_particion <span class="ot">&lt;-</span> <span class="fu">initial_split</span>(dat_grasa, <span class="fl">0.7</span>)</span>
+<span id="cb41-4"><a href="#cb41-4" aria-hidden="true" tabindex="-1"></a>grasa_ent <span class="ot">&lt;-</span> <span class="fu">training</span>(grasa_particion)</span>
+<span id="cb41-5"><a href="#cb41-5" aria-hidden="true" tabindex="-1"></a>grasa_pr <span class="ot">&lt;-</span> <span class="fu">testing</span>(grasa_particion)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb42"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="co"># nota: con glmnet no es necesario normalizar, pero aquí lo hacemos</span></span>
+<span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a><span class="co"># para ver los coeficientes en términos de las variables estandarizadas:</span></span>
+<span id="cb42-3"><a href="#cb42-3" aria-hidden="true" tabindex="-1"></a>grasa_receta <span class="ot">&lt;-</span> <span class="fu">recipe</span>(grasacorp <span class="sc">~</span> ., grasa_ent) <span class="sc">|&gt;</span> </span>
+<span id="cb42-4"><a href="#cb42-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">update_role</span>(cadera, cuello, muñeca, </span>
+<span id="cb42-5"><a href="#cb42-5" aria-hidden="true" tabindex="-1"></a>              tobillo, rodilla, <span class="at">new_role =</span> <span class="st">"ninguno"</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb42-6"><a href="#cb42-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_normalize</span>(<span class="fu">all_predictors</span>()) <span class="sc">|&gt;</span> </span>
+<span id="cb42-7"><a href="#cb42-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">prep</span>()</span>
+<span id="cb42-8"><a href="#cb42-8" aria-hidden="true" tabindex="-1"></a>modelo_2 <span class="ot">&lt;-</span> <span class="fu">linear_reg</span>(<span class="at">mixture =</span> <span class="dv">0</span>, <span class="at">penalty =</span> <span class="dv">0</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb42-9"><a href="#cb42-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_engine</span>(<span class="st">"glmnet"</span>, <span class="at">lambda.min.ratio =</span> <span class="fl">1e-20</span>) </span>
+<span id="cb42-10"><a href="#cb42-10" aria-hidden="true" tabindex="-1"></a>flujo_2 <span class="ot">&lt;-</span> <span class="fu">workflow</span>() <span class="sc">|&gt;</span> </span>
+<span id="cb42-11"><a href="#cb42-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add_model</span>(modelo_2) <span class="sc">|&gt;</span> </span>
+<span id="cb42-12"><a href="#cb42-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add_recipe</span>(grasa_receta)</span>
+<span id="cb42-13"><a href="#cb42-13" aria-hidden="true" tabindex="-1"></a>flujo_2 <span class="ot">&lt;-</span> flujo_2 <span class="sc">|&gt;</span> <span class="fu">fit</span>(grasa_ent) </span>
+<span id="cb42-14"><a href="#cb42-14" aria-hidden="true" tabindex="-1"></a>modelo_2 <span class="ot">&lt;-</span> <span class="fu">extract_fit_parsnip</span>(flujo_2)</span>
+<span id="cb42-15"><a href="#cb42-15" aria-hidden="true" tabindex="-1"></a>coefs <span class="ot">&lt;-</span> modelo_2 <span class="sc">|&gt;</span> <span class="fu">pluck</span>(<span class="st">"fit"</span>) <span class="sc">|&gt;</span><span class="fu">tidy</span>() <span class="sc">|&gt;</span> </span>
+<span id="cb42-16"><a href="#cb42-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(term <span class="sc">!=</span> <span class="st">"(Intercept)"</span>)</span>
+<span id="cb42-17"><a href="#cb42-17" aria-hidden="true" tabindex="-1"></a>g_l2 <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(coefs, <span class="fu">aes</span>(<span class="at">x =</span> lambda, <span class="at">y =</span> estimate, <span class="at">colour =</span> term)) <span class="sc">+</span></span>
+<span id="cb42-18"><a href="#cb42-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="at">size =</span> <span class="fl">1.4</span>) <span class="sc">+</span> <span class="fu">scale_x_log10</span>() <span class="sc">+</span></span>
+<span id="cb42-19"><a href="#cb42-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_colour_manual</span>(<span class="at">values =</span> cbb_palette) <span class="sc">+</span></span>
+<span id="cb42-20"><a href="#cb42-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">subtitle =</span> <span class="st">"Regularizacion L2"</span>)</span>
+<span id="cb42-21"><a href="#cb42-21" aria-hidden="true" tabindex="-1"></a>g_l2</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="05-regularizacion-1_files/figure-html/unnamed-chunk-27-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+<p>Estas gráfica se llama <strong>traza</strong> de los coeficientes, y nos muestra cómo cambian los coefi´cientes conforme cambiamos la regularización. Nótese que cuando la regularización es chica, obtenemos algunos resultados contra-intuitivos como que el coeficiente de peso es negativo para predecir el nivel de grasa corporal. Cuando regularizamos más, este coeficiente es positivo. La razón de esto tiene qué ver con la correlación fuerte de las variables de entrada, por ejemplo:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb43"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cor</span>(grasa_ent <span class="sc">|&gt;</span> <span class="fu">select</span>(peso, abdomen, biceps, muslo)) <span class="sc">|&gt;</span> </span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">round</span>(<span class="dv">2</span>)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>        peso abdomen biceps muslo
+peso    1.00    0.91   0.81  0.88
+abdomen 0.91    1.00   0.71  0.81
+biceps  0.81    0.71   1.00  0.75
+muslo   0.88    0.81   0.75  1.00</code></pre>
+</div>
+</div>
+<p>Ahora probemos con regularización lasso:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb45"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a><span class="do">## mixture = 1 es regresión lasso</span></span>
+<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a>modelo_1 <span class="ot">&lt;-</span>  <span class="fu">linear_reg</span>(<span class="at">mixture =</span> <span class="dv">1</span>, <span class="at">penalty =</span> <span class="dv">0</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb45-3"><a href="#cb45-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_engine</span>(<span class="st">"glmnet"</span>, <span class="at">lambda.min.ratio =</span> <span class="dv">0</span>) </span>
+<span id="cb45-4"><a href="#cb45-4" aria-hidden="true" tabindex="-1"></a>flujo_1 <span class="ot">&lt;-</span> <span class="fu">workflow</span>() <span class="sc">|&gt;</span> </span>
+<span id="cb45-5"><a href="#cb45-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add_model</span>(modelo_1) <span class="sc">|&gt;</span> </span>
+<span id="cb45-6"><a href="#cb45-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add_recipe</span>(grasa_receta)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb46"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a>flujo_1 <span class="ot">&lt;-</span> flujo_1 <span class="sc">|&gt;</span> <span class="fu">fit</span>(grasa_ent) </span>
+<span id="cb46-2"><a href="#cb46-2" aria-hidden="true" tabindex="-1"></a>modelo_1 <span class="ot">&lt;-</span> <span class="fu">extract_fit_parsnip</span>(flujo_1)</span>
+<span id="cb46-3"><a href="#cb46-3" aria-hidden="true" tabindex="-1"></a>coefs <span class="ot">&lt;-</span> modelo_1 <span class="sc">|&gt;</span> <span class="fu">pluck</span>(<span class="st">"fit"</span>) <span class="sc">|&gt;</span> <span class="fu">tidy</span>() <span class="sc">|&gt;</span> </span>
+<span id="cb46-4"><a href="#cb46-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(term <span class="sc">!=</span> <span class="st">"(Intercept)"</span>)</span>
+<span id="cb46-5"><a href="#cb46-5" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(coefs, </span>
+<span id="cb46-6"><a href="#cb46-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">aes</span>(<span class="at">x =</span> lambda, <span class="at">y =</span> estimate, <span class="at">colour =</span> term)) <span class="sc">+</span></span>
+<span id="cb46-7"><a href="#cb46-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="at">size =</span> <span class="fl">1.4</span>) <span class="sc">+</span> <span class="fu">scale_x_log10</span>() <span class="sc">+</span></span>
+<span id="cb46-8"><a href="#cb46-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_colour_manual</span>(<span class="at">values =</span> cbb_palette) <span class="sc">+</span></span>
+<span id="cb46-9"><a href="#cb46-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">subtitle =</span> <span class="st">"Regularizacion L1"</span>)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="05-regularizacion-1_files/figure-html/unnamed-chunk-30-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+<p>Y nótese que conforme aumentamos la penalización, algunas variables salen del modelo (sus coeficientes son cero). Por ejemplo, para un valor de <span class="math inline">\(lambda\)</span> intermedio, obtenemos un modelo simple de la forma:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb47"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a>coefs <span class="sc">|&gt;</span> <span class="fu">filter</span>(step <span class="sc">==</span> <span class="dv">21</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(term, estimate, lambda)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 3 × 3
+  term     estimate lambda
+  &lt;chr&gt;       &lt;dbl&gt;  &lt;dbl&gt;
+1 edad        0.160  0.434
+2 estatura   -0.452  0.434
+3 abdomen     6.67   0.434</code></pre>
+</div>
+</div>
+<p>Y nótese que este modelo solo incluye 3 variables.La traza confirma que la regularización lasso, además de encoger coeficientes, saca variables del modelo conforme el valor de regularización aumenta.</p>
+<p>La razón de esta diferencia cualitativa entre cómo funciona lasso y ridge se puede entender considerando que los problemas de penalización mostrados arriba puede escribirse en forma de problemas de restricción. Por ejemplo, lasso se puede reescribir como el problema de resolver</p>
+<p><span class="math display">\[\min_a D(\beta)\]</span> sujeto a <span class="math display">\[\sum_{i=1}^p |\beta_j| &lt; t\]</span> En la gráfica siguiente (tomada de <span class="citation" data-cites="ESL">Hastie, Tibshirani, y Friedman (<a href="99-referencias.html#ref-ESL" role="doc-biblioref">2017</a>)</span>), lasso está a la izquierda y ridge está a la derecha, las curvas rojas son curvas de nivel de la suma de cuadrados <span class="math inline">\(D(a)\)</span>, y <span class="math inline">\(\hat{\beta}\)</span> es el estimador usual de mínimos cuadrados de los coeficientes (sin penalizar). En azul está la restricción:</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="figuras/ridge_lasso.png" class="img-fluid figure-img"></p>
+<figcaption class="figure-caption">Ridge vs Lasso</figcaption>
+</figure>
+</div>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Regularización para modelos lineales
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<ul>
+<li>En regresión ridge, los coeficientes se encogen gradualmente desde la solución no restringida hasta el origen. Ridge es un método de <strong>encogimiento de coeficientes.</strong> Regresión ridge es especialmente útil cuando tenemos varias variables de entrada fuertemente <strong>correlacionadas</strong>. Regresión ridge intenta encoger juntos coeficientes de variables correlacionadas para reducir varianza en las predicciones.</li>
+<li>En regresión lasso, los coeficientes se encogen gradualmente, pero también se excluyen variables del modelo. Por eso lasso es un método de <strong>encogimiento y selección de variables</strong>. Lasso encoge igualmente coeficientes para reducir varianza, pero también comparte similitudes con <em>regresión de mejor subconjunto</em>, en donde para cada número de variables <span class="math inline">\(l\)</span> buscamos escoger las <span class="math inline">\(l\)</span> variables que den el mejor modelo. Sin embargo, el enfoque de lasso es más escalable y puede calcularse de manera más simple.</li>
+</ul>
+</div>
+</div>
+<p><strong>Nota</strong>: es posible también utilizar una penalización que mezcla ridge y lasso:</p>
+<p><span class="math display">\[\lambda \left (\alpha \sum_j |a_j| + (1-\alpha)\sum_j a_j^2 \right )\]</span></p>
+<p>y <span class="math inline">\(\alpha\)</span> es un parámetro que podemos afinar:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb49"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a><span class="co"># elastic net = ridge + lasso</span></span>
+<span id="cb49-2"><a href="#cb49-2" aria-hidden="true" tabindex="-1"></a><span class="co"># mixture es alpha y penalty es lambda</span></span>
+<span id="cb49-3"><a href="#cb49-3" aria-hidden="true" tabindex="-1"></a>modelo_enet <span class="ot">&lt;-</span> <span class="fu">linear_reg</span>(<span class="at">mixture =</span> <span class="fl">0.5</span>, <span class="at">penalty =</span> <span class="fl">0.05</span>)</span>
+<span id="cb49-4"><a href="#cb49-4" aria-hidden="true" tabindex="-1"></a><span class="co"># y si queremos afinar:</span></span>
+<span id="cb49-5"><a href="#cb49-5" aria-hidden="true" tabindex="-1"></a>modelo_enet <span class="ot">&lt;-</span> <span class="fu">linear_reg</span>(<span class="at">mixture =</span> <span class="fu">tune</span>(), <span class="at">penalty =</span> <span class="fu">tune</span>())</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="regularización-con-descenso-en-gradiente" class="level2" data-number="5.7">
+<h2 data-number="5.7" class="anchored" data-anchor-id="regularización-con-descenso-en-gradiente"><span class="header-section-number">5.7</span> Regularización con descenso en gradiente</h2>
+<p>Otra forma de hacer regularización que se utiliza comunmente se basa en el método de minimización que usamos para obtener nuestra función <span class="math inline">\(\hat{f}\)</span> para hacer predicciones. La idea es utilizar un método iterativo que comience con una <span class="math inline">\(f_0\)</span> simple, y luego iterar a una nueva <span class="math inline">\(f_1\)</span> que se adapta mejor a los datos pero no es muy diferente a <span class="math inline">\(f_0\)</span>. En lugar de seguir iterando hasta llegar a un mínimo de <span class="math inline">\(L(f),\)</span> evaluamos con una muestra de prueba para encontrar un lugar apropiado para detenernos (<em>early stopping</em>). También podemos modificar <span class="math inline">\(L(f)\)</span> en cada paso para evitar atorarnos en un mínimo sobreajustado.</p>
+<p>Una manera de hacer esto es usando el método de descenso estocástico, (ver apéndices <span class="citation" data-cites="desc-maximo">(<a href="99-referencias.html#ref-desc-maximo" role="doc-biblioref"><strong>desc-maximo?</strong></a>)</span> y <span class="citation" data-cites="desc-estocastico">(<a href="99-referencias.html#ref-desc-estocastico" role="doc-biblioref"><strong>desc-estocastico?</strong></a>)</span>) que consiste en:</p>
+<ul>
+<li>En cada iteración <span class="math inline">\(i\)</span> construimos una función de pérdida <span class="math inline">\(L^{(i)}(f)\)</span> basada solamente en una parte de los datos (<em>batch</em>).</li>
+<li>En cada iteración <span class="math inline">\(i\)</span> sólo nos movemos en una dirección de descenso para los parámetros, sin intentar buscar un mínimo local o global. La dirección de descenso está dada por <span class="math inline">\(-\nabla L\)</span>.</li>
+</ul>
+<p>Aunque este método es más útil en casos como redes neuronales o métodos basados en árboles, podemos comenzar por un ejemplo en regresión lineal para entender su efecto regularizador:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb50"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(keras)</span>
+<span id="cb50-2"><a href="#cb50-2" aria-hidden="true" tabindex="-1"></a>x_grasa <span class="ot">&lt;-</span> grasa_receta <span class="sc">|&gt;</span> <span class="fu">juice</span>() <span class="sc">|&gt;</span> </span>
+<span id="cb50-3"><a href="#cb50-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(abdomen, edad, antebrazo, biceps, estatura, muslo, pecho, peso) <span class="sc">|&gt;</span> </span>
+<span id="cb50-4"><a href="#cb50-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as.matrix</span>()</span>
+<span id="cb50-5"><a href="#cb50-5" aria-hidden="true" tabindex="-1"></a>vars_nombres <span class="ot">&lt;-</span> <span class="fu">colnames</span>(x_grasa)</span>
+<span id="cb50-6"><a href="#cb50-6" aria-hidden="true" tabindex="-1"></a>y_grasa <span class="ot">&lt;-</span> grasa_receta <span class="sc">|&gt;</span> <span class="fu">juice</span>() <span class="sc">|&gt;</span> <span class="fu">pull</span>(grasacorp)</span>
+<span id="cb50-7"><a href="#cb50-7" aria-hidden="true" tabindex="-1"></a><span class="do">## keras tiene distintos algos de optimización</span></span>
+<span id="cb50-8"><a href="#cb50-8" aria-hidden="true" tabindex="-1"></a>modelo_reg <span class="ot">&lt;-</span> <span class="fu">keras_model_sequential</span>() <span class="sc">|&gt;</span> </span>
+<span id="cb50-9"><a href="#cb50-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">layer_dense</span>(<span class="at">units =</span> <span class="dv">1</span>, </span>
+<span id="cb50-10"><a href="#cb50-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">kernel_initializer =</span> <span class="fu">initializer_constant</span>(<span class="dv">0</span>))</span>
+<span id="cb50-11"><a href="#cb50-11" aria-hidden="true" tabindex="-1"></a>modelo_reg <span class="sc">|&gt;</span> <span class="fu">compile</span>(</span>
+<span id="cb50-12"><a href="#cb50-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">loss =</span> <span class="st">"mse"</span>,</span>
+<span id="cb50-13"><a href="#cb50-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">optimizer =</span> <span class="fu">optimizer_sgd</span>(<span class="at">learning_rate =</span> <span class="fl">0.01</span>)</span>
+<span id="cb50-14"><a href="#cb50-14" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb50-15"><a href="#cb50-15" aria-hidden="true" tabindex="-1"></a><span class="co"># esto es más eficiente hacerlo con callbacks en general:</span></span>
+<span id="cb50-16"><a href="#cb50-16" aria-hidden="true" tabindex="-1"></a>pesos_tbl <span class="ot">&lt;-</span> <span class="fu">map_dfr</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">400</span>, <span class="cf">function</span>(epoca){</span>
+<span id="cb50-17"><a href="#cb50-17" aria-hidden="true" tabindex="-1"></a>    modelo_reg <span class="sc">|&gt;</span> <span class="fu">fit</span>(</span>
+<span id="cb50-18"><a href="#cb50-18" aria-hidden="true" tabindex="-1"></a>      <span class="at">x =</span> x_grasa, <span class="at">y =</span> y_grasa,</span>
+<span id="cb50-19"><a href="#cb50-19" aria-hidden="true" tabindex="-1"></a>      <span class="at">epochs =</span> <span class="dv">1</span>, </span>
+<span id="cb50-20"><a href="#cb50-20" aria-hidden="true" tabindex="-1"></a>      <span class="at">verbose =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb50-21"><a href="#cb50-21" aria-hidden="true" tabindex="-1"></a>    pesos_tbl <span class="ot">&lt;-</span> <span class="fu">get_weights</span>(modelo_reg)[[<span class="dv">1</span>]] <span class="sc">|&gt;</span> <span class="fu">t</span>() <span class="sc">|&gt;</span> </span>
+<span id="cb50-22"><a href="#cb50-22" aria-hidden="true" tabindex="-1"></a>      <span class="fu">as_tibble</span>() </span>
+<span id="cb50-23"><a href="#cb50-23" aria-hidden="true" tabindex="-1"></a>    <span class="fu">names</span>(pesos_tbl) <span class="ot">&lt;-</span> vars_nombres</span>
+<span id="cb50-24"><a href="#cb50-24" aria-hidden="true" tabindex="-1"></a>    pesos_tbl <span class="sc">|&gt;</span> <span class="fu">mutate</span>(<span class="at">epoca =</span> epoca)</span>
+<span id="cb50-25"><a href="#cb50-25" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb50-26"><a href="#cb50-26" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb51"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(patchwork)</span>
+<span id="cb51-2"><a href="#cb51-2" aria-hidden="true" tabindex="-1"></a>g_dest <span class="ot">&lt;-</span> pesos_tbl <span class="sc">|&gt;</span> <span class="fu">pivot_longer</span>(<span class="at">cols  =</span> <span class="sc">-</span><span class="fu">contains</span>(<span class="fu">c</span>(<span class="st">"grasacorp"</span>, <span class="st">"epoca"</span>))) <span class="sc">|&gt;</span> </span>
+<span id="cb51-3"><a href="#cb51-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> epoca, <span class="at">y =</span> value, <span class="at">colour =</span> name)) <span class="sc">+</span> </span>
+<span id="cb51-4"><a href="#cb51-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="at">linewidth =</span> <span class="fl">1.1</span>) <span class="sc">+</span>   <span class="fu">scale_colour_manual</span>(<span class="at">values =</span> cbb_palette) <span class="sc">+</span></span>
+<span id="cb51-5"><a href="#cb51-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_x_continuous</span>(<span class="at">trans  =</span> <span class="fu">compose_trans</span>(<span class="st">"log10"</span>, <span class="st">"reverse"</span>))</span>
+<span id="cb51-6"><a href="#cb51-6" aria-hidden="true" tabindex="-1"></a>g_dest <span class="sc">+</span> g_l2</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="05-regularizacion-1_files/figure-html/unnamed-chunk-34-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+<p>Y vemos que si inicializamos el proceso de minimización con valores chicos, pararnos en una época (iteración completa sobre los datos) nos permite tener un efecto similar al de utilizar regularización tipo L2.</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Descenso estocástico
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>El método de descenso estocástico (usualmente por minilotes) nos permite resolver problemas de optimización, y muchas veces actúa también como regularizador (al cambiar en cada paso la función de pérdida, y utilizando <em>early stopping</em>).</p>
+<p>Adicionalmente, es eficiente en el sentido de que no es necesario utilizar todo los datos para hacer un paso suficientemente bueno, y es escalable a grandes conjuntos de datos.</p>
+<p>Es crucial escoger un tamaño de paso adecuado para cada problema.</p>
+</div>
+</div>
+
+
+<div id="refs" class="references csl-bib-body hanging-indent" role="list" style="display: none">
+<div id="ref-chambers83" class="csl-entry" role="listitem">
+Chambers, J. M., W. S. Cleveland, B. Kleiner, y P. A. Tukey. 1983. <em>Graphical Methods for Data Analysis</em>. Chapman &amp; Hall statistics series. Wadsworth International Group. <a href="https://books.google.com.mx/books?id=I-tQAAAAMAAJ">https://books.google.com.mx/books?id=I-tQAAAAMAAJ</a>.
+</div>
+<div id="ref-ESL" class="csl-entry" role="listitem">
+Hastie, Trevor, Robert Tibshirani, y Jerome Friedman. 2017. <em>The Elements of Statistical Learning</em>. Springer Series en Statistics. Springer New York Inc. <a href="http://web.stanford.edu/~hastie/ElemStatLearn/">http://web.stanford.edu/~hastie/ElemStatLearn/</a>.
+</div>
+</div>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copiado");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copiado");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="./04-lineales-ingenieria.html" class="pagination-link">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Métodos lineales e ingenería de entradas</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./81-apendice-descenso.html" class="pagination-link">
+        <span class="nav-page-text"><span class="chapter-number">A</span>&nbsp; <span class="chapter-title">Apéndice 1: descenso en gradiente</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+</body></html>

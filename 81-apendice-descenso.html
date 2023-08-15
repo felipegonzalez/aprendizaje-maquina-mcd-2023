@@ -1,0 +1,1027 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="es" xml:lang="es"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.3.353">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Aprendizaje Máquina - Apéndice A — Apéndice 1: descenso en gradiente</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./82-apendice-descenso-estocastico.html" rel="next">
+<link href="./05-regularizacion-1.html" rel="prev">
+<script src="site_libs/quarto-html/quarto.js"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 20,
+  "language": {
+    "search-no-results-text": "Sin resultados",
+    "search-matching-documents-text": "documentos encontrados",
+    "search-copy-link-title": "Copiar el enlace en la búsqueda",
+    "search-hide-matches-text": "Ocultar resultados adicionales",
+    "search-more-match-text": "resultado adicional en este documento",
+    "search-more-matches-text": "resultados adicionales en este documento",
+    "search-clear-button-title": "Borrar",
+    "search-detached-cancel-button-title": "Cancelar",
+    "search-submit-button-title": "Enviar"
+  }
+}</script>
+
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+</head>
+
+<body class="nav-sidebar floating">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Alternar barra lateral" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+      <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./81-apendice-descenso.html">Appendices</a></li><li class="breadcrumb-item"><a href="./81-apendice-descenso.html"><span class="chapter-number">A</span>&nbsp; <span class="chapter-title">Apéndice 1: descenso en gradiente</span></a></li></ol></nav>
+      <a class="flex-grow-1" role="button" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Alternar barra lateral" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+      </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Buscar" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./">Aprendizaje Máquina</a> 
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Buscar"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Temario y referencias</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./01-introduccion.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Introducción</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./02-principios-supervisado.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Principios de aprendizaje supervisado</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./03-metodos-locales.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Métodos locales no estructurados</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./04-lineales-ingenieria.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Métodos lineales e ingenería de entradas</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./05-regularizacion-1.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Regularización y variabilidad</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-expanded="true">
+ <span class="menu-text">Appendices</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-expanded="true" aria-label="Alternar sección">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./81-apendice-descenso.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">A</span>&nbsp; <span class="chapter-title">Apéndice 1: descenso en gradiente</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./82-apendice-descenso-estocastico.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">B</span>&nbsp; <span class="chapter-title">Apéndice 2: Descenso estocástico</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./99-referencias.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Referencias</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Tabla de contenidos</h2>
+   
+  <ul>
+  <li><a href="#cálculo-del-gradiente" id="toc-cálculo-del-gradiente" class="nav-link active" data-scroll-target="#cálculo-del-gradiente"><span class="header-section-number">A.1</span> Cálculo del gradiente</a></li>
+  <li><a href="#implementación" id="toc-implementación" class="nav-link" data-scroll-target="#implementación"><span class="header-section-number">A.2</span> Implementación</a></li>
+  <li><a href="#normalización-de-entradas" id="toc-normalización-de-entradas" class="nav-link" data-scroll-target="#normalización-de-entradas"><span class="header-section-number">A.3</span> Normalización de entradas</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title"><span id="sec-desc-maximo" class="quarto-section-identifier">Apéndice A — Apéndice 1: descenso en gradiente</span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+</header>
+
+<p>Para ajustar varios modelos que vemos en este curso es necesario minimizar una función objetivo. Existe una gran cantidad de algoritmos de optimización útiles, pero en aprendizaje de máquina uno de los más utilizados es el descenso máximo (o descenso en gradiente), y modificaciones como descenso estocástico.</p>
+<p>Supongamos que una función <span class="math inline">\(h(x)\)</span> es convexa y tiene un mínimo. La idea de descenso en gradiente es comenzar con un candidato inicial <span class="math inline">\(z_0\)</span> y calcular la derivada en <span class="math inline">\(z^{(0)}\)</span>. Si <span class="math inline">\(h'(z^{(0)})&gt;0\)</span>, la función es creciente en <span class="math inline">\(z^{(0)}\)</span> y nos movemos ligeramente a la izquierda para obtener un nuevo candidato <span class="math inline">\(z^{(1)}\)</span>. si <span class="math inline">\(h'(z^{(0)})&lt;0\)</span>, la función es decreciente en <span class="math inline">\(z^{(0)}\)</span> y nos movemos ligeramente a la derecha para obtener un nuevo candidato <span class="math inline">\(z^{(1)}\)</span>. Iteramos este proceso hasta que la derivada es cercana a cero (estamos cerca del óptimo).</p>
+<p>Si <span class="math inline">\(\eta&gt;0\)</span> es una cantidad chica, podemos escribir</p>
+<p><span class="math display">\[z^{(1)} = z^{(0)} - \eta \,h'(z^{(0)}).\]</span></p>
+<p>Nótese que cuando la derivada tiene magnitud alta, el movimiento de <span class="math inline">\(z^{(0)}\)</span> a <span class="math inline">\(z^{(1)}\)</span> es más grande, y siempre nos movemos una fracción de la derivada. En general hacemos <span class="math display">\[z^{(j+1)} = z^{(j)} - \eta\,h'(z^{(j)})\]</span> para obtener una sucesión <span class="math inline">\(z^{(0)},z^{(1)},\ldots\)</span>. Esperamos a que <span class="math inline">\(z^{(j)}\)</span> converja para terminar la iteración.</p>
+<section id="ejemplo" class="level4 unnumbered">
+<h4 class="unnumbered anchored" data-anchor-id="ejemplo">Ejemplo</h4>
+<p>Si tenemos</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>h <span class="ot">&lt;-</span> <span class="cf">function</span>(x) x<span class="sc">^</span><span class="dv">2</span> <span class="sc">+</span> (x <span class="sc">-</span> <span class="dv">2</span>)<span class="sc">^</span><span class="dv">2</span> <span class="sc">-</span> <span class="fu">log</span>(x<span class="sc">^</span><span class="dv">2</span> <span class="sc">+</span> <span class="dv">1</span>)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Calculamos (a mano):</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>h_deriv <span class="ot">&lt;-</span> <span class="cf">function</span>(x) <span class="dv">2</span> <span class="sc">*</span> x <span class="sc">+</span> <span class="dv">2</span> <span class="sc">*</span> (x <span class="sc">-</span> <span class="dv">2</span>) <span class="sc">-</span> <span class="dv">2</span><span class="sc">*</span>x<span class="sc">/</span>(x<span class="sc">^</span><span class="dv">2</span> <span class="sc">+</span> <span class="dv">1</span>)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Ahora iteramos con <span class="math inline">\(\eta = 0.4\)</span> y valor inicial <span class="math inline">\(z_0=5\)</span></p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>z_0 <span class="ot">&lt;-</span> <span class="dv">5</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>eta <span class="ot">&lt;-</span> <span class="fl">0.4</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>descenso <span class="ot">&lt;-</span> <span class="cf">function</span>(n, z_0, eta, h_deriv){</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  z <span class="ot">&lt;-</span> <span class="fu">matrix</span>(<span class="dv">0</span>,n, <span class="fu">length</span>(z_0))</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  z[<span class="dv">1</span>, ] <span class="ot">&lt;-</span> z_0</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span>(i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>(n<span class="dv">-1</span>)){</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    <span class="co"># paso de descenso</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    z[i<span class="sc">+</span><span class="dv">1</span>, ] <span class="ot">&lt;-</span> z[i, ] <span class="sc">-</span> eta <span class="sc">*</span> <span class="fu">h_deriv</span>(z[i, ])</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>  z</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>z <span class="ot">&lt;-</span> <span class="fu">descenso</span>(<span class="dv">20</span>, z_0, eta, h_deriv)</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>z</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>            [,1]
+ [1,]  5.0000000
+ [2,] -1.2461538
+ [3,]  1.9571861
+ [4,]  0.7498212
+ [5,]  1.5340816
+ [6,]  1.0455267
+ [7,]  1.3722879
+ [8,]  1.1573987
+ [9,]  1.3013251
+[10,]  1.2057209
+[11,]  1.2696685
+[12,]  1.2270627
+[13,]  1.2555319
+[14,]  1.2365431
+[15,]  1.2492245
+[16,]  1.2407623
+[17,]  1.2464122
+[18,]  1.2426413
+[19,]  1.2451587
+[20,]  1.2434784</code></pre>
+</div>
+</div>
+<p>Y vemos que estamos cerca de la convergencia. Podemos graficar:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>dat_iteraciones <span class="ot">&lt;-</span> <span class="fu">tibble</span>(<span class="at">iteracion =</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">nrow</span>(z), </span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>                              <span class="at">x =</span> z[, <span class="dv">1</span>], <span class="at">y =</span> <span class="fu">h</span>(z[, <span class="dv">1</span>]))</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-fig.asp="0.7">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(gganimate)</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>curva <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(<span class="fu">tibble</span>(<span class="at">x =</span> <span class="fu">seq</span>(<span class="sc">-</span><span class="dv">4</span>, <span class="dv">5</span>, <span class="fl">0.1</span>)), <span class="fu">aes</span>(<span class="at">x =</span> x)) <span class="sc">+</span> <span class="fu">stat_function</span>(<span class="at">fun =</span> h) <span class="sc">+</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>     <span class="fu">xlim</span>(<span class="fu">c</span>(<span class="sc">-</span><span class="dv">4</span>, <span class="dv">5</span>))</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>descenso_g <span class="ot">&lt;-</span> curva <span class="sc">+</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_point</span>(<span class="at">data =</span> dat_iteraciones, <span class="fu">aes</span>(<span class="at">x =</span> x, <span class="at">y =</span> y), <span class="at">col =</span> <span class="st">"red"</span>, <span class="at">size =</span> <span class="dv">3</span>) <span class="sc">+</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">transition_time</span>(iteracion) <span class="sc">+</span> </span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme_minimal</span>(<span class="at">base_size =</span> <span class="dv">20</span>)</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="fu">animate</span>(descenso_g)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="81-apendice-descenso_files/figure-html/unnamed-chunk-6-1.gif" class="img-fluid" width="400"></p>
+</div>
+</div>
+</section>
+<section id="selección-de-tamaño-de-paso-eta" class="level4 unnumbered">
+<h4 class="unnumbered anchored" data-anchor-id="selección-de-tamaño-de-paso-eta">Selección de tamaño de paso <span class="math inline">\(\eta\)</span></h4>
+<p>Buscamos un <span class="math inline">\(\eta\)</span> apropiado para cada problema:</p>
+<ul>
+<li>Si hacemos <span class="math inline">\(\eta\)</span> muy chico, el algoritmo puede tardar mucho en converger.</li>
+<li>Si hacemos <span class="math inline">\(\eta\)</span> demasiado grande, el algoritmo puede divergir.</li>
+</ul>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>z_eta_chico <span class="ot">&lt;-</span> <span class="fu">descenso</span>(<span class="dv">20</span>, <span class="dv">5</span>, <span class="fl">0.01</span>, h_deriv)</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>z_eta_grande <span class="ot">&lt;-</span> <span class="fu">descenso</span>(<span class="dv">20</span>, <span class="fl">1.8</span>, <span class="fl">0.6</span>, h_deriv)</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>dat_chico <span class="ot">&lt;-</span> <span class="fu">tibble</span>(<span class="at">iteracion =</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">nrow</span>(z), <span class="at">x =</span> z_eta_chico[, <span class="dv">1</span>], <span class="at">y =</span> <span class="fu">h</span>(z_eta_chico[, <span class="dv">1</span>]), <span class="at">tipo =</span> <span class="st">"η = 0.01"</span>)</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>dat_grande <span class="ot">&lt;-</span> <span class="fu">tibble</span>(<span class="at">iteracion =</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">nrow</span>(z), <span class="at">x =</span> z_eta_grande[, <span class="dv">1</span>], <span class="at">y =</span> <span class="fu">h</span>(z_eta_grande[, <span class="dv">1</span>]), <span class="at">tipo =</span> <span class="st">"η = 0.6"</span>)</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>dat_iteraciones<span class="sc">$</span>tipo <span class="ot">&lt;-</span> <span class="st">"η = 0.03"</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>dat <span class="ot">&lt;-</span> <span class="fu">bind_rows</span>(dat_chico, dat_grande, dat_iteraciones)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(gganimate)</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>curva <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(<span class="fu">tibble</span>(<span class="at">x =</span> <span class="fu">seq</span>(<span class="sc">-</span><span class="dv">4</span>, <span class="dv">5</span>, <span class="fl">0.1</span>)), <span class="fu">aes</span>(<span class="at">x =</span> x)) <span class="sc">+</span> <span class="fu">stat_function</span>(<span class="at">fun =</span> h, <span class="at">colour =</span> <span class="st">"gray"</span>) <span class="sc">+</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>     <span class="fu">xlim</span>(<span class="fu">c</span>(<span class="sc">-</span><span class="dv">4</span>, <span class="dv">5</span>))</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>descenso_3 <span class="ot">&lt;-</span> curva <span class="sc">+</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_point</span>(<span class="at">data =</span> dat, <span class="fu">aes</span>(<span class="at">x =</span> x, <span class="at">y =</span> y), <span class="at">col =</span> <span class="st">"red"</span>, <span class="at">size =</span> <span class="dv">3</span>) <span class="sc">+</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">facet_wrap</span>(<span class="sc">~</span>tipo, <span class="at">nrow =</span> <span class="dv">1</span>) <span class="sc">+</span> <span class="fu">ylim</span>(<span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">50</span>)) <span class="sc">+</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">transition_time</span>(iteracion) <span class="sc">+</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Iteración {frame_time}"</span>) <span class="sc">+</span> </span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme_minimal</span>(<span class="at">base_size =</span> <span class="dv">20</span>)</span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a><span class="fu">animate</span>(descenso_3, <span class="at">width =</span> <span class="dv">1000</span>, <span class="at">height =</span> <span class="dv">300</span>)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="81-apendice-descenso_files/figure-html/unnamed-chunk-8-1.gif" class="img-fluid"></p>
+</div>
+</div>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Tip
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Es necesario ajustar el tamaño de paso para cada problema particular. Si la convergencia es muy lenta, podemos incrementarlo. Si las iteraciones divergen, podemos disminuirlo</p>
+</div>
+</div>
+</section>
+<section id="funciones-de-varias-variables" class="level4 unnumbered">
+<h4 class="unnumbered anchored" data-anchor-id="funciones-de-varias-variables">Funciones de varias variables</h4>
+<p>Si ahora <span class="math inline">\(h(z)\)</span> es una función de <span class="math inline">\(p\)</span> variables, podemos intentar la misma idea usando el gradiente, que está definido por:</p>
+<p><span class="math display">\[\nabla h(z) = \left( \frac{\partial h}{\partial z_1}, \frac{\partial h}{\partial z_2}, \ldots,    \frac{\partial h}{\partial z_p} \right)^t,\]</span> es decir, es el vector columna con las derivadas parciales de <span class="math inline">\(h\)</span>.</p>
+<p>Por cálculo sabemos que el gradiente apunta en la dirección de máximo crecimiento local, asi que el paso de iteración, dado un valor inicial <span class="math inline">\(z_0\)</span> y un tamaño de paso <span class="math inline">\(\eta &gt;0\)</span> es</p>
+<p><span class="math display">\[z^{(i+1)} = z^{(i)} - \eta \nabla h(z^{(i)})\]</span></p>
+<p>Las mismas consideraciones acerca del tamaño de paso <span class="math inline">\(\eta\)</span> aplican en el problema multivariado.</p>
+<div class="cell" data-fig.asp="0.7">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>h <span class="ot">&lt;-</span> <span class="cf">function</span>(z) {</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  z[<span class="dv">1</span>]<span class="sc">^</span><span class="dv">2</span> <span class="sc">+</span> z[<span class="dv">2</span>]<span class="sc">^</span><span class="dv">2</span> <span class="sc">-</span> z[<span class="dv">1</span>] <span class="sc">*</span> z[<span class="dv">2</span>]</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>h_gr <span class="ot">&lt;-</span> <span class="cf">function</span>(z_1,z_2) <span class="fu">apply</span>(<span class="fu">cbind</span>(z_1, z_2), <span class="dv">1</span>, h)</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>grid_graf <span class="ot">&lt;-</span> <span class="fu">expand.grid</span>(<span class="at">z_1 =</span> <span class="fu">seq</span>(<span class="sc">-</span><span class="dv">3</span>, <span class="dv">3</span>, <span class="fl">0.1</span>), <span class="at">z_2 =</span> <span class="fu">seq</span>(<span class="sc">-</span><span class="dv">3</span>, <span class="dv">3</span>, <span class="fl">0.1</span>))</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>grid_graf <span class="ot">&lt;-</span> grid_graf <span class="sc">|&gt;</span>  <span class="fu">mutate</span>( <span class="at">val =</span> <span class="fu">h_gr</span>(z_1, z_2) )</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>gr_contour <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(grid_graf, <span class="fu">aes</span>(<span class="at">x =</span> z_1, <span class="at">y =</span> z_2, <span class="at">z =</span> val)) <span class="sc">+</span> </span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_contour</span>(<span class="at">binwidth =</span> <span class="fl">1.5</span>, <span class="fu">aes</span>(<span class="at">colour =</span> <span class="fu">after_stat</span>(level)))</span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>gr_contour</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="81-apendice-descenso_files/figure-html/unnamed-chunk-9-1.png" class="img-fluid" width="480"></p>
+</div>
+</div>
+<p>El gradiente está dado por (calculado a mano):</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>h_grad <span class="ot">&lt;-</span> <span class="cf">function</span>(z){</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">c</span>(<span class="dv">2</span><span class="sc">*</span>z[<span class="dv">1</span>] <span class="sc">-</span> z[<span class="dv">2</span>], <span class="dv">2</span><span class="sc">*</span>z[<span class="dv">2</span>] <span class="sc">-</span> z[<span class="dv">1</span>])</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Podemos graficar la dirección de máximo descenso para diversos puntos. Estas direcciones son ortogonales a la curva de nivel que pasa por cada uno de los puntos:</p>
+<div class="cell" data-fig.asp="0.7">
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>grad_1 <span class="ot">&lt;-</span> <span class="fu">h_grad</span>(<span class="fu">c</span>(<span class="dv">0</span>,<span class="sc">-</span><span class="dv">2</span>))</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>grad_2 <span class="ot">&lt;-</span> <span class="fu">h_grad</span>(<span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">1</span>))</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>eta <span class="ot">&lt;-</span> <span class="fl">0.2</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>gr_contour <span class="sc">+</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_segment</span>(<span class="fu">aes</span>(<span class="at">x =</span> <span class="fl">0.0</span>, <span class="at">xend =</span> <span class="fl">0.0</span> <span class="sc">-</span> eta <span class="sc">*</span> grad_1[<span class="dv">1</span>], <span class="at">y =</span> <span class="sc">-</span><span class="dv">2</span>, <span class="at">yend =</span> <span class="sc">-</span><span class="dv">2</span> <span class="sc">-</span> eta <span class="sc">*</span> grad_1[<span class="dv">2</span>]),</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">arrow =</span> <span class="fu">arrow</span>(<span class="at">length =</span> <span class="fu">unit</span>(<span class="fl">0.2</span>, <span class="st">"cm"</span>))) <span class="sc">+</span> </span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_segment</span>(<span class="fu">aes</span>(<span class="at">x =</span> <span class="dv">1</span>, <span class="at">xend =</span> <span class="dv">1</span> <span class="sc">-</span> eta <span class="sc">*</span> grad_2[<span class="dv">1</span>], <span class="at">y =</span> <span class="dv">1</span>, <span class="at">yend =</span> <span class="dv">1</span> <span class="sc">-</span> eta<span class="sc">*</span>grad_2[<span class="dv">2</span>]),</span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">arrow =</span> <span class="fu">arrow</span>(<span class="at">length =</span> <span class="fu">unit</span>(<span class="fl">0.2</span>, <span class="st">"cm"</span>))) <span class="sc">+</span> <span class="fu">coord_fixed</span>(<span class="at">ratio =</span> <span class="dv">1</span>)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="81-apendice-descenso_files/figure-html/unnamed-chunk-11-1.png" class="img-fluid" width="480"></p>
+</div>
+</div>
+<p>Y aplicamos descenso en gradiente:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>inicial <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="dv">3</span>, <span class="dv">1</span>)</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>iteraciones <span class="ot">&lt;-</span> <span class="fu">descenso</span>(<span class="dv">150</span>, inicial , <span class="fl">0.1</span>, h_grad)</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="fu">colnames</span>(iteraciones) <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"X1"</span>, <span class="st">"X2"</span>)</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>df_iteraciones <span class="ot">&lt;-</span> <span class="fu">as_tibble</span>(iteraciones) <span class="sc">|&gt;</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">iteracion =</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">nrow</span>(iteraciones))</span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>graf_descenso_2 <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(<span class="at">data =</span> df_iteraciones <span class="sc">|&gt;</span> <span class="fu">filter</span>(iteracion <span class="sc">&lt;</span> <span class="dv">20</span>)) <span class="sc">+</span> </span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_contour</span>(<span class="at">data =</span> grid_graf, </span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>               <span class="at">binwidth =</span> <span class="fl">1.5</span>, <span class="fu">aes</span>(<span class="at">x =</span> z_1, <span class="at">y =</span> z_2, <span class="at">z =</span> val, <span class="at">colour =</span> ..level..)) <span class="sc">+</span> </span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="fu">aes</span>(<span class="at">x=</span>X1, <span class="at">y=</span>X2), <span class="at">colour =</span> <span class="st">'red'</span>, <span class="at">size =</span> <span class="dv">3</span>)</span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span>(<span class="cn">FALSE</span>){</span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">library</span>(gganimate)</span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>    graf_descenso_2 <span class="sc">+</span> </span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a>        <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">'Iteración: {frame_time}'</span>) <span class="sc">+</span></span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a>        <span class="fu">transition_time</span>(iteracion)</span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a>    <span class="fu">anim_save</span>(<span class="at">filename =</span> <span class="st">"figuras/descenso_2.gif"</span>)</span>
+<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p><img src="figuras/descenso_2.gif" class="img-fluid" width="400"></p>
+<p>En este caso, para checar convergencia podemos monitorear el valor de la función objetivo:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>df_iteraciones <span class="ot">&lt;-</span> df_iteraciones <span class="sc">|&gt;</span> </span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">h_valor =</span> <span class="fu">map2_dbl</span>(X1, X2, <span class="sc">~</span> <span class="fu">h</span>(<span class="at">z  =</span> <span class="fu">c</span>(.x,.y)))) <span class="co"># h no está vectorizada</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(df_iteraciones, <span class="fu">aes</span>(<span class="at">x =</span> iteracion, <span class="at">y =</span> h_valor)) <span class="sc">+</span> <span class="fu">geom_point</span>(<span class="at">size=</span><span class="dv">1</span>) <span class="sc">+</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_line</span>()</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="81-apendice-descenso_files/figure-html/unnamed-chunk-13-1.png" class="img-fluid" width="480"></p>
+</div>
+</div>
+<p>Y nuestra aproximación al mínimo es:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>df_iteraciones <span class="sc">|&gt;</span> <span class="fu">tail</span>(<span class="dv">1</span>)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 1 × 4
+           X1          X2 iteracion  h_valor
+        &lt;dbl&gt;       &lt;dbl&gt;     &lt;int&gt;    &lt;dbl&gt;
+1 0.000000304 0.000000304       150 9.25e-14</code></pre>
+</div>
+</div>
+</section>
+<section id="cálculo-del-gradiente" class="level2" data-number="A.1">
+<h2 data-number="A.1" class="anchored" data-anchor-id="cálculo-del-gradiente"><span class="header-section-number">A.1</span> Cálculo del gradiente</h2>
+<p>Vamos a escribir ahora el algoritmo de descenso en gradiente para regresión lineal. Igual que en los ejemplos anteriores, tenemos que precalcular el gradiente. Una vez que esto esté terminado, escribir la iteración es fácil.</p>
+<p>Recordamos que queremos minimizar (dividiendo entre dos para simplificar más adelante) <span class="math display">\[L(\beta) = \frac{1}{2N}\sum_{i=1}^N (y^{(i)} - f_\beta(x^{(i)}))^2\]</span></p>
+<p>La derivada de la suma es la suma de las derivadas, así nos concentramos en derivar uno de los términos</p>
+<p><span class="math display">\[  u^{(i)}=\frac{1}{2}(y^{(i)} - f_\beta(x^{(i)}))^2 \]</span> Usamos la regla de la cadena para obtener <span class="math display">\[ \frac{1}{2}\frac{\partial}{\partial \beta_j} (y^{(i)} - f_\beta(x^{(i)}))^2 =
+-(y^{(i)} - f_\beta(x^{(i)})) \frac{\partial f_\beta(x^{(i)})}{\partial \beta_j}\]</span></p>
+<p>Ahora recordamos que <span class="math display">\[f_{\beta} (x) = \beta_0 + \beta_1 x_1 + \beta_2 x_2 + \cdots + \beta_p x_p\]</span></p>
+<p>Y vemos que tenemos dos casos. Si <span class="math inline">\(j=0\)</span>,</p>
+<p><span class="math display">\[\frac{\partial f_\beta(x^{(i)})}{\partial \beta_0} = 1\]</span> y si <span class="math inline">\(j=1,2,\ldots, p\)</span> entonces</p>
+<p><span class="math display">\[\frac{\partial f_\beta(x^{(i)})}{\partial \beta_j} = x_j^{(i)}\]</span></p>
+<p>Entonces, si ponemos <span class="math inline">\(u^{(i)}=\frac{1}{2}(y^{(i)} - f_\beta(x^{(i)}))^2\)</span>:</p>
+<p><span class="math display">\[\frac{\partial u^{(i)}}{\partial \beta_0} = -(y^{(i)} - f_\beta(x^{(i)}))\]</span> y</p>
+<p><span class="math display">\[\frac{\partial u^{(i)}}{\partial \beta_j} = - x_j^{(i)}(y^{(i)} - f_\beta(x^{(i)}))\]</span></p>
+<p>Y sumando todos los términos (uno para cada caso de entrenamiento):</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Gradiente para regresión lineal
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Sea <span class="math inline">\(e^{(i)} = y_{(i)} - f_{\beta} (x^{(i)})\)</span>. Entonces <span class="math display">\[\begin{equation}
+  \frac{\partial L(\beta)}{\partial \beta_0} = - \frac{1}{N}\sum_{i=1}^N e^{(i)}
+  (\#eq:grad1)
+\end{equation}\]</span> <span class="math display">\[\begin{equation}
+  \frac{\partial L(\beta)}{\partial \beta_j} = - \frac{1}{N}\sum_{i=1}^N x_j^{(i)}e^{(i)}
+  (\#eq:grad2)
+\end{equation}\]</span> para <span class="math inline">\(j=1,2,\ldots, p\)</span>.</p>
+</div>
+</div>
+<p>Nótese que cada punto de entrenamiento contribuye al cálculo del gradiente - la contribución es la dirección de descenso de error para ese punto particular de entrenamiento. Nos movemos entonces en una dirección promedio, para intentar hacer el error total lo más chico posible.</p>
+</section>
+<section id="implementación" class="level2" data-number="A.2">
+<h2 data-number="A.2" class="anchored" data-anchor-id="implementación"><span class="header-section-number">A.2</span> Implementación</h2>
+<p>En este punto, podemos intentar una implementación simple basada en el código anterior para hacer descenso en gradiente para nuestro problema de regresión (es un buen ejercicio). En lugar de eso, mostraremos cómo usar librerías ahora estándar para hacer esto. En particular usamos keras (con tensorflow), que tienen la ventaja:</p>
+<ul>
+<li>En tensorflow y keras no es necesario calcular las derivadas a mano. Utiliza <a href="https://en.wikipedia.org/wiki/Automatic_differentiation">diferenciación automática</a>, que no es diferenciación numérica ni simbólica: se basa en la regla de la cadena y la codificación explícita de las derivadas de funciones elementales.</li>
+</ul>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidymodels)</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(keras)</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(<span class="st">"../R/casas_traducir_geo.R"</span>)</span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">68821</span>)</span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a><span class="co"># dividir muestra</span></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>casas_split <span class="ot">&lt;-</span> <span class="fu">initial_split</span>(casas <span class="sc">|&gt;</span></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>                      <span class="fu">select</span>(precio_m2_miles, area_hab_m2, calidad_gral, num_coches), </span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>                             <span class="at">prop =</span> <span class="fl">0.75</span>)</span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a><span class="co"># obtener muestra de entrenamiento</span></span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>casas_entrena <span class="ot">&lt;-</span> <span class="fu">training</span>(casas_split)</span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a>casas_receta <span class="ot">&lt;-</span> <span class="fu">recipe</span>(precio_m2_miles <span class="sc">~</span> ., casas_entrena) </span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co"># definición de estructura del modelo (regresión lineal)</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>x_ent <span class="ot">&lt;-</span> casas_receta <span class="sc">|&gt;</span> <span class="fu">prep</span>() <span class="sc">|&gt;</span> <span class="fu">juice</span>()  <span class="sc">|&gt;</span> <span class="fu">select</span>(<span class="sc">-</span>precio_m2_miles) <span class="sc">|&gt;</span> <span class="fu">as.matrix</span>()</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>y_ent <span class="ot">&lt;-</span> casas_receta <span class="sc">|&gt;</span> <span class="fu">prep</span>() <span class="sc">|&gt;</span> <span class="fu">juice</span>() <span class="sc">|&gt;</span> <span class="fu">pull</span>(precio_m2_miles)</span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>n_entrena <span class="ot">&lt;-</span> <span class="fu">nrow</span>(x_ent)</span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>crear_modelo <span class="ot">&lt;-</span> <span class="cf">function</span>(<span class="at">lr =</span> <span class="fl">0.01</span>){</span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>    modelo_casas <span class="ot">&lt;-</span> </span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>        <span class="fu">keras_model_sequential</span>() <span class="sc">|&gt;</span></span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>        <span class="fu">layer_dense</span>(<span class="at">units =</span> <span class="dv">1</span>,        <span class="co">#una sola respuesta,</span></span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>            <span class="at">activation =</span> <span class="st">"linear"</span>,    <span class="co"># combinar variables linealmente</span></span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a>            <span class="at">kernel_initializer =</span> <span class="fu">initializer_constant</span>(<span class="dv">0</span>), <span class="co">#inicializamos coeficientes en 0</span></span>
+<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a>            <span class="at">bias_initializer =</span> <span class="fu">initializer_constant</span>(<span class="dv">0</span>))   <span class="co">#inicializamos ordenada en 0</span></span>
+<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a>    <span class="co"># compilar seleccionando cantidad a minimizar, optimizador y métricas</span></span>
+<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a>    modelo_casas <span class="sc">|&gt;</span> <span class="fu">compile</span>(</span>
+<span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a>        <span class="at">loss =</span> <span class="st">"mean_squared_error"</span>,  <span class="co"># pérdida cuadrática</span></span>
+<span id="cb17-15"><a href="#cb17-15" aria-hidden="true" tabindex="-1"></a>        <span class="at">optimizer =</span> <span class="fu">optimizer_sgd</span>(<span class="at">learning_rate =</span> lr), <span class="co"># descenso en gradiente</span></span>
+<span id="cb17-16"><a href="#cb17-16" aria-hidden="true" tabindex="-1"></a>        <span class="at">metrics =</span> <span class="fu">list</span>(<span class="st">"mean_squared_error"</span>))</span>
+<span id="cb17-17"><a href="#cb17-17" aria-hidden="true" tabindex="-1"></a>    modelo_casas</span>
+<span id="cb17-18"><a href="#cb17-18" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb17-19"><a href="#cb17-19" aria-hidden="true" tabindex="-1"></a><span class="co"># tasa de aprendizaje es lr, tenemos que poner una tasa chica (prueba)</span></span>
+<span id="cb17-20"><a href="#cb17-20" aria-hidden="true" tabindex="-1"></a>modelo_casas <span class="ot">&lt;-</span> <span class="fu">crear_modelo</span>(<span class="at">lr =</span> <span class="fl">0.00001</span>)</span>
+<span id="cb17-21"><a href="#cb17-21" aria-hidden="true" tabindex="-1"></a><span class="co"># Ahora iteramos</span></span>
+<span id="cb17-22"><a href="#cb17-22" aria-hidden="true" tabindex="-1"></a><span class="co"># Primero probamos con un número bajo de iteraciones</span></span>
+<span id="cb17-23"><a href="#cb17-23" aria-hidden="true" tabindex="-1"></a>historia <span class="ot">&lt;-</span> modelo_casas <span class="sc">|&gt;</span> <span class="fu">fit</span>(</span>
+<span id="cb17-24"><a href="#cb17-24" aria-hidden="true" tabindex="-1"></a>  x_ent,    <span class="co"># x entradas</span></span>
+<span id="cb17-25"><a href="#cb17-25" aria-hidden="true" tabindex="-1"></a>  y_ent,    <span class="co"># y salida o target</span></span>
+<span id="cb17-26"><a href="#cb17-26" aria-hidden="true" tabindex="-1"></a>  <span class="at">batch_size =</span> <span class="fu">nrow</span>(x_ent), <span class="co"># para descenso en gradiente</span></span>
+<span id="cb17-27"><a href="#cb17-27" aria-hidden="true" tabindex="-1"></a>  <span class="at">epochs =</span> <span class="dv">20</span>, <span class="co"># número de iteraciones</span></span>
+<span id="cb17-28"><a href="#cb17-28" aria-hidden="true" tabindex="-1"></a>  <span class="at">verbose =</span> <span class="dv">0</span></span>
+<span id="cb17-29"><a href="#cb17-29" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(historia, <span class="at">metrics =</span> <span class="st">"mean_squared_error"</span>, <span class="at">smooth =</span> <span class="cn">FALSE</span>) <span class="sc">+</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>()</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="81-apendice-descenso_files/figure-html/unnamed-chunk-17-1.png" class="img-fluid" width="480"></p>
+</div>
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>historia<span class="sc">$</span>metrics<span class="sc">$</span>mean_squared_error <span class="sc">|&gt;</span> <span class="fu">round</span>(<span class="dv">4</span>)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> [1] 1.7903 0.7636 0.4549 0.3621 0.3342 0.3258 0.3232 0.3224 0.3222 0.3221
+[11] 0.3220 0.3220 0.3220 0.3219 0.3219 0.3219 0.3218 0.3218 0.3218 0.3217</code></pre>
+</div>
+</div>
+<p>Probamos con más corridas para checar convergencia:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Agregamos iteraciones: esta historia comienza en los últimos valores de</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="co"># la corrida anterior</span></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>historia <span class="ot">&lt;-</span> modelo_casas <span class="sc">|&gt;</span> <span class="fu">fit</span>(</span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as.matrix</span>(x_ent), <span class="co"># x entradas</span></span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>  y_ent,            <span class="co"># y salida o target</span></span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">batch_size =</span> <span class="fu">nrow</span>(x_ent), <span class="co"># para descenso en gradiente</span></span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">epochs =</span> <span class="dv">1000</span>, <span class="co"># número de iteraciones</span></span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">verbose =</span> <span class="dv">0</span></span>
+<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(historia, <span class="at">metrics =</span> <span class="st">"mean_squared_error"</span>, <span class="at">smooth =</span> <span class="cn">FALSE</span>) </span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="81-apendice-descenso_files/figure-html/unnamed-chunk-19-1.png" class="img-fluid" width="480"></p>
+</div>
+</div>
+<p>El modelo parece todavía ir mejorando. Veamos de todas formas los coeficientes estimados hasta ahora:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>keras<span class="sc">::</span><span class="fu">get_weights</span>(modelo_casas)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[[1]]
+            [,1]
+[1,] 0.007331367
+[2,] 0.016437238
+[3,] 0.004633876
+
+[[2]]
+[1] 0.003028648</code></pre>
+</div>
+</div>
+<p>La implementación oficial de R es <em>lm</em>, que en general tiene buen desempeño para datos que caben en memoria:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="fu">lm</span>(precio_m2_miles <span class="sc">~</span> area_hab_m2 <span class="sc">+</span> calidad_gral <span class="sc">+</span> num_coches, </span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>   <span class="at">data =</span> casas_entrena) <span class="sc">|&gt;</span> </span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">coef</span>()</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> (Intercept)  area_hab_m2 calidad_gral   num_coches 
+  0.66869194  -0.00449751   0.16807663   0.13115749 </code></pre>
+</div>
+</div>
+<p>De modo que todavía requerimos más iteraciones para alcanzar convergencia. ¿Por qué la convergencia es tan lenta? En parte, la razón es que las escalas de las variables de entrada son muy diferentes, de modo que es difícil ajustar una tasa de aprendizaje constante que funcione bien. Podemos remediar esto poniendo todas las entradas en la misma escala (normalizando)</p>
+</section>
+<section id="normalización-de-entradas" class="level2" data-number="A.3">
+<h2 data-number="A.3" class="anchored" data-anchor-id="normalización-de-entradas"><span class="header-section-number">A.3</span> Normalización de entradas</h2>
+<p>La convergencia de descenso en gradiente (y también el desempeño numérico para otros algoritmos) puede dificultarse cuando las variables tienen escalas muy diferentes. Esto produce curvaturas altas en la función que queremos minimizar.</p>
+<p>En este ejemplo simple, una variable tiene desviación estándar 10 y otra 1:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>x1 <span class="ot">&lt;-</span> <span class="fu">rnorm</span>(<span class="dv">100</span>, <span class="dv">0</span>, <span class="dv">5</span>) </span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>x2 <span class="ot">&lt;-</span> <span class="fu">rnorm</span>(<span class="dv">100</span>, <span class="dv">0</span>, <span class="dv">1</span>) <span class="sc">+</span>  <span class="fl">0.1</span><span class="sc">*</span>x1</span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>y <span class="ot">&lt;-</span> <span class="dv">0</span><span class="sc">*</span>x1 <span class="sc">+</span> <span class="dv">0</span><span class="sc">*</span>x2 <span class="sc">+</span> <span class="fu">rnorm</span>(<span class="dv">100</span>, <span class="dv">0</span>, <span class="fl">0.1</span>) </span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>dat <span class="ot">&lt;-</span> <span class="fu">tibble</span>(x1, x2,  y)</span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>rss <span class="ot">&lt;-</span> <span class="cf">function</span>(beta)  <span class="fu">mean</span>((<span class="fu">as.matrix</span>(dat[, <span class="dv">1</span><span class="sc">:</span><span class="dv">2</span>]) <span class="sc">%*%</span> beta <span class="sc">-</span> y)<span class="sc">^</span><span class="dv">2</span>) </span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a>grid_beta <span class="ot">&lt;-</span> <span class="fu">expand.grid</span>(<span class="at">beta1 =</span> <span class="fu">seq</span>(<span class="sc">-</span><span class="dv">1</span>, <span class="dv">1</span>, <span class="at">length.out =</span> <span class="dv">50</span>), </span>
+<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a>                         <span class="at">beta2 =</span> <span class="fu">seq</span>(<span class="sc">-</span><span class="dv">1</span>, <span class="dv">1</span>, <span class="at">length.out =</span> <span class="dv">50</span>))</span>
+<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a>rss_1 <span class="ot">&lt;-</span> <span class="fu">apply</span>(grid_beta, <span class="dv">1</span>, rss) </span>
+<span id="cb27-9"><a href="#cb27-9" aria-hidden="true" tabindex="-1"></a>dat_x <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(grid_beta, rss_1)</span>
+<span id="cb27-10"><a href="#cb27-10" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(dat_x, <span class="fu">aes</span>(<span class="at">x =</span> beta1, <span class="at">y =</span> beta2, <span class="at">z =</span> rss_1)) <span class="sc">+</span> </span>
+<span id="cb27-11"><a href="#cb27-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_contour</span>(<span class="at">binwidth =</span> <span class="fl">0.5</span>) <span class="sc">+</span></span>
+<span id="cb27-12"><a href="#cb27-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">coord_equal</span>() </span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="81-apendice-descenso_files/figure-html/unnamed-chunk-22-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+<p>En algunas direcciones el gradiente es muy grande, y en otras chico. Esto implica que la convergencia puede ser muy lenta en algunas direcciones, puede diverger en otras, y que hay que ajustar el paso <span class="math inline">\(\eta &gt; 0\)</span> con cuidado, dependiendo de dónde comiencen las iteraciones.</p>
+<p>Por ejemplo, con un tamaño de paso relativamente chico, damos unos saltos grandes al principio y luego avanzamos muy lentamente:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>grad_calc <span class="ot">&lt;-</span> <span class="cf">function</span>(x_ent, y_ent){</span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>  <span class="co"># calculamos directamente el gradiente</span></span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>  salida_grad <span class="ot">&lt;-</span> <span class="cf">function</span>(beta){</span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a>    n <span class="ot">&lt;-</span> <span class="fu">length</span>(y_ent)</span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a>    f_beta <span class="ot">&lt;-</span> <span class="fu">as.matrix</span>(<span class="fu">cbind</span>(<span class="dv">1</span>, x_ent)) <span class="sc">%*%</span> beta</span>
+<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a>    e <span class="ot">&lt;-</span> y_ent <span class="sc">-</span> f_beta</span>
+<span id="cb28-7"><a href="#cb28-7" aria-hidden="true" tabindex="-1"></a>    grad_out <span class="ot">&lt;-</span> <span class="sc">-</span> <span class="fu">as.numeric</span>(<span class="fu">t</span>(<span class="fu">cbind</span>(<span class="dv">1</span>, x_ent)) <span class="sc">%*%</span> e) <span class="sc">/</span> n</span>
+<span id="cb28-8"><a href="#cb28-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">names</span>(grad_out) <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">'Intercept'</span>, <span class="fu">colnames</span>(x_ent))</span>
+<span id="cb28-9"><a href="#cb28-9" aria-hidden="true" tabindex="-1"></a>    grad_out</span>
+<span id="cb28-10"><a href="#cb28-10" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb28-11"><a href="#cb28-11" aria-hidden="true" tabindex="-1"></a>  salida_grad</span>
+<span id="cb28-12"><a href="#cb28-12" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb28-13"><a href="#cb28-13" aria-hidden="true" tabindex="-1"></a>grad_sin_norm <span class="ot">&lt;-</span> <span class="fu">grad_calc</span>(dat[, <span class="dv">1</span><span class="sc">:</span><span class="dv">2</span>, <span class="at">drop =</span> <span class="cn">FALSE</span>], dat<span class="sc">$</span>y)</span>
+<span id="cb28-14"><a href="#cb28-14" aria-hidden="true" tabindex="-1"></a>iteraciones <span class="ot">&lt;-</span> <span class="fu">descenso</span>(<span class="dv">10</span>, <span class="fu">c</span>(<span class="dv">0</span>, <span class="sc">-</span><span class="fl">0.25</span>, <span class="sc">-</span><span class="fl">0.75</span>), <span class="fl">0.02</span>, grad_sin_norm)</span>
+<span id="cb28-15"><a href="#cb28-15" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(dat_x) <span class="sc">+</span> </span>
+<span id="cb28-16"><a href="#cb28-16" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_contour</span>(<span class="fu">aes</span>(<span class="at">x =</span> beta1, <span class="at">y =</span> beta2, <span class="at">z =</span> rss_1), <span class="at">binwidth =</span> <span class="fl">0.5</span>) <span class="sc">+</span></span>
+<span id="cb28-17"><a href="#cb28-17" aria-hidden="true" tabindex="-1"></a>    <span class="fu">coord_equal</span>() <span class="sc">+</span></span>
+<span id="cb28-18"><a href="#cb28-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_path</span>(<span class="at">data =</span> <span class="fu">data.frame</span>(iteraciones[, <span class="dv">2</span><span class="sc">:</span><span class="dv">3</span>]), <span class="fu">aes</span>(<span class="at">x=</span>X1, <span class="at">y=</span>X2), <span class="at">colour =</span> <span class="st">'red'</span>) <span class="sc">+</span></span>
+<span id="cb28-19"><a href="#cb28-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">data =</span> <span class="fu">data.frame</span>(iteraciones[, <span class="dv">2</span><span class="sc">:</span><span class="dv">3</span>]), <span class="fu">aes</span>(<span class="at">x=</span>X1, <span class="at">y=</span>X2), <span class="at">colour =</span> <span class="st">'red'</span>)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="81-apendice-descenso_files/figure-html/unnamed-chunk-23-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+<p>Si incrementamos el tamaño de paso observamos también convergencia lenta. En este caso particular, subir más el tamaño de paso puede producir divergencia:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>iteraciones <span class="ot">&lt;-</span> <span class="fu">descenso</span>(<span class="dv">10</span>, <span class="fu">c</span>(<span class="dv">0</span>, <span class="sc">-</span><span class="fl">0.25</span>, <span class="sc">-</span><span class="fl">0.75</span>), <span class="fl">0.07</span>, grad_sin_norm)</span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(dat_x) <span class="sc">+</span> </span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_contour</span>(<span class="fu">aes</span>(<span class="at">x =</span> beta1, <span class="at">y =</span> beta2, <span class="at">z =</span> rss_1), <span class="at">binwidth =</span> <span class="fl">0.5</span>) <span class="sc">+</span></span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">coord_equal</span>() <span class="sc">+</span></span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_path</span>(<span class="at">data =</span> <span class="fu">data.frame</span>(iteraciones[, <span class="dv">2</span><span class="sc">:</span><span class="dv">3</span>]), <span class="fu">aes</span>(<span class="at">x=</span>X1, <span class="at">y=</span>X2), <span class="at">colour =</span> <span class="st">'red'</span>) <span class="sc">+</span></span>
+<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">data =</span> <span class="fu">data.frame</span>(iteraciones[, <span class="dv">2</span><span class="sc">:</span><span class="dv">3</span>]), <span class="fu">aes</span>(<span class="at">x=</span>X1, <span class="at">y=</span>X2), <span class="at">colour =</span> <span class="st">'red'</span>)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="81-apendice-descenso_files/figure-html/unnamed-chunk-24-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+<p>Una normalización usual es con la media y desviación estándar, donde hacemos, para cada variable de entrada <span class="math inline">\(j=1,2,\ldots, p\)</span> <span class="math display">\[ x_j^{(i)} = \frac{ x_j^{(i)} - \bar{x}_j}{s_j}\]</span> donde <span class="math display">\[\bar{x}_j = \frac{1}{N} \sum_{i=1}^N x_j^{(i)}\]</span> <span class="math display">\[s_j = \sqrt{\frac{1}{N-1}\sum_{i=1}^N (x_j^{(i)}- \bar{x}_j )^2}\]</span> es decir, centramos y normalizamos por columna. Otra opción común es restar el mínimo y dividir entre la diferencia del máximo y el mínimo, de modo que las variables resultantes toman valores en <span class="math inline">\([0,1]\)</span>.</p>
+<p>Entonces escalamos antes de ajustar:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>x1_s <span class="ot">=</span> (x1 <span class="sc">-</span> <span class="fu">mean</span>(x1))<span class="sc">/</span><span class="fu">sd</span>(x1)</span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>x2_s <span class="ot">=</span> (x2 <span class="sc">-</span> <span class="fu">mean</span>(x2))<span class="sc">/</span><span class="fu">sd</span>(x2)</span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a>dat <span class="ot">&lt;-</span> <span class="fu">tibble</span>(<span class="at">x1_s =</span> x1_s, <span class="at">x2_s =</span> x2_s,  <span class="at">y =</span> y)</span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a>rss <span class="ot">&lt;-</span> <span class="cf">function</span>(beta)  <span class="fu">mean</span>((<span class="fu">as.matrix</span>(dat[, <span class="dv">1</span><span class="sc">:</span><span class="dv">2</span>]) <span class="sc">%*%</span> beta <span class="sc">-</span> y)<span class="sc">^</span><span class="dv">2</span>) </span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a>grid_beta <span class="ot">&lt;-</span> <span class="fu">expand.grid</span>(<span class="at">beta1 =</span> <span class="fu">seq</span>(<span class="sc">-</span><span class="dv">1</span>, <span class="dv">1</span>, <span class="at">length.out =</span> <span class="dv">50</span>), </span>
+<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a>                         <span class="at">beta2 =</span> <span class="fu">seq</span>(<span class="sc">-</span><span class="dv">1</span>, <span class="dv">1</span>, <span class="at">length.out =</span> <span class="dv">50</span>))</span>
+<span id="cb30-7"><a href="#cb30-7" aria-hidden="true" tabindex="-1"></a>rss_1 <span class="ot">&lt;-</span> <span class="fu">apply</span>(grid_beta, <span class="dv">1</span>, rss) </span>
+<span id="cb30-8"><a href="#cb30-8" aria-hidden="true" tabindex="-1"></a>dat_x <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(grid_beta, rss_1)</span>
+<span id="cb30-9"><a href="#cb30-9" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(dat_x, <span class="fu">aes</span>(<span class="at">x =</span> beta1, <span class="at">y =</span> beta2, <span class="at">z =</span> rss_1)) <span class="sc">+</span> </span>
+<span id="cb30-10"><a href="#cb30-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_contour</span>(<span class="at">binwidth =</span> <span class="fl">0.5</span>) <span class="sc">+</span></span>
+<span id="cb30-11"><a href="#cb30-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">coord_equal</span>() </span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="81-apendice-descenso_files/figure-html/unnamed-chunk-25-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+<p>Nótese que los coeficientes ajustados serán diferentes a los del caso no normalizado.</p>
+<p>Si normalizamos, obtenemos convergencia más rápida</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>grad_sin_norm <span class="ot">&lt;-</span> <span class="fu">grad_calc</span>(dat[, <span class="dv">1</span><span class="sc">:</span><span class="dv">2</span>, <span class="at">drop =</span> <span class="cn">FALSE</span>], dat<span class="sc">$</span>y)</span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>iteraciones <span class="ot">&lt;-</span> <span class="fu">descenso</span>(<span class="dv">10</span>, <span class="fu">c</span>(<span class="dv">0</span>, <span class="sc">-</span><span class="fl">0.25</span>, <span class="sc">-</span><span class="fl">0.75</span>), <span class="fl">0.5</span>, grad_sin_norm)</span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(dat_x) <span class="sc">+</span> </span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_contour</span>(<span class="fu">aes</span>(<span class="at">x =</span> beta1, <span class="at">y =</span> beta2, <span class="at">z =</span> rss_1), <span class="at">binwidth =</span> <span class="fl">0.5</span>) <span class="sc">+</span></span>
+<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">coord_equal</span>() <span class="sc">+</span></span>
+<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_path</span>(<span class="at">data =</span> <span class="fu">data.frame</span>(iteraciones[, <span class="dv">2</span><span class="sc">:</span><span class="dv">3</span>]), <span class="fu">aes</span>(<span class="at">x=</span>X1, <span class="at">y=</span>X2), <span class="at">colour =</span> <span class="st">'red'</span>) <span class="sc">+</span></span>
+<span id="cb31-7"><a href="#cb31-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">data =</span> <span class="fu">data.frame</span>(iteraciones[, <span class="dv">2</span><span class="sc">:</span><span class="dv">3</span>]), <span class="fu">aes</span>(<span class="at">x=</span>X1, <span class="at">y=</span>X2), <span class="at">colour =</span> <span class="st">'red'</span>)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="81-apendice-descenso_files/figure-html/unnamed-chunk-26-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+<div class="cell" type="comment">
+<div class="comment">
+<p>
+Cuando normalizamos antes de ajustar el modelo, las predicciones deben hacerse con entradas normalizadas. La normalización se hace con los mismos valores que se usaron en el entrenamiento (y <strong>no</strong> recalculando medias y desviaciones estándar con el conjunto de prueba). En cuanto a la forma funcional del predictor <span class="math inline">(f)</span>, el problema con entradas normalizadas es equivalente al de las entradas no normalizadas. Asegúrate de esto escribiendo cómo correponden los coeficientes de cada modelo normalizado con los coeficientes del modelo no normalizado.
+</p>
+</div>
+</div>
+<p>Supongamos que el modelo en las variables originales es <span class="math display">\[{f}_\beta (X) = \beta_0 + \beta_1 X_1 + \beta_2 X_2 + \cdots + \beta_p X_p,\]</span> Consideramos el modelo con variables estandarizadas <span class="math display">\[{g}_{\beta^s} (X) = \beta_0^s + \beta_1^s Z_1 + \beta_2^s Z_2 + \cdots + \beta_p^s Z_p,\]</span></p>
+<p>Sustituyendo <span class="math inline">\(Z_j = (X_j - \mu_j)/s_j,\)</span></p>
+<p><span class="math display">\[{g}_{\beta^s} (X) = (\beta_0^s - \sum_{j=1}^p \beta_j^s \mu_j/s_j) + \frac{\beta_1^s}{s_j} X_1 + \frac{\beta_2^s}{s_2} X_2 + \cdots + \frac{\beta_p^s}{s_p} X_p,\]</span> Y vemos que tiene la misma forma funcional de <span class="math inline">\(f_\beta(X)\)</span>. Si la solución de mínimos cuadrados es única, entonces una vez que ajustemos tenemos que tener <span class="math inline">\(\hat{f}_\beta(X) = \hat{g}_{\beta^s} (X)\)</span>, lo que implica que <span class="math display">\[\hat{\beta}_0 = \hat{\beta}_0^s -  \sum_{j=1}^p \hat{\beta}_j^s\mu_j/s_j\]</span> y <span class="math display">\[\hat{\beta}_j = \hat{\beta}_j^s/s_j.\]</span></p>
+<p>Nótese que para pasar del problema estandarizado al no estandarizado simplemente se requiere escalar los coeficientes por la <span class="math inline">\(s_j\)</span> correspondiente.</p>
+<section id="ejemplo-1" class="level4 unnumbered">
+<h4 class="unnumbered anchored" data-anchor-id="ejemplo-1">Ejemplo</h4>
+<p>Repetimos nuestro modelo, pero normalizando las entradas:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb32"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="co"># usamos recipes para este ejemplo, no necesitas usarlo</span></span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>casas_receta <span class="ot">&lt;-</span> <span class="fu">recipe</span>(precio_m2_miles <span class="sc">~</span> ., casas_entrena) <span class="sc">|&gt;</span></span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_normalize</span>(<span class="fu">all_predictors</span>()) </span>
+<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a>casas_receta <span class="sc">|&gt;</span> <span class="fu">summary</span>()</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 4 × 4
+  variable        type      role      source  
+  &lt;chr&gt;           &lt;list&gt;    &lt;chr&gt;     &lt;chr&gt;   
+1 area_hab_m2     &lt;chr [2]&gt; predictor original
+2 calidad_gral    &lt;chr [2]&gt; predictor original
+3 num_coches      &lt;chr [2]&gt; predictor original
+4 precio_m2_miles &lt;chr [2]&gt; outcome   original</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb34"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a>modelo_lineal <span class="ot">&lt;-</span> <span class="fu">linear_reg</span>() <span class="sc">|&gt;</span></span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_engine</span>(<span class="st">"lm"</span>)</span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a>casas_flujo <span class="ot">&lt;-</span> <span class="fu">workflow</span>() <span class="sc">|&gt;</span></span>
+<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add_recipe</span>(casas_receta) <span class="sc">|&gt;</span> </span>
+<span id="cb34-5"><a href="#cb34-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add_model</span>(modelo_lineal)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(keras)</span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a><span class="co"># definición de estructura del modelo (regresión lineal)</span></span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a>x_ent_s <span class="ot">&lt;-</span>  <span class="fu">prep</span>(casas_receta) <span class="sc">|&gt;</span> <span class="fu">juice</span>() <span class="sc">|&gt;</span> <span class="fu">select</span>(<span class="sc">-</span>precio_m2_miles) <span class="sc">|&gt;</span> </span>
+<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as.matrix</span>()</span>
+<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a>ajustar_casas <span class="ot">&lt;-</span> <span class="cf">function</span>(modelo, x, y, <span class="at">n_epochs =</span> <span class="dv">100</span>){</span>
+<span id="cb35-6"><a href="#cb35-6" aria-hidden="true" tabindex="-1"></a>  ajuste <span class="ot">&lt;-</span> modelo <span class="sc">|&gt;</span> <span class="fu">fit</span>(</span>
+<span id="cb35-7"><a href="#cb35-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">as.matrix</span>(x), y,</span>
+<span id="cb35-8"><a href="#cb35-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">batch_size =</span> <span class="fu">nrow</span>(x_ent), <span class="co"># para descenso en gradiente</span></span>
+<span id="cb35-9"><a href="#cb35-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">epochs =</span> n_epochs, <span class="co"># número de iteraciones</span></span>
+<span id="cb35-10"><a href="#cb35-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">verbose =</span> <span class="dv">0</span>) <span class="sc">|&gt;</span> <span class="fu">as_tibble</span>()</span>
+<span id="cb35-11"><a href="#cb35-11" aria-hidden="true" tabindex="-1"></a>  ajuste</span>
+<span id="cb35-12"><a href="#cb35-12" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb35-13"><a href="#cb35-13" aria-hidden="true" tabindex="-1"></a>modelo_casas_ns <span class="ot">&lt;-</span> <span class="fu">crear_modelo</span>(<span class="fl">0.00001</span>)</span>
+<span id="cb35-14"><a href="#cb35-14" aria-hidden="true" tabindex="-1"></a>modelo_casas_s <span class="ot">&lt;-</span> <span class="fu">crear_modelo</span>(<span class="fl">0.2</span>)</span>
+<span id="cb35-15"><a href="#cb35-15" aria-hidden="true" tabindex="-1"></a>historia_s <span class="ot">&lt;-</span> <span class="fu">ajustar_casas</span>(modelo_casas_s, x_ent_s, y_ent) <span class="sc">|&gt;</span></span>
+<span id="cb35-16"><a href="#cb35-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">tipo =</span> <span class="st">"Estandarizar"</span>)</span>
+<span id="cb35-17"><a href="#cb35-17" aria-hidden="true" tabindex="-1"></a>historia_ns <span class="ot">&lt;-</span> <span class="fu">ajustar_casas</span>(modelo_casas_ns, x_ent, y_ent) <span class="sc">|&gt;</span> </span>
+<span id="cb35-18"><a href="#cb35-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">tipo =</span> <span class="st">"Sin estandarizar"</span>)</span>
+<span id="cb35-19"><a href="#cb35-19" aria-hidden="true" tabindex="-1"></a>historia <span class="ot">&lt;-</span> <span class="fu">bind_rows</span>(historia_ns, historia_s) <span class="sc">|&gt;</span>  <span class="fu">filter</span>(metric <span class="sc">==</span> <span class="st">"mean_squared_error"</span>)</span>
+<span id="cb35-20"><a href="#cb35-20" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(historia, <span class="fu">aes</span>(<span class="at">x =</span> epoch, <span class="at">y =</span> value, <span class="at">colour =</span> tipo)) <span class="sc">+</span></span>
+<span id="cb35-21"><a href="#cb35-21" aria-hidden="true" tabindex="-1"></a>     <span class="fu">geom_line</span>() <span class="sc">+</span> <span class="fu">geom_point</span>() <span class="sc">+</span><span class="fu">scale_x_log10</span>() <span class="sc">+</span> <span class="fu">scale_y_log10</span>()</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="81-apendice-descenso_files/figure-html/unnamed-chunk-30-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+<p>Observamos que el modelo con datos estandarizados convergió:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb36"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a>keras<span class="sc">::</span><span class="fu">get_weights</span>(modelo_casas_s)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[[1]]
+            [,1]
+[1,] -0.22045916
+[2,]  0.23149671
+[3,]  0.09673478
+
+[[2]]
+[1] 1.295027</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb38"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="fu">coef</span>(<span class="fu">lm.fit</span>(<span class="fu">cbind</span>(<span class="dv">1</span>,x_ent_s), y_ent))</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>              area_hab_m2 calidad_gral   num_coches 
+  1.29502679  -0.22045919   0.23149675   0.09673476 </code></pre>
+</div>
+</div>
+<p>Mientras que el modelo no estandarizado todavía requiere iteraciones:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb40"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a>keras<span class="sc">::</span><span class="fu">get_weights</span>(modelo_casas_ns)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[[1]]
+             [,1]
+[1,] 0.0079817399
+[2,] 0.0019486140
+[3,] 0.0005532746
+
+[[2]]
+[1] 0.0003491882</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb42"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="fu">coef</span>(<span class="fu">lm.fit</span>(<span class="fu">cbind</span>(<span class="dv">1</span>, x_ent), y_ent))</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>              area_hab_m2 calidad_gral   num_coches 
+  0.66869194  -0.00449751   0.16807663   0.13115749 </code></pre>
+</div>
+</div>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copiado");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copiado");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="./05-regularizacion-1.html" class="pagination-link">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Regularización y variabilidad</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./82-apendice-descenso-estocastico.html" class="pagination-link">
+        <span class="nav-page-text"><span class="chapter-number">B</span>&nbsp; <span class="chapter-title">Apéndice 2: Descenso estocástico</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+</body></html>
