@@ -590,25 +590,28 @@ g_1 + g_2 + plot_layout(guides = 'collect')
 
 Esto patrón sugiere que:
 
--  Nuestro método de vecinos más cercanos no tiene errores por sesgo, sino más
-bien por sobreajuste o variabilidad.
+-  Nuestro método de vecinos más cercanos tiene errores bajos por sesgo, pero tiene error considerable por sobreajuste o variabilidad.
 - Nuestro método lineal no tiene mucha variabilidad (el estimado con una muestra
 grande es casi igual al de la muestra de entrenamiento), sino más bien
-por sesgo
+por sesgo.
 
 - El error por sesgo se reduce usando métodos más flexibles o menos
 restringidos que puedan capturar patrones claros en los datos. 
 - Para reducir la variabilidad podemos usar métodos más simples o restringidos
-que no capturen tanto ruido. 
+que no capturen tanto ruido.
+- El balance de complejidad correcto depende del tamaño de muestra
+de entrenamiento.
 - El error irreducible se puede reducir incorporando información adicional relevante
 a las entradas.
 
 ::: callout-note
 # Complejidad y error de predicción
+Para un tamaño de muestra de entrenamiento fijo,
 
 - Métodos de predicción más flexibles o complejos tienden a sufrir
 más de error por variabilidad, pues dependen fuertemente de la muestra utilizada.
 - Métodos de predicción más rígidos o simples tienden a sufrir más error por sesgo, pues dependen menos de la muestra utilizada.
+
 :::
 
 
@@ -699,6 +702,8 @@ una muestra independiente ${\mathcal T}$.
 (por ejemplo, $\hat{Err} \to Err$ cuando el tamaño de la muestra de prueba
 crece), pero $\overline{err}$ típicamente es **una estimación mala del error de
 predicción**.
+- Nótese también que aunque generalmente podemos ajustar reduciendo
+el error de *entrenamiento*, lo que queremos es reducir el error de *prueba*: es decir, el error *fuera* de la muestra de entrenamiento.
 
 ::: callout-note
 # Reduciendo el error de predicción
