@@ -16,8 +16,8 @@ como regresión lineal, que necesariamente incurren en sesgo porque su estructur
 siempre está mal especificada.
 
 Sin embargo, no es necesario que se cumpla exactamente el supuesto lineal para
-que los predictores lineales funcionen, y veremos que en casos típicos los
-métodos locales como $k$-vecinos más cercanos rara vez funcionan apropiadamente.
+que los predictores lineales funcionen de manera predictiva, y veremos que en casos típicos los
+métodos locales simples como $k$-vecinos más cercanos rara vez funcionan apropiadamente.
 
 ## Controlando complejidad
 
@@ -25,9 +25,9 @@ Primero examinamos cómo controlamos el nivel de complejidad para un método
 local como $k$ vecinos más cercanos. La idea es que:
 
 - **Más complejidad**: Si tomamos $k$ demasiado chica, cada estimación usa pocos datos y puede ser ruidosa
-(incurrimos en variabilidad)
+(incurrimos en variabilidad). Sin embargo, el predictor resultante puede ajustarse a patrones locales y globales.
 - **Menos complejidad**: Si tomamos $k$ demasiado grande, cada estimación usa potencialmente datos no relevantes muy
-lejanos a donde queremos predecir (incurrimos en sesgo)
+lejanos a donde queremos predecir (incurrimos en sesgo), sin embargo cada estimación es más estable pues utiliza más datos.
 
 Comenzamos con un ejemplo simple en dimensión baja:
 
@@ -129,7 +129,7 @@ dat_graf <- dat_graf |>
   mutate(pred_1 = predict(ajuste_1, dat_graf) |> pull(.pred))
 ggplot(datos_entrena, aes(x = peso_kg, group = año, colour = año)) +
   geom_point(aes(y = rendimiento_kpl), alpha = 0.6) + 
-  geom_line(data = dat_graf, aes(y = pred_1),  size = 1.2)
+  geom_line(data = dat_graf, aes(y = pred_1),  linewidth = 1.2)
 ```
 
 El método parece funcionar razonablemente bien para este problema simple. Sin 
@@ -157,9 +157,9 @@ típicamente no existen vecinos cercanos, aún para conjuntos de entrenamiento m
 
 Esto implica que para tamaños típicos $n$ de muestra de entrenamiento:
 
-- Si tomamos $k$ chica, el sesgo por especificación es chico (muestras muy grandes), pero el sesgo de estimación puede ser *grande* pues estamos de todas formas obligados a buscar vecinos lejos de donde queremos predecir.
+- Si tomamos $k$ chica, el sesgo por especificación es chico (muestras muy grandes), pero el sesgo de estimación puede ser *grande* pues estamos de todas formas obligados a buscar vecinos lejos de donde queremos predecir. La variabilidad también es alta pues usamos pocos datos para cada predicción.
 
-- Pero si tomamos $k$ más grande, 
+- Si tomamos $k$ más grande, 
 el sesgo por especificación tiende ser más grande (pues promediamos sobre regiones relativamente grandes). Perdemos la supuesta ventaja del método local, 
 aún cuando quizá reduzcamos el sesgo de estimación.
 
@@ -347,7 +347,7 @@ apropiadas ya sea mediante:
 
 - **Estructura** en nuestros modelos (por ejemplo, efectos lineales cuando variables tienen efectos aproximadamente
 lineales, árboles cuando hay algunas interacciones, redes convolucionales
-para procesamiento de imágenes y señales, dependencia del contexto inmediato en modelos
+para procesamiento de imágenes y señales, dependencia del contexto en modelos
 de lenguaje, etc.)
 - **Reducción de dimensionalidad** apropiada (por ejemplo, 
 *embeddings* basados en otros modelos, o técnicas como componentes principales/descompocisión en valores singulares, etc.).
