@@ -1,0 +1,389 @@
+---
+title: "Tarea 2"
+format: html
+---
+
+# Parte 1: descomposición del error de predicción
+
+En este ejemplo consideramos la descomposición simplificada al final de la sección 2,
+que trata con una muestra en entrenamiento de tamaño fijo:
+
+$$\mathbf{y} - \hat{f_{\mathcal{L}}}(\mathbf{x}) = \underbrace{f^* (\mathbf{x}) - E(\hat{f_{\mathcal{L}}}(\mathbf{x}))}_\text{sesgo} +   \underbrace{E(\hat{f_{\mathcal{L}}}(\mathbf{x})) - \hat{f_{\mathcal{L}}}(\mathbf{x})}_\text{variabilidad} + \underbrace{y - f^*(\mathbf{x})}_\text{irreducible}.$$
+
+En este caso nos reduciremos a dimensión 1 (una variable de entrada). Generamos datos con:
+
+```{r}
+#| message: false
+library(tidyverse)
+library(tidymodels)
+fun_exp <- \(x) sin( 1.7 * pi * x)
+simular_1 <- function(n) {
+  x_grid <- seq(0, 1, 0.1)
+  datos_tbl <- tibble(x = rep(x_grid, length.out = n)) |> 
+    mutate(y = map_dbl(x, fun_exp)) |> 
+    mutate(y = y + rnorm(n, 0, 0.25))
+  datos_tbl
+}
+```
+
+ Abajo  mostramos la gráfica que queremos estimar (que es el óptimo $f^*$):
+
+```{r}
+#| fig-width: 4
+#| fig-height: 3
+datos_f <- tibble(x = seq(0, 1, 0.01)) |> 
+  mutate(y = map_dbl(x, fun_exp)) 
+datos_f |> 
+  ggplot(aes(x = x, y = y)) + geom_line()
+```
+
+Utilizaremos polinomios de distintos grados ajustados a los datos
+con mínimos cuadrados para hacer predicciones. Por ejemplo,
+si el grado es $p=3$ ajustaremos un predictor de la forma
+
+$$\hat{f}(x) = a_0 + a_1 x + a_2 x^2 + a_3 x^3$$
+
+**Pregunta 1**: explica en qué sentido predictores con grado
+más grande son más "complejos" que predictores con grado
+más bajo. 
+
+**Pregunta 2**: este es un ejemplo clásico de "expansión de
+entradas". En los datos originales solo tenemos una entrada $x$,
+pero antes de ajustar nuestro modelo creamos y agregamos
+las columnas $x^2, x^3$. El modelo sigue siendo una regresión lineal,
+pero en las entradas derivadas $x_1 = x, x_2 = x^2, x_3 = x^3$.
+¿Por qué querríamos hacer esto en algunos casos?
+
+**Nota**: usar polinomios de esta forma no generalmente
+no es numéricamente conveniente, además de tener otros
+problemas por la naturaleza global de los polinomios.
+Este tipo de expansión 
+de entradas es generalmente más efectivo usando *splines* (ver notas).
+
+
+Ahora tomamos una muestra de $N=50$ casos para entrenar, y otra de prueba de tamaño grande para evaluar:
+
+```{r}
+set.seed(4)
+muestra <- simular_1(10000)
+split_ent_pr <- validation_split(
+  muestra,
+  prop = 30 / 10000)
+muestra_entrena <- training(split_ent_pr$splits[[1]])
+```
+
+
+```{r}
+#modelo
+mod_1 <- linear_reg() |>
+  set_mode("regression")
+#preprocesamiento
+receta_1 <- recipe(y ~ ., muestra_entrena) |> 
+  step_poly(x, degree = tune(),
+            options = list(raw = TRUE)) 
+flujo_polinomio <- workflow() |>  
+  add_recipe(receta_1) |> 
+  add_model(mod_1)
+grid_grado <- degree(range = c(1, 10)) |> 
+  grid_regular(levels = 10)
+ajustes <- tune_grid(flujo_polinomio,
+                     resamples = split_ent_pr,
+                     metrics = metric_set(rmse),
+                     grid = grid_grado) 
+metricas_prueba <- ajustes |> 
+  collect_metrics()
+metricas_prueba |> ggplot(aes(x = degree, y = mean)) + 
+  geom_point() + geom_line() +
+  xlab("Grado (complejidad)") + ylab("Error de prueba (rmse)")
+```
+
+
+**Pregunta 3**: explica por qué crees que las evaluaciones de
+desempeño
+(con la muestra de prueba) de los distintos modelos tienen esta forma de U. ¿En qué parte hay subajuste y en qué parte hay sobreajuste?
+Explica por qué si viéramos la curva de error de entrenamiento sería
+una curva decreciente.
+
+
+Ahora graficamos los distintos modelos para
+entender mejor lo que está pasando:
+
+```{r}
+ajustados <- map_df(1:10, function(grado) {
+  ajustado <- finalize_workflow(flujo_polinomio,  
+    parameters = list(degree = grado)) |> 
+    fit(muestra_entrena)
+  predicciones <- predict(ajustado, datos_f) |> 
+    bind_cols(datos_f) |> select(x, .pred) |> 
+    mutate(grado = grado)
+})
+ggplot(ajustados, aes(x = x)) +
+  geom_line(aes(y = .pred), colour = "red") +
+  facet_wrap(~grado) +
+  geom_line(data = datos_f, aes(y = y))
+```
+
+
+**Pregunta 4**: Confirma si tus observaciones en la pregunta 3
+anterior confirman lo que ves en esta última gráfica.
+
+## Términos de sesgo y variabilidad 
+
+Comparemos sesgo y variabilidad para los modelos de grado 2 y
+de grado 9
+
+
+```{r}
+simular_reps <- function(grado, n = 100){
+  map_df(1:100, function(rep){
+  #preprocesamiento
+  muestra_ent <- simular_1(30)
+  ajuste <-  finalize_workflow(flujo_polinomio,  
+    parameters = list(degree = grado)) |> 
+    fit(muestra_ent)
+  predicciones <- predict(ajuste, datos_f) |> 
+  bind_cols(datos_f) |> select(x, .pred)
+  predicciones |> mutate(grado = grado) |> 
+    mutate(rep = rep)
+  })
+}
+reps_tbl <- simular_reps(grado = 2) |> 
+  mutate(y = map_dbl(x, fun_exp))
+```
+
+Podemos examinar cómo se ve nuestro predictor para distintas muestras:
+
+```{r}
+reps_tbl |> 
+  ggplot(aes(x = x, group = interaction(grado, rep))) +
+  geom_line(aes(y = .pred), colour = "red", alpha = 0.5) + 
+  geom_line(aes(y = y), colour = "black")
+```
+
+Y podemos calcular media y cuantiles para darnos una idea de 
+la media y la variabilidad de las predicciones:
+
+```{r}
+reps_tbl |> 
+  group_by(x, grado) |> 
+  summarise(media = mean(.pred), 
+    q10 = quantile(.pred, 0.10), q90 = quantile(.pred, 0.90),
+    y = first(y)) |> 
+  ggplot(aes(x = x)) +
+  geom_line(aes(y = media), colour = "red") + 
+  geom_ribbon(aes(ymin = q10, ymax = q90), alpha = 0.5) +
+  geom_line(aes(y = y), colour = "black")
+```
+**Pregunta 5**: Explica por qué el error de predicción en este caso
+es más afectado por sesgo que por varianza en este caso.
+¿En qué valores de x hay más error?
+
+
+```{r}
+reps_tbl <- reps_tbl <- simular_reps(grado = 9) |> 
+  mutate(y = map_dbl(x, fun_exp)) 
+```
+
+Podemos examinar cómo se ve nuestro predictor para distintas muestras:
+
+```{r}
+reps_tbl |> 
+  ggplot(aes(x = x, group = interaction(grado, rep))) +
+  geom_line(aes(y = .pred), colour = "red", alpha = 0.5) + 
+  geom_line(aes(y = y), colour = "black")
+```
+```{r}
+reps_tbl |> 
+  group_by(x, grado) |> 
+  summarise(media = mean(.pred), 
+    q10 = quantile(.pred, 0.10), q90 = quantile(.pred, 0.90),
+    y = first(y)) |> 
+  ggplot(aes(x = x)) +
+  geom_line(aes(y = media), colour = "red") + 
+  geom_ribbon(aes(ymin = q10, ymax = q90), alpha = 0.5) +
+  geom_line(aes(y = y), colour = "black")
+```
+
+**Pregunta 6**: Explica por qué el error de predicción en este caso
+es más afectado por variabilidad que por sesgo. ¿Dónde ves que el sesgo
+es muy bajo para este modelo? ¿En qué valores de x hay más error?
+
+**Pregunta 7**: Repite el análisis para los algunos de los
+valores donde encontramos menor error de prueba (por ejemplo, grado 3,4 o 5)
+
+
+
+# Parte 2: repaso de descenso máximo
+
+En el curso veremos el método de descenso máximo para
+ajustar modelos. Esta parte es un recordatorio breve del método general
+de descenso máximo o *gradient descent* en general como método
+de optimización
+
+Supongamos que tenemos una función $h(x)$ convexa con un mínimo. Queremos encontrar el mínimo. El método de descenso por gradiente
+utiliza la derivada $h'(x)$ para encontrar direcciones locales de descenso.
+
+La idea es comenzar con un candidato inicial $z_0$ y
+calcular la derivada en $z^{(0)}$. 
+
+- Si $h'(z^{(0)})>0$, la función es
+creciente en $z^{(0)}$ y nos movemos ligeramente a la izquierda para
+obtener un nuevo candidato $z^{(1)}$. 
+- Si $h'(z^{(0)})<0$, la función es
+decreciente en $z^{(0)}$ y nos movemos ligeramente a la derecha para
+obtener un nuevo candidato $z^{(1)}$. 
+- Iteramos este proceso hasta que la
+derivada es cercana a cero (estamos cerca del óptimo).
+
+Si el **tamaño de paso** $\eta>0$ es una cantidad chica que predefinimos, podemos escribir la primera iteración como:
+
+$$z^{(1)} = z^{(0)} - \eta \,h'(z^{(0)}).$$
+
+Nótese que cuando la derivada tiene magnitud alta, el movimiento de
+$z^{(0)}$ a $z^{(1)}$ es más grande, y siempre nos movemos una fracción
+de la derivada. En general hacemos
+$$z^{(j+1)} = z^{(j)} - \eta\,h'(z^{(j)})$$ para obtener una sucesión
+$z^{(0)},z^{(1)},\ldots$. Esperamos a que $z^{(j)}$ converja para
+terminar la iteración.
+
+Si tenemos
+
+```{r}
+h <- function(x) x^2 + (x - 2)^2 - log(x^2 + 1)
+```
+
+Calculamos (a mano):
+
+```{r}
+h_deriv <- function(x) 2 * x + 2 * (x - 2) - 2*x/(x^2 + 1)
+```
+
+Ahora iteramos con $\eta = 0.4$ y valor inicial $z_0=5$
+
+```{r}
+z_0 <- 5
+eta <- 0.4
+descenso <- function(n, z_0, eta, h_deriv){
+  z <- matrix(0,n, length(z_0))
+  z[1, ] <- z_0
+  for(i in 1:(n-1)){
+    # paso de descenso
+    z[i+1, ] <- z[i, ] - eta * h_deriv(z[i, ])
+  }
+  z
+}
+z <- descenso(20, z_0, eta, h_deriv)
+z
+```
+
+Y vemos que estamos cerca de la convergencia. Podemos graficar las iteraciones:
+
+```{r}
+dat_iteraciones <- tibble(iteracion = 1:nrow(z), 
+                              x = z[, 1], y = h(z[, 1]))
+```
+
+```{r, fig.width = 3, fig.asp = 0.7, out.width="400px", message=FALSE, warning = FALSE}
+library(gganimate)
+curva <- ggplot(tibble(x = seq(-4, 5, 0.1)), aes(x = x)) + stat_function(fun = h) +
+     xlim(c(-4, 5))
+descenso_g <- curva +
+    geom_point(data = dat_iteraciones, aes(x = x, y = y), col = "red", size = 3) +
+    transition_time(iteracion) + 
+    theme_minimal(base_size = 20)
+animate(descenso_g)
+```
+
+**Pregunta 1**: prueba qué pasa cuando pones el tamaño de paso $\eta$ demasiado
+grande o demasiado chico. ¿Cuál es el problema en cada uno de estos dos casos?
+
+
+#### Funciones de varias variables {.unnumbered}
+
+Si ahora $h(z)$ es una función de $p$ variables, podemos intentar la
+misma idea usando el gradiente, que está definido por:
+
+$$\nabla h(z) = \left( \frac{\partial h}{\partial z_1}, \frac{\partial h}{\partial z_2}, \ldots,    \frac{\partial h}{\partial z_p} \right)^t,$$
+
+es decir, es el vector columna con las derivadas parciales de $h$.
+
+Por cálculo sabemos que el gradiente apunta en la dirección de máximo
+crecimiento local, asi que el paso de iteración, dado un valor inicial
+$z_0$ y un tamaño de paso $\eta >0$ es
+
+$$z^{(i+1)} = z^{(i)} - \eta \nabla h(z^{(i)})$$
+
+Las mismas consideraciones acerca del tamaño de paso $\eta$ aplican en
+el problema multivariado.
+
+```{r, fig.width=5, fig.asp=0.7}
+# el mínimo de la siguiente función está en (1,0)
+h <- function(z) {
+  (z[1]-1)^2 + z[2]^2 - z[1] * z[2] + z[2]
+}
+h_graf <- function(z_1,z_2) apply(cbind(z_1, z_2), 1, h)
+
+grid_graf <- expand.grid(z_1 = seq(-2, 4, 0.1), z_2 = seq(-3, 3, 0.1))
+grid_graf <- grid_graf |>  mutate( val = h_graf(z_1, z_2) )
+gr_contour <- ggplot(grid_graf, aes(x = z_1, y = z_2, z = val)) + 
+  geom_contour(binwidth = 1.5, aes(colour = after_stat(level)))
+gr_contour
+```
+
+El gradiente está dado por (calculado a mano):
+
+```{r}
+h_grad <- function(z){
+  c(2 * (z[1] - 1) - z[2], 2 * z[2] - z[1] + 1)
+}
+```
+
+**Pregunta 2**: explica por qué este es el gradiente de la función $h$
+mostrada arriba.
+
+Podemos graficar la dirección de máximo descenso para diversos puntos.
+Estas direcciones son ortogonales a la curva de nivel que pasa por cada
+uno de los puntos:
+
+```{r, fig.width=5, fig.asp=0.7}
+grad_1 <- h_grad(c(0,-2))
+grad_2 <- h_grad(c(1,1))
+eta <- 0.2
+gr_contour +
+  geom_segment(aes(x = 0.0, xend = 0.0 - eta * grad_1[1], y = -2, yend = -2 - eta * grad_1[2]),
+    arrow = arrow(length = unit(0.2, "cm"))) + 
+  geom_segment(aes(x = 1, xend = 1 - eta * grad_2[1], y = 1, yend = 1 - eta*grad_2[2]),
+    arrow = arrow(length = unit(0.2, "cm"))) + coord_fixed(ratio = 1)
+```
+
+Y aplicamos descenso en gradiente:
+
+```{r, fig.width=5, fig.height= 3.5}
+inicial <- c(3, 1)
+iteraciones <- descenso(180, inicial, 0.1, h_grad)
+colnames(iteraciones) <- c("X1", "X2")
+df_iteraciones <- as_tibble(iteraciones) |>
+    mutate(iteracion = 1:nrow(iteraciones))
+```
+
+Veamos los valores de los dos parámetros sobre los que estamos optimizando:
+
+```{r}
+head(df_iteraciones)
+tail(df_iteraciones)
+```
+
+
+En este caso, para checar convergencia podemos monitorear el valor de la
+función objetivo:
+
+```{r, fig.width=5, fig.height= 3.5}
+df_iteraciones <- df_iteraciones |> 
+    mutate(h_valor = map2_dbl(X1, X2, ~ h(z  = c(.x,.y)))) # h no está vectorizada
+ggplot(df_iteraciones, aes(x = iteracion, y = h_valor)) + geom_point(size=1) +
+    geom_line()
+```
+
+**Pregunta 3**: explica en este ejemplo qué pasa cuando pones
+un tamaño de paso $\eta$ muy grande o muy chico.
+
