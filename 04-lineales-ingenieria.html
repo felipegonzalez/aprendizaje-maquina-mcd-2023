@@ -304,7 +304,7 @@ Mínimos cuadrados para regresión lineal
 </div>
 </div>
 <p>Hay varias maneras de resolver este problema: puede hacerse analíticamente con álgebra lineal, o con algún método numérico como descenso máximo (que puede escalarse fácilmente). Típicamente la función objetivo es convexa, y la solución es única, excepto en casos degenerados que podremos evitar más adelante usando regularización.</p>
-<p><strong>Observación</strong>: Como discutimos al final de la sección anterior, minimizar directamente el error de entrenamiento para encontrar los coeficientes puede resultar en en un modelo sobreajustado/con varianza alta/ruidoso. Hay cuatro grandes estrategias para mitigar este problema: restringir o estructurar la familia de funciones, penalizar la función objetivo, perturbar la muestra de entrenamiento, o cambiar el proceso de ajuste para no necesariamente llegar al mínimo sobreajustado. El método mas común es cambiar la función objetivo, que discutiremos más adelante en la sección de regularización.</p>
+<p><strong>Observación</strong>: Como discutimos al final de la sección anterior, minimizar directamente el error de entrenamiento para encontrar los coeficientes puede resultar en en un modelo sobreajustado/con varianza alta/ruidoso. Hay cuatro grandes estrategias para mitigar este problema: restringir o estructurar la familia de funciones, penalizar la función objetivo, perturbar la muestra de entrenamiento, o cambiar el proceso de minimización perturbando la función objetivo en cada paso o deteniendo el proceso antes de llegar a un mínimo sobreajustado. El método mas común es cambiar la función objetivo, que discutiremos más adelante en la sección de regularización.</p>
 </section>
 <section id="ingeniería-de-entradas" class="level2" data-number="4.2">
 <h2 data-number="4.2" class="anchored" data-anchor-id="ingeniería-de-entradas"><span class="header-section-number">4.2</span> Ingeniería de entradas</h2>
@@ -3069,7 +3069,7 @@ Variables categóricas
 <ol type="1">
 <li>Establecemos los niveles que puede tener cada variable, incluyendo la posibilidad de categorías nuevas al momento de predecir, y categorías para valores no disponibles (NAs) (es posible también imputar con algún método en caso necesario).</li>
 <li>Reorganizamos factores dependiendo del problema. Por ejemplo, incluir categorías de baja frecuencia en una categoría separada, o manipulaciones ad-hoc dependiendo del problema.</li>
-<li>Sustituimos variables categóricas con <span class="math inline">\(K\)</span> niveles en <span class="math inline">\(K-1\)</span> columnas indicadoras de los niveles (estableciendo) alguna categoría como referencia.</li>
+<li>Sustituimos variables categóricas con <span class="math inline">\(K\)</span> niveles en <span class="math inline">\(K-1\)</span> columnas indicadoras de los niveles (estableciendo) alguna categoría como referencia. Esto no es estrictamente necesario en otros métodos, o si utilizamos regularización (ver sección siguiente).</li>
 </ol>
 </div>
 </div>
@@ -3196,22 +3196,9 @@ The retained training set is ~ 0.46 Mb  in memory.</code></pre>
 </div>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>datos_tbl <span class="sc">|&gt;</span></span>
-<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="fu">across</span>(<span class="fu">where</span>(is.numeric), round, <span class="dv">2</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="fu">across</span>(<span class="fu">where</span>(is.numeric), \(x) <span class="fu">round</span>(x, <span class="dv">2</span>))) <span class="sc">|&gt;</span></span>
 <span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">head</span>() <span class="sc">|&gt;</span> </span>
 <span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">gt</span>()</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stderr">
-<pre><code>Warning: There was 1 warning in `mutate()`.
-ℹ In argument: `across(where(is.numeric), round, 2)`.
-Caused by warning:
-! The `...` argument of `across()` is deprecated as of dplyr 1.1.0.
-Supply arguments directly to `.fns` through an anonymous function instead.
-
-  # Previously
-  across(a:b, mean, na.rm = TRUE)
-
-  # Now
-  across(a:b, \(x) mean(x, na.rm = TRUE))</code></pre>
-</div>
 <div class="cell-output-display">
 
 <div id="vanbquvomk" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
@@ -4104,17 +4091,17 @@ Supply arguments directly to `.fns` through an anonymous function instead.
 </div>
 <p>Finalmente, usamos un modelo lineal con las 62 entradas que acabamos de crear:</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>flujo_casas <span class="ot">&lt;-</span> <span class="fu">workflow</span>() <span class="sc">|&gt;</span> </span>
-<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add_recipe</span>(receta_casas) <span class="sc">|&gt;</span> </span>
-<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add_model</span>(<span class="fu">linear_reg</span>() <span class="sc">|&gt;</span> <span class="fu">set_engine</span>(<span class="st">"lm"</span>))</span>
-<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>ajuste <span class="ot">&lt;-</span> <span class="fu">fit</span>(flujo_casas, casas_entrena)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>flujo_casas <span class="ot">&lt;-</span> <span class="fu">workflow</span>() <span class="sc">|&gt;</span> </span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add_recipe</span>(receta_casas) <span class="sc">|&gt;</span> </span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add_model</span>(<span class="fu">linear_reg</span>() <span class="sc">|&gt;</span> <span class="fu">set_engine</span>(<span class="st">"lm"</span>))</span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>ajuste <span class="ot">&lt;-</span> <span class="fu">fit</span>(flujo_casas, casas_entrena)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Aunque no es de interés particular para nosotros por el momento, examinamos los coeficientes (que no son tan simples de interpretar como discutiremos más adelante):</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>ajuste <span class="sc">|&gt;</span> broom<span class="sc">::</span><span class="fu">tidy</span>() <span class="sc">|&gt;</span> </span>
-<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="fu">across</span>(<span class="fu">where</span>(is.numeric), round, <span class="dv">2</span>)) <span class="sc">|&gt;</span> </span>
-<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(term, estimate) <span class="sc">|&gt;</span> </span>
-<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">gt</span>()</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>ajuste <span class="sc">|&gt;</span> broom<span class="sc">::</span><span class="fu">tidy</span>() <span class="sc">|&gt;</span> </span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="fu">across</span>(<span class="fu">where</span>(is.numeric), \(x) <span class="fu">round</span>(x, <span class="dv">2</span>))) <span class="sc">|&gt;</span> </span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(term, estimate) <span class="sc">|&gt;</span> </span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">gt</span>()</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 
 <div id="wjpynotfka" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
@@ -4705,12 +4692,12 @@ Supply arguments directly to `.fns` through an anonymous function instead.
 </ul>
 <p>Finalmente, evaluamos el desempeño sobre las ventas normales:</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>metricas <span class="ot">&lt;-</span> <span class="fu">metric_set</span>(mape, mae, rmse, rsq)</span>
-<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>casas_prueba_normal <span class="ot">&lt;-</span> <span class="fu">testing</span>(casas_split) <span class="sc">|&gt;</span> </span>
-<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(condicion_venta <span class="sc">==</span> <span class="st">"Normal"</span>)</span>
-<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a><span class="fu">metricas</span>(casas_prueba_normal <span class="sc">|&gt;</span> <span class="fu">bind_cols</span>(<span class="fu">predict</span>(ajuste, casas_prueba_normal)), </span>
-<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>     <span class="at">truth =</span> precio_miles, <span class="at">estimate =</span> .pred) <span class="sc">|&gt;</span> </span>
-<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">gt</span>() <span class="sc">|&gt;</span> <span class="fu">fmt_number</span>(.estimate, <span class="at">decimals =</span> <span class="dv">2</span>)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>metricas <span class="ot">&lt;-</span> <span class="fu">metric_set</span>(mape, mae, rmse, rsq)</span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>casas_prueba_normal <span class="ot">&lt;-</span> <span class="fu">testing</span>(casas_split) <span class="sc">|&gt;</span> </span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(condicion_venta <span class="sc">==</span> <span class="st">"Normal"</span>)</span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a><span class="fu">metricas</span>(casas_prueba_normal <span class="sc">|&gt;</span> <span class="fu">bind_cols</span>(<span class="fu">predict</span>(ajuste, casas_prueba_normal)), </span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>     <span class="at">truth =</span> precio_miles, <span class="at">estimate =</span> .pred) <span class="sc">|&gt;</span> </span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">gt</span>() <span class="sc">|&gt;</span> <span class="fu">fmt_number</span>(.estimate, <span class="at">decimals =</span> <span class="dv">2</span>)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 
 <div id="hsxwwlphgo" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
@@ -5185,29 +5172,29 @@ Supply arguments directly to `.fns` through an anonymous function instead.
 </section>
 <section id="no-linealidad-y-atípicos" class="level2" data-number="4.6">
 <h2 data-number="4.6" class="anchored" data-anchor-id="no-linealidad-y-atípicos"><span class="header-section-number">4.6</span> No linealidad y atípicos</h2>
-<p>En un primer ejemplo consideremos la variable de area de lote:</p>
+<p>En un primer ejemplo consideremos la variable de área de lote:</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(patchwork)</span>
-<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>g_1 <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(casas_entrena, <span class="fu">aes</span>(<span class="at">x =</span> area_lote_m2, <span class="at">y =</span> precio_miles)) <span class="sc">+</span></span>
-<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>() <span class="sc">+</span> <span class="co">#geom_smooth(method = "loess", span = 0.5, se = FALSE,</span></span>
-<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>                <span class="co">#             method.args = list(degree = 1)) +</span></span>
-<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_smooth</span>(<span class="at">method =</span> <span class="st">"lm"</span>, <span class="at">se =</span> <span class="cn">FALSE</span>)</span>
-<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a>g_2 <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(casas_entrena <span class="sc">|&gt;</span> <span class="fu">filter</span>(area_lote_m2 <span class="sc">&lt;</span> <span class="dv">5000</span>), <span class="fu">aes</span>(<span class="at">x =</span> area_lote_m2, <span class="at">y =</span> precio_miles)) <span class="sc">+</span></span>
-<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">data =</span> casas_entrena, <span class="fu">aes</span>(<span class="at">colour =</span> area_lote_m2 <span class="sc">&gt;</span> <span class="dv">5000</span>)) <span class="sc">+</span> </span>
-<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a>  <span class="co">#geom_smooth(method = "loess", span = 0.5, se = FALSE,</span></span>
-<span id="cb25-9"><a href="#cb25-9" aria-hidden="true" tabindex="-1"></a>  <span class="co">#                           method.args = list(degree = 1)) +</span></span>
-<span id="cb25-10"><a href="#cb25-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_smooth</span>(<span class="at">method =</span> <span class="st">"lm"</span>, <span class="at">se =</span> <span class="cn">FALSE</span>)</span>
-<span id="cb25-11"><a href="#cb25-11" aria-hidden="true" tabindex="-1"></a>g_1 <span class="sc">+</span> g_2</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(patchwork)</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>g_1 <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(casas_entrena, <span class="fu">aes</span>(<span class="at">x =</span> area_lote_m2, <span class="at">y =</span> precio_miles)) <span class="sc">+</span></span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>() <span class="sc">+</span> <span class="co">#geom_smooth(method = "loess", span = 0.5, se = FALSE,</span></span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>                <span class="co">#             method.args = list(degree = 1)) +</span></span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_smooth</span>(<span class="at">method =</span> <span class="st">"lm"</span>, <span class="at">se =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>g_2 <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(casas_entrena <span class="sc">|&gt;</span> <span class="fu">filter</span>(area_lote_m2 <span class="sc">&lt;</span> <span class="dv">5000</span>), <span class="fu">aes</span>(<span class="at">x =</span> area_lote_m2, <span class="at">y =</span> precio_miles)) <span class="sc">+</span></span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">data =</span> casas_entrena, <span class="fu">aes</span>(<span class="at">colour =</span> area_lote_m2 <span class="sc">&gt;</span> <span class="dv">5000</span>)) <span class="sc">+</span> </span>
+<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a>  <span class="co">#geom_smooth(method = "loess", span = 0.5, se = FALSE,</span></span>
+<span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a>  <span class="co">#                           method.args = list(degree = 1)) +</span></span>
+<span id="cb24-10"><a href="#cb24-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_smooth</span>(<span class="at">method =</span> <span class="st">"lm"</span>, <span class="at">se =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb24-11"><a href="#cb24-11" aria-hidden="true" tabindex="-1"></a>g_1 <span class="sc">+</span> g_2</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <p><img src="04-lineales-ingenieria_files/figure-html/unnamed-chunk-18-1.png" class="img-fluid" width="768"></p>
 </div>
 </div>
 <p>Y notamos que hay algunos valores grandes que pueden perturbar el ajuste lineal. Esto puede producir varianza alta en las predicciones, pues el ajuste depende mucho de unos cuantos valores de entrenamiento. Una solución puede ser transformar la entrada por ejempo usando el logaritmo, que comprime la cola derecha de la distribución de la variable que tiene mucho sesgo:</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(casas_entrena, <span class="fu">aes</span>(<span class="at">x =</span> area_lote_m2, <span class="at">y =</span> precio_miles)) <span class="sc">+</span></span>
-<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>() <span class="sc">+</span></span>
-<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_smooth</span>(<span class="at">method =</span> <span class="st">"loess"</span>, <span class="at">span =</span> <span class="fl">0.5</span>, <span class="at">se =</span> <span class="cn">FALSE</span>) <span class="sc">+</span></span>
-<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_x_log10</span>()</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(casas_entrena, <span class="fu">aes</span>(<span class="at">x =</span> area_lote_m2, <span class="at">y =</span> precio_miles)) <span class="sc">+</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>() <span class="sc">+</span></span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_smooth</span>(<span class="at">method =</span> <span class="st">"loess"</span>, <span class="at">span =</span> <span class="fl">0.5</span>, <span class="at">se =</span> <span class="cn">FALSE</span>) <span class="sc">+</span></span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_x_log10</span>()</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
 <pre><code>`geom_smooth()` using formula = 'y ~ x'</code></pre>
 </div>
@@ -5222,18 +5209,18 @@ Supply arguments directly to `.fns` through an anonymous function instead.
 <p>En algunos casos, la relación de una variable de entrada con la predicción es no lineal. Podemos entonces incluír entradas derivadas de la original usando transformaciones no lineales: por ejemplo, transformar entradas usando el logaritmo, o agregar el cuadrado o la raíz de las variables de entrada.</p>
 <p>Una de las maneras más simples y menos problemáticas de hacer esto es usando <em>splines naturales</em> para modelar, que son funciones cúbicas por tramos dos veces diferenciables. Los tramos están definidos por <em>nudos</em> que podemos definir por ejemplo igualmente espaciados en los datos.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>valores_x <span class="ot">&lt;-</span> <span class="fu">seq</span>(<span class="sc">-</span><span class="dv">10</span>, <span class="dv">110</span>, <span class="dv">1</span>)</span>
-<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>base_splines <span class="ot">&lt;-</span> splines<span class="sc">::</span><span class="fu">ns</span>(<span class="at">x =</span> valores_x, </span>
-<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">knots =</span> <span class="fu">c</span>(<span class="dv">33</span>, <span class="dv">66</span>), <span class="at">Boundary.knots =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">100</span>))</span>
-<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a>spline_1 <span class="ot">&lt;-</span> base_splines <span class="sc">%*%</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">1</span>)</span>
-<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a>spline_2 <span class="ot">&lt;-</span> base_splines <span class="sc">%*%</span> <span class="fu">c</span>(<span class="sc">-</span><span class="fl">0.1</span>, <span class="dv">2</span>, <span class="dv">1</span>)</span>
-<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a><span class="fu">tibble</span>(<span class="at">x =</span> valores_x, <span class="at">y =</span> spline_1, <span class="at">spline =</span> <span class="dv">1</span>) <span class="sc">|&gt;</span> </span>
-<span id="cb28-7"><a href="#cb28-7" aria-hidden="true" tabindex="-1"></a><span class="fu">bind_rows</span>(<span class="fu">tibble</span>(<span class="at">x =</span> valores_x, <span class="at">y =</span> spline_2, <span class="at">spline =</span> <span class="dv">2</span>)) <span class="sc">|&gt;</span> </span>
-<span id="cb28-8"><a href="#cb28-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> x, <span class="at">y =</span> y, </span>
-<span id="cb28-9"><a href="#cb28-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">group =</span> spline, <span class="at">colour =</span> <span class="fu">factor</span>(spline))) <span class="sc">+</span> </span>
-<span id="cb28-10"><a href="#cb28-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>() <span class="sc">+</span> <span class="fu">geom_line</span>() <span class="sc">+</span></span>
-<span id="cb28-11"><a href="#cb28-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_vline</span>(<span class="at">xintercept =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">33</span>, <span class="dv">66</span>, <span class="dv">100</span>), </span>
-<span id="cb28-12"><a href="#cb28-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">colour =</span> <span class="st">"red"</span>)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>valores_x <span class="ot">&lt;-</span> <span class="fu">seq</span>(<span class="sc">-</span><span class="dv">10</span>, <span class="dv">110</span>, <span class="dv">1</span>)</span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>base_splines <span class="ot">&lt;-</span> splines<span class="sc">::</span><span class="fu">ns</span>(<span class="at">x =</span> valores_x, </span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">knots =</span> <span class="fu">c</span>(<span class="dv">33</span>, <span class="dv">66</span>), <span class="at">Boundary.knots =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">100</span>))</span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>spline_1 <span class="ot">&lt;-</span> base_splines <span class="sc">%*%</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">1</span>)</span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>spline_2 <span class="ot">&lt;-</span> base_splines <span class="sc">%*%</span> <span class="fu">c</span>(<span class="sc">-</span><span class="fl">0.1</span>, <span class="dv">2</span>, <span class="dv">1</span>)</span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a><span class="fu">tibble</span>(<span class="at">x =</span> valores_x, <span class="at">y =</span> spline_1, <span class="at">spline =</span> <span class="dv">1</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a><span class="fu">bind_rows</span>(<span class="fu">tibble</span>(<span class="at">x =</span> valores_x, <span class="at">y =</span> spline_2, <span class="at">spline =</span> <span class="dv">2</span>)) <span class="sc">|&gt;</span> </span>
+<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> x, <span class="at">y =</span> y, </span>
+<span id="cb27-9"><a href="#cb27-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">group =</span> spline, <span class="at">colour =</span> <span class="fu">factor</span>(spline))) <span class="sc">+</span> </span>
+<span id="cb27-10"><a href="#cb27-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>() <span class="sc">+</span> <span class="fu">geom_line</span>() <span class="sc">+</span></span>
+<span id="cb27-11"><a href="#cb27-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_vline</span>(<span class="at">xintercept =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">33</span>, <span class="dv">66</span>, <span class="dv">100</span>), </span>
+<span id="cb27-12"><a href="#cb27-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">colour =</span> <span class="st">"red"</span>)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <p><img src="04-lineales-ingenieria_files/figure-html/unnamed-chunk-20-1.png" class="img-fluid" width="480"></p>
 </div>
@@ -5244,45 +5231,45 @@ Supply arguments directly to `.fns` through an anonymous function instead.
 <h3 class="unnumbered anchored" data-anchor-id="ejemplo-1">Ejemplo</h3>
 <p>Revisamos nuestro ejemplo de rendimiento de coches:</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
-<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(gt)</span>
-<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>auto <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="st">"../datos/auto.csv"</span>)</span>
-<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a>datos <span class="ot">&lt;-</span> auto[, <span class="fu">c</span>(<span class="st">'name'</span>, <span class="st">'weight'</span>,<span class="st">'year'</span>, <span class="st">'mpg'</span>, <span class="st">'displacement'</span>)]</span>
-<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a>datos <span class="ot">&lt;-</span> datos <span class="sc">|&gt;</span> <span class="fu">mutate</span>(</span>
-<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">peso_kg =</span> weight <span class="sc">*</span> <span class="fl">0.45359237</span>,</span>
-<span id="cb29-7"><a href="#cb29-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">rendimiento_kpl =</span> mpg <span class="sc">*</span> (<span class="fl">1.609344</span> <span class="sc">/</span> <span class="fl">3.78541178</span>), </span>
-<span id="cb29-8"><a href="#cb29-8" aria-hidden="true" tabindex="-1"></a>  año <span class="ot">=</span> year)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(gt)</span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>auto <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="st">"../datos/auto.csv"</span>)</span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a>datos <span class="ot">&lt;-</span> auto[, <span class="fu">c</span>(<span class="st">'name'</span>, <span class="st">'weight'</span>,<span class="st">'year'</span>, <span class="st">'mpg'</span>, <span class="st">'displacement'</span>)]</span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a>datos <span class="ot">&lt;-</span> datos <span class="sc">|&gt;</span> <span class="fu">mutate</span>(</span>
+<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">peso_kg =</span> weight <span class="sc">*</span> <span class="fl">0.45359237</span>,</span>
+<span id="cb28-7"><a href="#cb28-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">rendimiento_kpl =</span> mpg <span class="sc">*</span> (<span class="fl">1.609344</span> <span class="sc">/</span> <span class="fl">3.78541178</span>), </span>
+<span id="cb28-8"><a href="#cb28-8" aria-hidden="true" tabindex="-1"></a>  año <span class="ot">=</span> year)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>Vamos a separa en muestra de entrenamiento y de prueba estos datos. Podemos hacerlo como sigue (75% para entrenamiento aproximadamente en este caso, así obtenemos alrededor de 100 casos para prueba):</p>
+<p>Vamos a separar en muestra de entrenamiento y de prueba estos datos. Podemos hacerlo como sigue (75% para entrenamiento aproximadamente en este caso, así obtenemos alrededor de 100 casos para prueba):</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidymodels)</span>
-<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">121</span>)</span>
-<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a>datos_split <span class="ot">&lt;-</span> <span class="fu">initial_split</span>(datos, <span class="at">prop =</span> <span class="fl">0.75</span>)</span>
-<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a>datos_entrena <span class="ot">&lt;-</span> <span class="fu">training</span>(datos_split)</span>
-<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a>datos_prueba <span class="ot">&lt;-</span> <span class="fu">testing</span>(datos_split)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidymodels)</span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">121</span>)</span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>datos_split <span class="ot">&lt;-</span> <span class="fu">initial_split</span>(datos, <span class="at">prop =</span> <span class="fl">0.75</span>)</span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a>datos_entrena <span class="ot">&lt;-</span> <span class="fu">training</span>(datos_split)</span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a>datos_prueba <span class="ot">&lt;-</span> <span class="fu">testing</span>(datos_split)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Vamos a usar año y peso de los coches para predecir su rendimiento:</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(datos_entrena, <span class="fu">aes</span>(<span class="at">x =</span> peso_kg, <span class="at">y =</span> rendimiento_kpl, <span class="at">colour =</span> año)) <span class="sc">+</span></span>
-<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>()</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(datos_entrena, <span class="fu">aes</span>(<span class="at">x =</span> peso_kg, <span class="at">y =</span> rendimiento_kpl, <span class="at">colour =</span> año)) <span class="sc">+</span></span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>()</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <p><img src="04-lineales-ingenieria_files/figure-html/unnamed-chunk-23-1.png" class="img-fluid" width="480"></p>
 </div>
 </div>
 <p>Nuestra receta incluye la transformación no lineal de splines:</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb32"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a>receta_lineal <span class="ot">&lt;-</span> <span class="fu">recipe</span>(rendimiento_kpl <span class="sc">~</span> peso_kg <span class="sc">+</span> año, datos_entrena) <span class="sc">|&gt;</span> </span>
-<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_ns</span>(peso_kg, <span class="at">deg_free =</span> <span class="dv">3</span>) <span class="sc">|&gt;</span> </span>
-<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_ns</span>(año, <span class="at">deg_free =</span> <span class="dv">2</span>)</span>
-<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a>mod_lineal <span class="ot">&lt;-</span> <span class="fu">linear_reg</span>() <span class="sc">|&gt;</span>  </span>
-<span id="cb32-5"><a href="#cb32-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_engine</span>(<span class="st">"lm"</span>)  </span>
-<span id="cb32-6"><a href="#cb32-6" aria-hidden="true" tabindex="-1"></a>flujo <span class="ot">&lt;-</span> <span class="fu">workflow</span>() <span class="sc">|&gt;</span>  </span>
-<span id="cb32-7"><a href="#cb32-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add_recipe</span>(receta_lineal) <span class="sc">|&gt;</span> </span>
-<span id="cb32-8"><a href="#cb32-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add_model</span>(mod_lineal)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>receta_lineal <span class="ot">&lt;-</span> <span class="fu">recipe</span>(rendimiento_kpl <span class="sc">~</span> peso_kg <span class="sc">+</span> año, datos_entrena) <span class="sc">|&gt;</span> </span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_ns</span>(peso_kg, <span class="at">deg_free =</span> <span class="dv">3</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_ns</span>(año, <span class="at">deg_free =</span> <span class="dv">2</span>)</span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a>mod_lineal <span class="ot">&lt;-</span> <span class="fu">linear_reg</span>() <span class="sc">|&gt;</span>  </span>
+<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_engine</span>(<span class="st">"lm"</span>)  </span>
+<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a>flujo <span class="ot">&lt;-</span> <span class="fu">workflow</span>() <span class="sc">|&gt;</span>  </span>
+<span id="cb31-7"><a href="#cb31-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add_recipe</span>(receta_lineal) <span class="sc">|&gt;</span> </span>
+<span id="cb31-8"><a href="#cb31-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add_model</span>(mod_lineal)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Los datos de entrada son los siguientes:</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="fu">juice</span>(<span class="fu">prep</span>(receta_lineal)) <span class="sc">|&gt;</span> <span class="fu">head</span>() <span class="sc">|&gt;</span> <span class="fu">gt</span>()</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb32"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="fu">juice</span>(<span class="fu">prep</span>(receta_lineal)) <span class="sc">|&gt;</span> <span class="fu">head</span>() <span class="sc">|&gt;</span> <span class="fu">gt</span>()</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 
 <div id="lbcboxdrag" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
@@ -5783,17 +5770,17 @@ Supply arguments directly to `.fns` through an anonymous function instead.
 </div>
 <p>Nótese que tenemos 4 entradas en lugar de las 2 originales, pues creamos dos transformaciones no lineales de <em>peso_kg</em>. El modelo es lineal en estas 4 variables, pero no en las 2 originales. Ajustamos:</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb34"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a>flujo_ajustado <span class="ot">&lt;-</span> <span class="fu">fit</span>(flujo, datos_entrena)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>flujo_ajustado <span class="ot">&lt;-</span> <span class="fu">fit</span>(flujo, datos_entrena)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Y ahora podemos graficar los resultados y vemos cómo pudimos capturar la relación no lineal entre peso y rendimiento:</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a>dat_graf <span class="ot">&lt;-</span> <span class="fu">tibble</span>(<span class="at">peso_kg =</span> <span class="fu">seq</span>(<span class="dv">900</span>, <span class="dv">2200</span>, <span class="at">by =</span> <span class="dv">10</span>)) <span class="sc">|&gt;</span>   </span>
-<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">crossing</span>(<span class="fu">tibble</span>(año <span class="ot">=</span> <span class="fu">c</span>(<span class="dv">70</span>, <span class="dv">75</span>, <span class="dv">80</span>)))</span>
-<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a>dat_graf <span class="ot">&lt;-</span> dat_graf <span class="sc">|&gt;</span> </span>
-<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">pred_1 =</span> <span class="fu">predict</span>(flujo_ajustado, dat_graf) <span class="sc">|&gt;</span> <span class="fu">pull</span>(.pred))</span>
-<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(datos_entrena, <span class="fu">aes</span>(<span class="at">x =</span> peso_kg, <span class="at">group =</span> año, <span class="at">colour =</span> año)) <span class="sc">+</span></span>
-<span id="cb35-6"><a href="#cb35-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="fu">aes</span>(<span class="at">y =</span> rendimiento_kpl), <span class="at">alpha =</span> <span class="fl">0.6</span>) <span class="sc">+</span> </span>
-<span id="cb35-7"><a href="#cb35-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="at">data =</span> dat_graf, <span class="fu">aes</span>(<span class="at">y =</span> pred_1),  <span class="at">size =</span> <span class="fl">1.2</span>)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb34"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a>dat_graf <span class="ot">&lt;-</span> <span class="fu">tibble</span>(<span class="at">peso_kg =</span> <span class="fu">seq</span>(<span class="dv">900</span>, <span class="dv">2200</span>, <span class="at">by =</span> <span class="dv">10</span>)) <span class="sc">|&gt;</span>   </span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">crossing</span>(<span class="fu">tibble</span>(año <span class="ot">=</span> <span class="fu">c</span>(<span class="dv">70</span>, <span class="dv">75</span>, <span class="dv">80</span>)))</span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a>dat_graf <span class="ot">&lt;-</span> dat_graf <span class="sc">|&gt;</span> </span>
+<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">pred_1 =</span> <span class="fu">predict</span>(flujo_ajustado, dat_graf) <span class="sc">|&gt;</span> <span class="fu">pull</span>(.pred))</span>
+<span id="cb34-5"><a href="#cb34-5" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(datos_entrena, <span class="fu">aes</span>(<span class="at">x =</span> peso_kg, <span class="at">group =</span> año, <span class="at">colour =</span> año)) <span class="sc">+</span></span>
+<span id="cb34-6"><a href="#cb34-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="fu">aes</span>(<span class="at">y =</span> rendimiento_kpl), <span class="at">alpha =</span> <span class="fl">0.6</span>) <span class="sc">+</span> </span>
+<span id="cb34-7"><a href="#cb34-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="at">data =</span> dat_graf, <span class="fu">aes</span>(<span class="at">y =</span> pred_1),  <span class="at">size =</span> <span class="fl">1.2</span>)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
 <pre><code>Warning: Using `size` aesthetic for lines was deprecated in ggplot2 3.4.0.
 ℹ Please use `linewidth` instead.</code></pre>
@@ -5808,53 +5795,53 @@ Supply arguments directly to `.fns` through an anonymous function instead.
 <h3 class="unnumbered anchored" data-anchor-id="ejemplo-casas">Ejemplo: casas</h3>
 <p>Por ejemplo, podríamos incluir un efecto no lineal de area_lote, calidad y condición general y año de construcción:</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a>receta_casas <span class="ot">&lt;-</span> <span class="fu">recipe</span>(precio_miles <span class="sc">~</span> </span>
-<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>           nombre_zona <span class="sc">+</span> </span>
-<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a>           area_hab_m2 <span class="sc">+</span> area_garage_m2 <span class="sc">+</span> area_sotano_m2 <span class="sc">+</span> </span>
-<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a>           area_lote_m2 <span class="sc">+</span> </span>
-<span id="cb37-5"><a href="#cb37-5" aria-hidden="true" tabindex="-1"></a>           año_construccion <span class="sc">+</span> </span>
-<span id="cb37-6"><a href="#cb37-6" aria-hidden="true" tabindex="-1"></a>           calidad_gral <span class="sc">+</span> calidad_garage <span class="sc">+</span> calidad_sotano <span class="sc">+</span> </span>
-<span id="cb37-7"><a href="#cb37-7" aria-hidden="true" tabindex="-1"></a>           condicion_gral <span class="sc">+</span> </span>
-<span id="cb37-8"><a href="#cb37-8" aria-hidden="true" tabindex="-1"></a>           num_coches  <span class="sc">+</span> </span>
-<span id="cb37-9"><a href="#cb37-9" aria-hidden="true" tabindex="-1"></a>           aire_acondicionado <span class="sc">+</span> condicion_venta, </span>
-<span id="cb37-10"><a href="#cb37-10" aria-hidden="true" tabindex="-1"></a>           <span class="at">data =</span> casas_entrena) <span class="sc">|&gt;</span> </span>
-<span id="cb37-11"><a href="#cb37-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_filter</span>(condicion_venta <span class="sc">==</span> <span class="st">"Normal"</span>) <span class="sc">|&gt;</span> </span>
-<span id="cb37-12"><a href="#cb37-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_select</span>(<span class="sc">-</span>condicion_venta, <span class="at">skip =</span> <span class="cn">TRUE</span>) <span class="sc">|&gt;</span> </span>
-<span id="cb37-13"><a href="#cb37-13" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb37-14"><a href="#cb37-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_novel</span>(nombre_zona, calidad_sotano, calidad_garage) <span class="sc">|&gt;</span> </span>
-<span id="cb37-15"><a href="#cb37-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_unknown</span>(calidad_sotano, calidad_garage) <span class="sc">|&gt;</span> </span>
-<span id="cb37-16"><a href="#cb37-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_other</span>(nombre_zona, <span class="at">threshold =</span> <span class="fl">0.02</span>, <span class="at">other =</span> <span class="st">"otras"</span>) <span class="sc">|&gt;</span> </span>
-<span id="cb37-17"><a href="#cb37-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_mutate</span>(<span class="at">area_sotano_m2 =</span> </span>
-<span id="cb37-18"><a href="#cb37-18" aria-hidden="true" tabindex="-1"></a>    <span class="fu">ifelse</span>(<span class="fu">is.na</span>(area_sotano_m2), <span class="dv">0</span>, area_sotano_m2)) <span class="sc">|&gt;</span> </span>
-<span id="cb37-19"><a href="#cb37-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_mutate</span>(<span class="at">area_garage_m2 =</span> </span>
-<span id="cb37-20"><a href="#cb37-20" aria-hidden="true" tabindex="-1"></a>    <span class="fu">ifelse</span>(<span class="fu">is.na</span>(area_garage_m2), <span class="dv">0</span>, area_garage_m2)) <span class="sc">|&gt;</span></span>
-<span id="cb37-21"><a href="#cb37-21" aria-hidden="true" tabindex="-1"></a> <span class="co"># step_log(area_lote_m2) |&gt; </span></span>
-<span id="cb37-22"><a href="#cb37-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_ns</span>(año_construccion, <span class="at">deg_free =</span> <span class="dv">2</span>) <span class="sc">|&gt;</span> </span>
-<span id="cb37-23"><a href="#cb37-23" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_ns</span>(calidad_gral, <span class="at">deg_free =</span> <span class="dv">2</span>) <span class="sc">|&gt;</span> </span>
-<span id="cb37-24"><a href="#cb37-24" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_ns</span>(condicion_gral, <span class="at">deg_free =</span> <span class="dv">2</span>) <span class="sc">|&gt;</span> </span>
-<span id="cb37-25"><a href="#cb37-25" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_ns</span>(area_lote_m2, <span class="at">deg_free =</span> <span class="dv">3</span>) <span class="sc">|&gt;</span> </span>
-<span id="cb37-26"><a href="#cb37-26" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_dummy</span>(nombre_zona,  calidad_garage, calidad_sotano, aire_acondicionado) <span class="sc">|&gt;</span> </span>
-<span id="cb37-27"><a href="#cb37-27" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_interact</span>(<span class="at">terms =</span> <span class="sc">~</span> area_hab_m2<span class="sc">:</span><span class="fu">starts_with</span>(<span class="st">"calidad_gral"</span>)) <span class="sc">|&gt;</span> </span>
-<span id="cb37-28"><a href="#cb37-28" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_interact</span>(<span class="at">terms =</span> <span class="sc">~</span> area_hab_m2<span class="sc">:</span><span class="fu">starts_with</span>(<span class="st">"nombre_zona"</span>)) <span class="sc">|&gt;</span> </span>
-<span id="cb37-29"><a href="#cb37-29" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_interact</span>(<span class="at">terms =</span> <span class="sc">~</span> area_garage_m2<span class="sc">:</span><span class="fu">starts_with</span>(<span class="st">"calidad_garage"</span>)) <span class="sc">|&gt;</span> </span>
-<span id="cb37-30"><a href="#cb37-30" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_interact</span>(<span class="at">terms =</span> <span class="sc">~</span> area_sotano_m2<span class="sc">:</span> <span class="fu">starts_with</span>(<span class="st">"calidad_sotano"</span>)) <span class="sc">|&gt;</span> </span>
-<span id="cb37-31"><a href="#cb37-31" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_nzv</span>(<span class="fu">all_predictors</span>(), <span class="at">freq_cut =</span> <span class="dv">500</span> <span class="sc">/</span> <span class="dv">1</span>, <span class="at">unique_cut =</span> <span class="dv">1</span>)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb36"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a>receta_casas <span class="ot">&lt;-</span> <span class="fu">recipe</span>(precio_miles <span class="sc">~</span> </span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a>           nombre_zona <span class="sc">+</span> </span>
+<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a>           area_hab_m2 <span class="sc">+</span> area_garage_m2 <span class="sc">+</span> area_sotano_m2 <span class="sc">+</span> </span>
+<span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a>           area_lote_m2 <span class="sc">+</span> </span>
+<span id="cb36-5"><a href="#cb36-5" aria-hidden="true" tabindex="-1"></a>           año_construccion <span class="sc">+</span> </span>
+<span id="cb36-6"><a href="#cb36-6" aria-hidden="true" tabindex="-1"></a>           calidad_gral <span class="sc">+</span> calidad_garage <span class="sc">+</span> calidad_sotano <span class="sc">+</span> </span>
+<span id="cb36-7"><a href="#cb36-7" aria-hidden="true" tabindex="-1"></a>           condicion_gral <span class="sc">+</span> </span>
+<span id="cb36-8"><a href="#cb36-8" aria-hidden="true" tabindex="-1"></a>           num_coches  <span class="sc">+</span> </span>
+<span id="cb36-9"><a href="#cb36-9" aria-hidden="true" tabindex="-1"></a>           aire_acondicionado <span class="sc">+</span> condicion_venta, </span>
+<span id="cb36-10"><a href="#cb36-10" aria-hidden="true" tabindex="-1"></a>           <span class="at">data =</span> casas_entrena) <span class="sc">|&gt;</span> </span>
+<span id="cb36-11"><a href="#cb36-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_filter</span>(condicion_venta <span class="sc">==</span> <span class="st">"Normal"</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb36-12"><a href="#cb36-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_select</span>(<span class="sc">-</span>condicion_venta, <span class="at">skip =</span> <span class="cn">TRUE</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb36-13"><a href="#cb36-13" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb36-14"><a href="#cb36-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_novel</span>(nombre_zona, calidad_sotano, calidad_garage) <span class="sc">|&gt;</span> </span>
+<span id="cb36-15"><a href="#cb36-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_unknown</span>(calidad_sotano, calidad_garage) <span class="sc">|&gt;</span> </span>
+<span id="cb36-16"><a href="#cb36-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_other</span>(nombre_zona, <span class="at">threshold =</span> <span class="fl">0.02</span>, <span class="at">other =</span> <span class="st">"otras"</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb36-17"><a href="#cb36-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_mutate</span>(<span class="at">area_sotano_m2 =</span> </span>
+<span id="cb36-18"><a href="#cb36-18" aria-hidden="true" tabindex="-1"></a>    <span class="fu">ifelse</span>(<span class="fu">is.na</span>(area_sotano_m2), <span class="dv">0</span>, area_sotano_m2)) <span class="sc">|&gt;</span> </span>
+<span id="cb36-19"><a href="#cb36-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_mutate</span>(<span class="at">area_garage_m2 =</span> </span>
+<span id="cb36-20"><a href="#cb36-20" aria-hidden="true" tabindex="-1"></a>    <span class="fu">ifelse</span>(<span class="fu">is.na</span>(area_garage_m2), <span class="dv">0</span>, area_garage_m2)) <span class="sc">|&gt;</span></span>
+<span id="cb36-21"><a href="#cb36-21" aria-hidden="true" tabindex="-1"></a> <span class="co"># step_log(area_lote_m2) |&gt; </span></span>
+<span id="cb36-22"><a href="#cb36-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_ns</span>(año_construccion, <span class="at">deg_free =</span> <span class="dv">2</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb36-23"><a href="#cb36-23" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_ns</span>(calidad_gral, <span class="at">deg_free =</span> <span class="dv">2</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb36-24"><a href="#cb36-24" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_ns</span>(condicion_gral, <span class="at">deg_free =</span> <span class="dv">2</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb36-25"><a href="#cb36-25" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_ns</span>(area_lote_m2, <span class="at">deg_free =</span> <span class="dv">3</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb36-26"><a href="#cb36-26" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_dummy</span>(nombre_zona,  calidad_garage, calidad_sotano, aire_acondicionado) <span class="sc">|&gt;</span> </span>
+<span id="cb36-27"><a href="#cb36-27" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_interact</span>(<span class="at">terms =</span> <span class="sc">~</span> area_hab_m2<span class="sc">:</span><span class="fu">starts_with</span>(<span class="st">"calidad_gral"</span>)) <span class="sc">|&gt;</span> </span>
+<span id="cb36-28"><a href="#cb36-28" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_interact</span>(<span class="at">terms =</span> <span class="sc">~</span> area_hab_m2<span class="sc">:</span><span class="fu">starts_with</span>(<span class="st">"nombre_zona"</span>)) <span class="sc">|&gt;</span> </span>
+<span id="cb36-29"><a href="#cb36-29" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_interact</span>(<span class="at">terms =</span> <span class="sc">~</span> area_garage_m2<span class="sc">:</span><span class="fu">starts_with</span>(<span class="st">"calidad_garage"</span>)) <span class="sc">|&gt;</span> </span>
+<span id="cb36-30"><a href="#cb36-30" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_interact</span>(<span class="at">terms =</span> <span class="sc">~</span> area_sotano_m2<span class="sc">:</span> <span class="fu">starts_with</span>(<span class="st">"calidad_sotano"</span>)) <span class="sc">|&gt;</span> </span>
+<span id="cb36-31"><a href="#cb36-31" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_nzv</span>(<span class="fu">all_predictors</span>(), <span class="at">freq_cut =</span> <span class="dv">500</span> <span class="sc">/</span> <span class="dv">1</span>, <span class="at">unique_cut =</span> <span class="dv">1</span>)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb38"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a>flujo_casas <span class="ot">&lt;-</span> <span class="fu">workflow</span>() <span class="sc">|&gt;</span> </span>
-<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add_recipe</span>(receta_casas) <span class="sc">|&gt;</span> </span>
-<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add_model</span>(<span class="fu">linear_reg</span>() <span class="sc">|&gt;</span> <span class="fu">set_engine</span>(<span class="st">"lm"</span>))</span>
-<span id="cb38-4"><a href="#cb38-4" aria-hidden="true" tabindex="-1"></a>ajuste <span class="ot">&lt;-</span> <span class="fu">fit</span>(flujo_casas, casas_entrena)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a>flujo_casas <span class="ot">&lt;-</span> <span class="fu">workflow</span>() <span class="sc">|&gt;</span> </span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add_recipe</span>(receta_casas) <span class="sc">|&gt;</span> </span>
+<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add_model</span>(<span class="fu">linear_reg</span>() <span class="sc">|&gt;</span> <span class="fu">set_engine</span>(<span class="st">"lm"</span>))</span>
+<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a>ajuste <span class="ot">&lt;-</span> <span class="fu">fit</span>(flujo_casas, casas_entrena)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Finalmente, evaluamos el desempeño sobre las ventas normales, y obtenemos una mejoría con respecto a nuestro modelo anterior:</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb39"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a>metricas <span class="ot">&lt;-</span> <span class="fu">metric_set</span>(mape, mae, rmse, rsq)</span>
-<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a>casas_prueba_normal <span class="ot">&lt;-</span> <span class="fu">testing</span>(casas_split) <span class="sc">|&gt;</span> </span>
-<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(condicion_venta <span class="sc">==</span> <span class="st">"Normal"</span>)</span>
-<span id="cb39-4"><a href="#cb39-4" aria-hidden="true" tabindex="-1"></a><span class="fu">metricas</span>(casas_prueba_normal <span class="sc">|&gt;</span> </span>
-<span id="cb39-5"><a href="#cb39-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">bind_cols</span>(<span class="fu">predict</span>(ajuste, casas_prueba_normal)), </span>
-<span id="cb39-6"><a href="#cb39-6" aria-hidden="true" tabindex="-1"></a>     <span class="at">truth =</span> precio_miles, <span class="at">estimate =</span> .pred) <span class="sc">|&gt;</span> </span>
-<span id="cb39-7"><a href="#cb39-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">gt</span>() <span class="sc">|&gt;</span> <span class="fu">fmt_number</span>(.estimate, <span class="at">decimals =</span> <span class="dv">2</span>)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb38"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a>metricas <span class="ot">&lt;-</span> <span class="fu">metric_set</span>(mape, mae, rmse, rsq)</span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a>casas_prueba_normal <span class="ot">&lt;-</span> <span class="fu">testing</span>(casas_split) <span class="sc">|&gt;</span> </span>
+<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(condicion_venta <span class="sc">==</span> <span class="st">"Normal"</span>)</span>
+<span id="cb38-4"><a href="#cb38-4" aria-hidden="true" tabindex="-1"></a><span class="fu">metricas</span>(casas_prueba_normal <span class="sc">|&gt;</span> </span>
+<span id="cb38-5"><a href="#cb38-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">bind_cols</span>(<span class="fu">predict</span>(ajuste, casas_prueba_normal)), </span>
+<span id="cb38-6"><a href="#cb38-6" aria-hidden="true" tabindex="-1"></a>     <span class="at">truth =</span> precio_miles, <span class="at">estimate =</span> .pred) <span class="sc">|&gt;</span> </span>
+<span id="cb38-7"><a href="#cb38-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">gt</span>() <span class="sc">|&gt;</span> <span class="fu">fmt_number</span>(.estimate, <span class="at">decimals =</span> <span class="dv">2</span>)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 
 <div id="fntqtpfrvf" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
@@ -6328,10 +6315,10 @@ Supply arguments directly to `.fns` through an anonymous function instead.
 </div>
 <p>Finalmente, examinamos la respuesta contra la predicción:</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb40"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a>casas_prueba_normal <span class="sc">|&gt;</span> </span>
-<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">bind_cols</span>(<span class="fu">predict</span>(ajuste, casas_prueba_normal)) <span class="sc">|&gt;</span> </span>
-<span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> .pred, <span class="at">y =</span> precio_miles)) <span class="sc">+</span> <span class="fu">geom_abline</span>() <span class="sc">+</span> </span>
-<span id="cb40-4"><a href="#cb40-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_point</span>(<span class="at">colour =</span> <span class="st">"red"</span>) <span class="sc">+</span> <span class="fu">coord_obs_pred</span>()</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb39"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a>casas_prueba_normal <span class="sc">|&gt;</span> </span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">bind_cols</span>(<span class="fu">predict</span>(ajuste, casas_prueba_normal)) <span class="sc">|&gt;</span> </span>
+<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> .pred, <span class="at">y =</span> precio_miles)) <span class="sc">+</span> <span class="fu">geom_abline</span>() <span class="sc">+</span> </span>
+<span id="cb39-4"><a href="#cb39-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_point</span>(<span class="at">colour =</span> <span class="st">"red"</span>) <span class="sc">+</span> <span class="fu">coord_obs_pred</span>()</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <p><img src="04-lineales-ingenieria_files/figure-html/unnamed-chunk-31-1.png" class="img-fluid" width="384"></p>
 </div>

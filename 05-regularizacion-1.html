@@ -1874,7 +1874,7 @@ Regularización para modelos lineales
 <p>Una manera de hacer esto es usando el método de descenso estocástico, (ver apéndices <span class="citation" data-cites="desc-maximo">(<a href="99-referencias.html#ref-desc-maximo" role="doc-biblioref"><strong>desc-maximo?</strong></a>)</span> y <span class="citation" data-cites="desc-estocastico">(<a href="99-referencias.html#ref-desc-estocastico" role="doc-biblioref"><strong>desc-estocastico?</strong></a>)</span>) que consiste en:</p>
 <ul>
 <li>En cada iteración <span class="math inline">\(i\)</span> construimos una función de pérdida <span class="math inline">\(L^{(i)}(f)\)</span> basada solamente en una parte de los datos (<em>batch</em>).</li>
-<li>En cada iteración <span class="math inline">\(i\)</span> sólo nos movemos en una dirección de descenso para los parámetros, sin intentar buscar un mínimo local o global. La dirección de descenso está dada por <span class="math inline">\(-\nabla L\)</span>.</li>
+<li>En cada iteración <span class="math inline">\(i\)</span> sólo nos movemos en una dirección de descenso para los parámetros, sin intentar buscar un mínimo local o global. La dirección de descenso está dada por <span class="math inline">\(-\nabla L^{(i)}\)</span>.</li>
 </ul>
 <p>Aunque este método es más útil en casos como redes neuronales o métodos basados en árboles, podemos comenzar por un ejemplo en regresión lineal para entender su efecto regularizador:</p>
 <div class="cell">
@@ -1910,10 +1910,12 @@ Regularización para modelos lineales
 <span id="cb51-2"><a href="#cb51-2" aria-hidden="true" tabindex="-1"></a>g_dest <span class="ot">&lt;-</span> pesos_tbl <span class="sc">|&gt;</span> <span class="fu">pivot_longer</span>(<span class="at">cols  =</span> <span class="sc">-</span><span class="fu">contains</span>(<span class="fu">c</span>(<span class="st">"grasacorp"</span>, <span class="st">"epoca"</span>))) <span class="sc">|&gt;</span> </span>
 <span id="cb51-3"><a href="#cb51-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> epoca, <span class="at">y =</span> value, <span class="at">colour =</span> name)) <span class="sc">+</span> </span>
 <span id="cb51-4"><a href="#cb51-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="at">linewidth =</span> <span class="fl">1.1</span>) <span class="sc">+</span>   <span class="fu">scale_colour_manual</span>(<span class="at">values =</span> cbb_palette) <span class="sc">+</span></span>
-<span id="cb51-5"><a href="#cb51-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_x_continuous</span>(<span class="at">trans  =</span> <span class="fu">compose_trans</span>(<span class="st">"log10"</span>, <span class="st">"reverse"</span>))</span>
-<span id="cb51-6"><a href="#cb51-6" aria-hidden="true" tabindex="-1"></a>g_dest <span class="sc">+</span> g_l2</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb51-5"><a href="#cb51-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_x_continuous</span>(<span class="at">trans  =</span> <span class="fu">compose_trans</span>(<span class="st">"log10"</span>, <span class="st">"reverse"</span>)) <span class="sc">+</span></span>
+<span id="cb51-6"><a href="#cb51-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">subtitle =</span> <span class="st">"Descenso estocástico"</span>)</span>
+<span id="cb51-7"><a href="#cb51-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb51-8"><a href="#cb51-8" aria-hidden="true" tabindex="-1"></a>g_dest <span class="sc">+</span> g_l2</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
-<p><img src="05-regularizacion-1_files/figure-html/unnamed-chunk-34-1.png" class="img-fluid" width="672"></p>
+<p><img src="05-regularizacion-1_files/figure-html/unnamed-chunk-34-1.png" class="img-fluid" width="768"></p>
 </div>
 </div>
 <p>Y vemos que si inicializamos el proceso de minimización con valores chicos, pararnos en una época (iteración completa sobre los datos) nos permite tener un efecto similar al de utilizar regularización tipo L2.</p>
