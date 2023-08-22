@@ -126,8 +126,7 @@ Como discutimos al final de la sección anterior, minimizar directamente el erro
  de entrenamiento para encontrar los coeficientes puede resultar en en un modelo
  sobreajustado/con varianza alta/ruidoso. Hay
  cuatro grandes estrategias para mitigar este problema: restringir o estructurar la familia
- de funciones, penalizar la función objetivo, perturbar la muestra de entrenamiento, o cambiar el proceso de ajuste para no necesariamente
- llegar al mínimo sobreajustado.
+ de funciones, penalizar la función objetivo, perturbar la muestra de entrenamiento, o cambiar el proceso de minimización perturbando la función objetivo en cada paso o deteniendo el proceso antes de llegar a un mínimo sobreajustado.
  El método mas común es cambiar la función objetivo, que discutiremos más adelante
  en la sección de regularización.
 
@@ -277,7 +276,9 @@ El proceso general es (ver por ejemplo [esta lista](https://recipes.tidymodels.o
 la posibilidad de categorías nuevas al momento de predecir, y categorías para valores no disponibles (NAs) (es posible también imputar con algún método en caso necesario).
 2. Reorganizamos factores dependiendo del problema. Por ejemplo, incluir categorías de baja frecuencia
 en una categoría separada, o manipulaciones ad-hoc dependiendo del problema. 
-3.  Sustituimos variables categóricas con $K$ niveles en $K-1$ columnas indicadoras de los niveles (estableciendo) alguna categoría como referencia.
+3.  Sustituimos variables categóricas con $K$ niveles en $K-1$ columnas indicadoras de los niveles (estableciendo) alguna categoría como referencia. Esto no es 
+estrictamente necesario en otros métodos, o 
+si utilizamos regularización (ver sección siguiente).
 
 :::
 
@@ -404,7 +405,7 @@ dim(datos_tbl)
 
 ```{r}
 datos_tbl |>
-  mutate(across(where(is.numeric), round, 2)) |>
+  mutate(across(where(is.numeric), \(x) round(x, 2))) |>
   head() |> 
   gt()
 ```
@@ -424,7 +425,7 @@ los coeficientes (que no son tan simples de interpretar como discutiremos más a
 
 ```{r}
 ajuste |> broom::tidy() |> 
-  mutate(across(where(is.numeric), round, 2)) |> 
+  mutate(across(where(is.numeric), \(x) round(x, 2))) |> 
   select(term, estimate) |> 
   gt()
 ```
@@ -450,7 +451,7 @@ metricas(casas_prueba_normal |> bind_cols(predict(ajuste, casas_prueba_normal)),
 
 ## No linealidad y atípicos
 
-En un primer ejemplo consideremos la variable de area de lote:
+En un primer ejemplo consideremos la variable de área de lote:
 
 ```{r, fig.width = 8, fig.height=3, warning=FALSE ,message = FALSE}
 library(patchwork)
@@ -532,7 +533,7 @@ datos <- datos |> mutate(
   año = year)
 ```
 
-Vamos a separa en muestra de entrenamiento y de prueba estos datos. Podemos
+Vamos a separar en muestra de entrenamiento y de prueba estos datos. Podemos
 hacerlo como sigue (75% para entrenamiento aproximadamente en este caso, así
 obtenemos alrededor de 100 casos para prueba):
 

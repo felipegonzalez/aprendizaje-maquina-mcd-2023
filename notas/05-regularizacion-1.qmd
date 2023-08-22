@@ -624,7 +624,7 @@ Una manera de hacer esto es usando el método de descenso estocástico,
 - En cada iteración $i$ construimos una función de pérdida $L^{(i)}(f)$ basada solamente en una parte de los datos (*batch*).
 - En cada iteración $i$ sólo nos movemos en una dirección de descenso
 para los parámetros, sin intentar buscar un mínimo local o global. La
-dirección de descenso está dada por $-\nabla L$.
+dirección de descenso está dada por $-\nabla L^{(i)}$.
 
 Aunque este método es más útil en casos como redes neuronales
 o métodos basados en árboles, podemos comenzar por un ejemplo en regresión lineal para entender su efecto regularizador:
@@ -658,12 +658,15 @@ pesos_tbl <- map_dfr(1:400, function(epoca){
   }
 )
 ```
-```{r}
+
+```{r, fig.width = 8, fig.height = 3}
 library(patchwork)
 g_dest <- pesos_tbl |> pivot_longer(cols  = -contains(c("grasacorp", "epoca"))) |> 
   ggplot(aes(x = epoca, y = value, colour = name)) + 
   geom_line(linewidth = 1.1) +   scale_colour_manual(values = cbb_palette) +
-  scale_x_continuous(trans  = compose_trans("log10", "reverse"))
+  scale_x_continuous(trans  = compose_trans("log10", "reverse")) +
+  labs(subtitle = "Descenso estocástico")
+
 g_dest + g_l2
 ```
 
