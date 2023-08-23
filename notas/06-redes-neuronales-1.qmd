@@ -2,7 +2,7 @@
 
 ```{r, include = FALSE}
 ggplot2::theme_set(ggplot2::theme_minimal(base_size = 13))
-knitr::opts_chunk$set(fig.width=4, fig.height=3) 
+knitr::opts_chunk$set(fig.width=3, fig.height=2) 
 cbb_palette <- c("#000000", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
 scale_colour_discrete <- function(...) {
   ggplot2::scale_colour_manual(..., values = cbb_palette)
@@ -49,6 +49,7 @@ knitr::opts_chunk$set(fig.width=5, fig.asp=0.7)
 usar_cache = FALSE
 library(igraph)
 library(tidyverse)
+library(tidymodels)
  gr <- graph(
    c(c(1,4,1,5,1,6,2,4,2,5,2,6,3,4,3,5,3,6), c(4,7,5,7,6,7)))
  plot(gr, layout = matrix(c(-4,1,-4,0,-4,-1,0,1,0,-1,0,0,4,0), byrow=T, ncol=2),
@@ -385,7 +386,10 @@ mod_1
 El resultado del modelo lineal no es bueno:
 
 ```{r}
-plot(fitted(mod_1), dat_ent$y)
+tibble(y_hat = fitted(mod_1), y = dat_ent$y) |> 
+  ggplot(aes(x = y_hat, y = y)) + geom_point(color = "red") +
+  geom_abline() +
+  coord_obs_pred()
 ```
 
 Sin embargo, agregando una interacción lo mejoramos considerablemente 
@@ -394,7 +398,10 @@ Sin embargo, agregando una interacción lo mejoramos considerablemente
 ```{r}
 mod_2 <- lm(y ~ x1 + x2 + x1:x2, data = dat_ent)
 mod_2
-plot(fitted(mod_2), dat_ent$y)
+tibble(y_hat = fitted(mod_2), y = dat_ent$y) |> 
+  ggplot(aes(x = y_hat, y = y)) + geom_point(color = "red") +
+  geom_abline() +
+  coord_obs_pred()
 
 ```
  
@@ -414,11 +421,11 @@ mod_inter |>
 
 ```{r}
 mod_inter |> compile(loss = "mse", 
-  optimizer = optimizer_sgd(learning_rate = 0.05))
+  optimizer = optimizer_sgd(learning_rate = 0.1))
 historia <- mod_inter |> 
   fit(dat_ent |> select(x1, x2) |> as.matrix(), dat_ent$y,
-      batch_size = 32,
-      epochs = 500, verbose = 0)
+      batch_size = 10,
+      epochs = 100, verbose = 0)
 ```
 
 Verificamos que esta red captura la interacción:
