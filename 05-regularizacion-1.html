@@ -83,7 +83,7 @@ div.csl-indent {
 <script src="site_libs/quarto-search/fuse.min.js"></script>
 <script src="site_libs/quarto-search/quarto-search.js"></script>
 <meta name="quarto:offset" content="./">
-<link href="./81-apendice-descenso.html" rel="next">
+<link href="./06-redes-neuronales-1.html" rel="next">
 <link href="./04-lineales-ingenieria.html" rel="prev">
 <script src="site_libs/quarto-html/quarto.js"></script>
 <script src="site_libs/quarto-html/popper.min.js"></script>
@@ -187,6 +187,12 @@ div.csl-indent {
   <div class="sidebar-item-container"> 
   <a href="./05-regularizacion-1.html" class="sidebar-item-text sidebar-link active">
  <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Regularización y variabilidad</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./06-redes-neuronales-1.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Redes neuronales (intro)</span></span></a>
   </div>
 </li>
         <li class="sidebar-item sidebar-item-section">
@@ -1929,9 +1935,12 @@ Descenso estocástico
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p>El método de descenso estocástico (usualmente por minilotes) nos permite resolver problemas de optimización, y muchas veces actúa también como regularizador (al cambiar en cada paso la función de pérdida, y utilizando <em>early stopping</em>).</p>
-<p>Adicionalmente, es eficiente en el sentido de que no es necesario utilizar todo los datos para hacer un paso suficientemente bueno, y es escalable a grandes conjuntos de datos.</p>
-<p>Es crucial escoger un tamaño de paso adecuado para cada problema.</p>
+<p>El método de descenso estocástico (usualmente por minilotes) nos permite resolver problemas de optimización, y muchas veces actúa también como regularizador (al cambiar en cada paso la función de pérdida, y utilizando <em>early stopping</em>). Tiene las ventajas adicionales de que:</p>
+<ul>
+<li><p>Al cambiar la función de pérdida en cada paso, también es posible escapar de puntos estacionarios subóptimos (si el problema no tiene varios puntos estacionarios, es decir, donde el gradiente es cero).</p></li>
+<li><p>Es eficiente en el sentido de que no es necesario utilizar todo los datos para hacer un paso suficientemente bueno, y es escalable a grandes conjuntos de datos.</p></li>
+</ul>
+<p>Es crucial escoger un tamaño de paso adecuado para cada problema. Generalmente se considera un parámetro que debe ser afinado, de manera similar al parámetro de regularización L2 que vimos arriba.</p>
 </div>
 </div>
 
@@ -2187,8 +2196,8 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
       </a>          
   </div>
   <div class="nav-page nav-page-next">
-      <a href="./81-apendice-descenso.html" class="pagination-link">
-        <span class="nav-page-text"><span class="chapter-number">A</span>&nbsp; <span class="chapter-title">Apéndice 1: descenso en gradiente</span></span> <i class="bi bi-arrow-right-short"></i>
+      <a href="./06-redes-neuronales-1.html" class="pagination-link">
+        <span class="nav-page-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Redes neuronales (intro)</span></span> <i class="bi bi-arrow-right-short"></i>
       </a>
   </div>
 </nav>
