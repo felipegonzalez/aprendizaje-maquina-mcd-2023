@@ -489,19 +489,19 @@ La función logística está dada por <span class="math display">\[h(x)=\frac{e^
 <div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="fu">get_weights</span>(ejemplo_mod)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>[[1]]
-         [,1]     [,2]
-[1,] 2.161883 3.875308
+         [,1]    [,2]
+[1,] 2.150227 3.87858
 
 [[2]]
-[1] -1.957988  3.943473
+[1] -1.935077  3.943532
 
 [[3]]
           [,1]
-[1,] -3.081656
-[2,]  3.054342
+[1,] -3.088956
+[2,]  3.060517
 
 [[4]]
-[1] -1.518722</code></pre>
+[1] -1.517978</code></pre>
 </div>
 </div>
 <p><strong>Ejercicio</strong>: compara los coeficientes que obtuviste en este ejemplo con los anteriores.</p>
@@ -543,7 +543,10 @@ Coefficients:
 </div>
 <p>El resultado del modelo lineal no es bueno:</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(<span class="fu">fitted</span>(mod_1), dat_ent<span class="sc">$</span>y)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="fu">tibble</span>(<span class="at">y_hat =</span> <span class="fu">fitted</span>(mod_1), <span class="at">y =</span> dat_ent<span class="sc">$</span>y) <span class="sc">|&gt;</span> </span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> y_hat, <span class="at">y =</span> y)) <span class="sc">+</span> <span class="fu">geom_point</span>(<span class="at">color =</span> <span class="st">"red"</span>) <span class="sc">+</span></span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_abline</span>() <span class="sc">+</span></span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">coord_obs_pred</span>()</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <p><img src="06-redes-neuronales-1_files/figure-html/unnamed-chunk-26-1.png" class="img-fluid" width="480"></p>
 </div>
@@ -561,7 +564,10 @@ Coefficients:
 (Intercept)           x1           x2        x1:x2  
       4.499       -4.895       -4.885        9.964  </code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb34"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(<span class="fu">fitted</span>(mod_2), dat_ent<span class="sc">$</span>y)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb34"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="fu">tibble</span>(<span class="at">y_hat =</span> <span class="fu">fitted</span>(mod_2), <span class="at">y =</span> dat_ent<span class="sc">$</span>y) <span class="sc">|&gt;</span> </span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> y_hat, <span class="at">y =</span> y)) <span class="sc">+</span> <span class="fu">geom_point</span>(<span class="at">color =</span> <span class="st">"red"</span>) <span class="sc">+</span></span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_abline</span>() <span class="sc">+</span></span>
+<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">coord_obs_pred</span>()</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <p><img src="06-redes-neuronales-1_files/figure-html/unnamed-chunk-27-1.png" class="img-fluid" width="480"></p>
 </div>
@@ -578,11 +584,11 @@ Coefficients:
 </div>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb36"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a>mod_inter <span class="sc">|&gt;</span> <span class="fu">compile</span>(<span class="at">loss =</span> <span class="st">"mse"</span>, </span>
-<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">optimizer =</span> <span class="fu">optimizer_sgd</span>(<span class="at">learning_rate =</span> <span class="fl">0.05</span>))</span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">optimizer =</span> <span class="fu">optimizer_sgd</span>(<span class="at">learning_rate =</span> <span class="fl">0.1</span>))</span>
 <span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a>historia <span class="ot">&lt;-</span> mod_inter <span class="sc">|&gt;</span> </span>
 <span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">fit</span>(dat_ent <span class="sc">|&gt;</span> <span class="fu">select</span>(x1, x2) <span class="sc">|&gt;</span> <span class="fu">as.matrix</span>(), dat_ent<span class="sc">$</span>y,</span>
-<span id="cb36-5"><a href="#cb36-5" aria-hidden="true" tabindex="-1"></a>      <span class="at">batch_size =</span> <span class="dv">32</span>,</span>
-<span id="cb36-6"><a href="#cb36-6" aria-hidden="true" tabindex="-1"></a>      <span class="at">epochs =</span> <span class="dv">500</span>, <span class="at">verbose =</span> <span class="dv">0</span>)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb36-5"><a href="#cb36-5" aria-hidden="true" tabindex="-1"></a>      <span class="at">batch_size =</span> <span class="dv">10</span>,</span>
+<span id="cb36-6"><a href="#cb36-6" aria-hidden="true" tabindex="-1"></a>      <span class="at">epochs =</span> <span class="dv">100</span>, <span class="at">verbose =</span> <span class="dv">0</span>)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Verificamos que esta red captura la interacción:</p>
 <div class="cell">
@@ -614,10 +620,10 @@ Coefficients:
 <span id="cb39-6"><a href="#cb39-6" aria-hidden="true" tabindex="-1"></a>pred_mat</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>         [,1] [,2] [,3] [,4]
-apagadas 0.01 0.75 0.22 0.26
-segunda  0.10 0.12 0.75 0.01
-primera  0.06 0.10 0.00 0.69
-ambas    0.51 0.01 0.04 0.04</code></pre>
+apagadas 0.00 0.08 0.66 0.05
+segunda  0.11 0.68 0.13 0.00
+primera  0.05 0.00 0.04 0.65
+ambas    0.65 0.07 0.00 0.06</code></pre>
 </div>
 </div>
 <p>Los pesos de la última capa son:</p>
@@ -626,13 +632,13 @@ ambas    0.51 0.01 0.04 0.04</code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code>[[1]]
           [,1]
-[1,]  5.497053
-[2,]  5.364990
-[3,] -4.103584
-[4,] -4.066984
+[1,]  4.540478
+[2,] -4.669443
+[3,]  4.144367
+[4,] -3.954614
 
 [[2]]
-[1] 1.904854</code></pre>
+[1] 1.96708</code></pre>
 </div>
 </div>
 <p><strong>Ejercicio</strong>: interpreta la red en términos de qué unidades están <em>encendidas</em> (valor cercano a 1) o <em>apagadas</em> (valor cercano a 0). ¿Puedes ajustar este modelo con dos tres unidades intermedias? Haz varias pruebas: ¿qué dificultades encuentras?</p>
