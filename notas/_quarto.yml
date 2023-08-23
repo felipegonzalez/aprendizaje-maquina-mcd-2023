@@ -11,6 +11,7 @@ book:
     - 03-metodos-locales.qmd
     - 04-lineales-ingenieria.qmd
     - 05-regularizacion-1.qmd
+    - 06-redes-neuronales-1.qmd
   appendices:
     - 81-apendice-descenso.qmd
     - 82-apendice-descenso-estocastico.qmd

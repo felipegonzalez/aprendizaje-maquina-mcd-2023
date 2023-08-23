@@ -681,13 +681,19 @@ L2.
 El método de descenso estocástico (usualmente por minilotes) 
 nos permite resolver problemas de optimización, y muchas veces actúa también
 como regularizador (al cambiar en cada paso la función de pérdida, y utilizando
-*early stopping*).
+*early stopping*). Tiene las ventajas adicionales de que:
 
-Adicionalmente, es eficiente en el sentido de que no es necesario
+- Al cambiar la función de pérdida en cada paso, también es posible escapar
+de puntos estacionarios subóptimos (si el problema no tiene varios puntos
+estacionarios, es decir, donde el gradiente es cero).
+
+- Es eficiente en el sentido de que no es necesario
 utilizar todo los datos para hacer un paso suficientemente bueno, y 
 es escalable a grandes conjuntos de datos.
 
-Es crucial escoger un tamaño de paso adecuado para cada problema.
+Es crucial escoger un tamaño de paso adecuado para cada problema. Generalmente
+se considera un parámetro que debe ser afinado, de manera similar al
+parámetro de regularización L2 que vimos arriba.
 :::
 
 
