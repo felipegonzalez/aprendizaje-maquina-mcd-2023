@@ -619,7 +619,7 @@ podemos modificar $L(f)$ en cada paso para evitar atorarnos en un mínimo
 sobreajustado.
 
 Una manera de hacer esto es usando el método de descenso estocástico,
-(ver apéndices @desc-maximo y @desc-estocastico) que consiste en:
+(ver apéndices @sec-desc-maximo y @sec-desc-estocastico) que consiste en:
 
 - En cada iteración $i$ construimos una función de pérdida $L^{(i)}(f)$ basada solamente en una parte de los datos (*batch*).
 - En cada iteración $i$ sólo nos movemos en una dirección de descenso
