@@ -1,0 +1,337 @@
+---
+title: "Ingeniería de entradas y regularización"
+format: html
+---
+
+
+En este ejemplo hacemos *análisis de sentimiento*, intentanto
+predecir si reseñas de películas son positivas o negativas
+a partir del texto de las reseñas. En este ejemplo
+veremos un enfoque relativamente simple, que consiste en
+considerar solamente las palabras que contienen las reseñas, sin tomar en
+cuenta el orden (el modelo de bolsa de palabras o *bag of words*).
+
+Usaremos regresión lineal, aunque este tipo de problema es mejor resolverlo
+usando algún método para variables binarias o categóricas (regresión logística por 
+ejemplo)
+
+## Ingeniería de entradas básico 
+
+Hay muchas maneras de preprocesar textos para obtener
+variables numéricas a partir del texto. En este caso simplemente
+tomamos las palabras que ocurren más frecuentemente. Nuestra
+primera estrategia será:
+
+- Limpiamos caracteres que no sean alfanuméricos (en este caso los eliminamos, aunque pueden sustituirse por una "palabra" especial, por ejemplo [NUMERO], etc.)
+- Encontramos las 3000 palabras más frecuentes sobre todos los textos, por ejemplo. 
+Estas palabras son nuestro **vocabulario**.
+- Registramos en qué documentos ocurre cada una de esas palabras.
+- Cada palabra es una columna de nuestros datos, el valor es 1 si la palabra
+ocurre en documento y 0 si no ocurre.
+- Cada documento está representado entonces por una sucesión de 0's y 1's 
+dependiendo de si contiene o no la palabra que corresponde a cada posición.
+
+Por ejemplo, para el texto "Un gato blanco, un gato negro", "un perro juega", "un astronauta juega" quedarían los datos:
+
+| texto-id | un | gato | negro | blanco | perro | juega |
+|----------|----|------|-------|--------|-------|-------|
+| texto_1  | 1  |  1   |   1   |  1     |  0    |  0    |
+| texto_2  | 1  |  0   |   0   |  0     |  1    |  1    |
+| texto_3  | 1  |  0   |   0   |  0     |  0    |  1    |
+
+Nótese que la palabra *astronauta* no está en nuestro vocabulario para este ejemplo.
+
+
+Hay varias opciones para tener mejores variables, que pueden o no ayudar en este
+problema (no las exploramos en este ejercicio):
+
+- Usar conteos de frecuencias de ocurrencia de 
+palabras en cada documento, o usar log(1+ conteo), en lugar
+de 0-1's
+- Usar palabras frecuentes, pero quitar las que son *stopwords*,
+como son preposiciones y artículos entre otras, pues no tienen significado: en inglés, por ejemplo, *so, is, then, the, a*, etc.
+- Lematizar palabras: por ejemplo, contar en la misma categoría *movie* y *movies*, o
+*funny* y *funniest*, etc.
+- Usar indicadores binarios si la palabra ocurre o no en lugar de la frecuencia
+- Usar frecuencias ponderadas por qué tan rara es una palabra sobre todos los documentos (frecuencia inversa sobre documentos)
+- Usar pares de palabras en lugar de palabras sueltas: por ejemplo: juntar "not" con la palabra que sigue (en lugar de usar *not* y *bad* por separado, juntar en una palabra *not_bad*),
+- Usar técnicas de reducción de dimensionalidad que considera la co-ocurrencia de palabras (veremos más adelante en el curso).
+- Muchas otras
+
+### Datos 
+
+Los textos originales los puedes encontrarlos en la carpeta *datos/sentiment*. 
+Están en archivos individuales que tenemos que leer. Podemos hacer lo que sigue:
+
+```{r, message = FALSE, warning = FALSE}
+library(tidyverse)
+library(tidymodels)
+# puedes necesitar el siguiente paquete
+# install.packages("textrecipes")
+# install.packages("stopwords")
+nombres_neg <- list.files("./datos/sentiment/neg", full.names = TRUE)
+nombres_pos <- list.files("./datos/sentiment/pos", full.names = TRUE)
+# positivo
+textos_pos <- tibble(texto = map_chr(nombres_pos, read_file), polaridad = "pos")
+textos_neg <- tibble(texto = map_chr(nombres_neg, read_file), polaridad = "neg")
+textos <- bind_rows(textos_pos, textos_neg) |> 
+  mutate(polaridad_num = ifelse(polaridad == "pos", 1, 0)) |> 
+  select(-polaridad)
+nrow(textos)
+table(textos$polaridad_num)
+```
+
+Y un fragmento del primer texto:
+
+```{r}
+str_sub(textos$texto[[5]], 1, 300)
+```
+
+Antes de definir la receta y explorar, 
+separamos muestra de entrenamiento y validación:
+
+```{r}
+set.seed(3189)
+# Hacemos un split de validación porque más adelante lo usaremos
+# para seleccionar modelos
+textos_split <- validation_split(textos, prop = 0.85)
+textos_ent <- analysis(textos_split$splits[[1]])
+```
+
+Construimos nuestra receta con el feature engineering explicado arriba:
+
+```{r}
+# install.packages("textrecipes")
+# install.packages("stopwords")
+library(textrecipes)
+receta_polaridad <- recipe(polaridad_num ~ ., textos_ent) |>
+  step_mutate(texto = str_remove_all(texto, "[_()]")) |> 
+  step_mutate(texto = str_remove_all(texto, "[0-9]*")) |> 
+  step_mutate(texto = str_remove_all(texto, "\n")) |> 
+  step_tokenize(texto) |> # separar por palabras
+  step_stopwords(texto) |> # quitar palabras vacías
+  step_tokenfilter(texto, max_tokens = 6000) |> # escoger palabras frecuentes 
+  step_tf(texto, weight_scheme = "binary") |> # crear indicadores 
+  step_mutate(across(where(is.logical), as.numeric))
+# en el prep se separa en palabras, se eliminan stopwords,
+# se filtran los de menor frecuencia y se crean las variables
+# 0 - 1 que discutimos arriba, todo con los textos de entrenamiento
+receta_prep <- receta_polaridad |> prep()
+```
+
+
+Los términos seleccionados (el vocabulario) están aquí (una muestra)
+
+```{r}
+receta_prep$term_info |> sample_n(30)
+```
+El tamaño de la matriz que usaremos tiene 1700
+renglones (textos) por 6000 columnas de términos:
+
+```{r}
+mat_textos_entrena <- juice(receta_prep) 
+dim(mat_textos_entrena)
+head(mat_textos_entrena)
+```
+
+Usamos regresión lineal:
+
+$$f_\beta(x) =\beta_0 + \beta_1 x_1 +\beta_2 x_2+\cdots + \beta_{6000} x_{6000}$$
+donde las $x_i$ valen 0 o uno dependiendo de si el texto tiene
+la palabra correspondiente o no.
+
+Este modelo no puede ajustarse de manera simple con regresión usual, pues
+tiene más columnas que casos (tienen más de una solución o mínimo). Una manera de resolver esto es poner una penalización a los mínimos
+cuadrados, como vimos al final de la clase.
+
+En lugar de minimizar 
+$$\sum_i {(y^{(i)} - f_\beta (x^{(i)})^2}$$
+Minimizamos 
+
+$$\sum_{i=1}^{1700} {(y^{(i)} - f_\beta (x^{(i)}))^2} + \lambda \sum_{j=1}^{6000} \beta_j^2$$
+donde podemos afinar el valor de $\lambda$. Comenzaremos con 
+un valor muy chico de $\lambda$, de forma que la solución 
+
+## Clasificador de textos
+
+Calculamos el rmse de prueba del siguiente modelo:
+
+```{r}
+modelo_baja_reg <- linear_reg(penalty = exp(-10)) |> 
+  set_engine("glmnet") 
+flujo_textos <- workflow() |> 
+  add_recipe(receta_polaridad) |> 
+  add_model(modelo_baja_reg) |> 
+  fit(textos_ent)
+```
+
+
+```{r}
+textos_pr <- assessment(textos_split$splits[[1]])
+preds_baja_reg <- predict(flujo_textos, textos_pr) |> 
+  bind_cols(textos_pr |> select(polaridad_num))
+```
+
+
+```{r}
+preds_baja_reg |> 
+  rmse(polaridad_num, .pred)
+```
+
+**Nota**: puedes también tomar la predicción y checar si 
+es mayor a 0.5 o menor a 0.5. Consideramos aciertos cuando
+el texto es negativo y la predicción es menor a 0.5, o cuando
+el texto es positivo y la predicción es mayor a 0.5,
+
+```{r}
+preds_baja_reg |> 
+  mutate(polaridad_fac = factor(polaridad_num)) |> 
+  mutate(pred_positiva = ifelse(.pred > 0.5, 1, 0) |> factor()) |> 
+  accuracy(polaridad_fac, pred_positiva ) 
+```
+
+Finalmente, revisamos los coeficientes más grandes del modelo
+para entender cómo funciona nuestro predictor:
+
+```{r}
+#por ejemplo:
+coefs_baja <- flujo_textos |>  tidy() 
+coefs_baja <- coefs_baja |> 
+  select(term,  estimate) |> 
+  arrange(estimate)
+head(coefs_baja, 10)
+tail(coefs_baja, 10)
+```
+
+**Pregunta 1**: ¿Ves algún patrón en los términos que influyen
+positivamente o negativamente en la predicción?
+
+## Clasificador de textos con regularización
+
+
+Selecciona ahora un modelo con regularización mayor. En
+la ecuación de arriba, corresponde a tomar $\lambda$ más grande,
+lo que obliga a los coeficientes del modelo a tomar valores más 
+cercanos a 0.
+
+```{r}
+modelo_mas_reg <- linear_reg(penalty = 0.02) |> 
+  set_engine("glmnet") 
+flujo_textos_alta <- workflow() |> 
+  add_recipe(receta_polaridad) |> 
+  add_model(modelo_mas_reg) |> 
+  fit(textos_ent)
+preds_alta_reg <- predict(flujo_textos_alta, textos_pr) |> 
+  bind_cols(textos_pr |> select(polaridad_num)) 
+preds_alta_reg |> 
+  rmse(polaridad_num, .pred)
+```
+
+
+**Pregunta 2**: ¿Qué modelo se desempeña mejor? 
+¿Que es lo que mejoramos en el mejor modelo? ¿Se debe a reducción
+de varianza o sesgo? Prueba con otros valores de lambda
+y examina el error. Por ejemplo, ¿qué pasa si pones
+un valor de lambda muy grande?
+
+
+Ahora vamos a ver algunos coeficientes del nuevo modelo
+
+
+```{r}
+#por ejemplo:
+coefs_alta <- flujo_textos_alta |>  tidy() 
+coefs_alta <- coefs_alta |> 
+  select(term,  estimate) |> 
+  arrange(estimate)
+head(coefs_alta, 10)
+tail(coefs_alta, 10)
+```
+**Pregunta 3**: ¿Ves algún patrón en los términos que influyen
+positivamente o negativamente en la predicción para este modelo 
+más regularizado? ¿Cómo se comparan el tamaño de los coeficientes 
+de los dos modelos?
+
+
+
+
+## Afinando parámetros
+
+Veremos cómo seleccionar ahora parámetros óptimos de regularización. Podemos
+también probar con un número diferente de tokens generados. Alteramos
+nuestra receta:
+
+```{r}
+receta_polaridad <- recipe(polaridad_num ~ ., textos_ent) |>
+  step_mutate(texto = str_remove_all(texto, "[_()]")) |> 
+  step_mutate(texto = str_remove_all(texto, "[0-9]*")) |> 
+  step_tokenize(texto) |> # separar por palabras
+  step_stopwords(texto) |> 
+  #### en esta no fijamos el número de tokens:
+  step_tokenfilter(texto, max_tokens = tune("max_tokens")) |> 
+  step_tf(texto, weight_scheme = "binary") |> 
+  step_mutate(across(where(is.logical), as.numeric))
+```
+
+Definimos nuestro modelo. Nótese que el término de penalty tampoco
+está fijo:
+
+```{r}
+reg_spec <- linear_reg(penalty = tune()) |>
+  set_engine("glmnet") |>
+  set_mode("regression")
+office_wf <- workflow() |>
+  add_recipe(receta_polaridad) |> 
+  add_model(reg_spec) 
+```
+
+Y creamos combinaciones de valores para probar:
+
+```{r}
+# nota: ajustar los límites aquí dependiendo de los resultados:
+valores_afinar <- tibble(penalty = 10^seq(-5, 1, 0.1)) |> 
+  crossing(tibble(max_tokens = c(100, 3000, 6000, 9000)))
+```
+
+En este caso, los datos de entrenamiento de nuestro split se usan para ajustar el modelo, y cada modelo se evaluá con el conjunto de validación:
+
+```{r}
+evaluar_lasso <- tune_grid(
+  office_wf,
+  resamples = textos_split,
+  grid = valores_afinar,
+  metrics = metric_set(rmse)
+)
+collect_metrics(evaluar_lasso) |> 
+  ggplot(aes(x = penalty, y = mean, colour = factor(max_tokens), 
+             group = max_tokens)) + 
+  geom_point() +
+  geom_line() + 
+  scale_x_log10()
+```
+
+**Pregunta 3**: ¿Qué pasa con valores grandes de *penalty* (lambda)? ¿Por qué el valor del error no cambia para valores grandes? ¿Qué modelos son los seleccionados para valores grandes de lambda?
+
+
+
+**Pregunta 4**: ¿Por qué el error de modelos con muy baja regularización es más grande que los modelos más regularizados? ¿Su problema es sesgo o por varianza?
+
+**Pregunta 5**: Considera que el valor de *max_tokens* igual a 100
+lo puedes descalificar. ¿Es por
+problemas de sesgo o varianza? ¿Por qué para valores grandes de regularización se
+desempeña igual que los otros modelos más grandes?
+
+Seleccionaremos nuestro modelo final tomando el que dio el mejor valor de el error:
+
+```{r}
+minimo_rmse <- evaluar_lasso |> 
+  select_best("rmse")
+minimo_rmse
+# finalizar modelo con hiperparámetros seleccionados
+modelo_final <- finalize_workflow(office_wf, minimo_rmse) |> fit(textos_ent)
+```
+
+**Pregunta 6**: calcula el error para este modelo final seleccionado.
+
+
+
