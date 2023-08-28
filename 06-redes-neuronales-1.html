@@ -253,7 +253,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p><span class="math display">\[a_k = h \left ( \theta_{k,0} + \sum_{j=1}^p \theta_{k,j}x_j
 \right)\]</span></p>
 <p>para <span class="math inline">\(k=1,\ldots, m\)</span>, donde <span class="math inline">\(h\)</span> es una función no lineal (logística o relu entre otras), y las <span class="math inline">\(\theta\)</span> son parámetros que seleccionaremos más tarde. La idea es hacer <strong>combinaciones lineales</strong> de variables <strong>transformadas</strong>.</p>
-<p>Modelamos ahora la respuesta usando las entradas derivadas en lugar de las originales:</p>
+<p>Modelamos ahora la respuesta usando las entradas derivadas en lugar de las originales en una regresión lineal:</p>
 <p><span class="math inline">\(a_1, . . . , a_m\)</span>: <span class="math display">\[f(x) =  \beta_0 + \sum_{j=1}^m \beta_ja_j\]</span></p>
 <p>Podemos representar este esquema con una red dirigida (<span class="math inline">\(m=3\)</span> variables derivadas):</p>
 <div class="cell">
@@ -295,15 +295,15 @@ La función logística está dada por <span class="math display">\[h(x)=\frac{e^
 <span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>f <span class="ot">&lt;-</span> <span class="fu">atan</span>(<span class="dv">2</span> <span class="sc">-</span> <span class="dv">2</span> <span class="sc">*</span> x<span class="sc">^</span><span class="dv">2</span>)</span>
 <span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">2805721</span>)</span>
 <span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>x_1 <span class="ot">&lt;-</span> <span class="fu">runif</span>(<span class="dv">10</span>, <span class="sc">-</span><span class="dv">2</span>, <span class="dv">2</span>)</span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>f_1 <span class="ot">&lt;-</span> <span class="fu">rnorm</span>(<span class="dv">10</span>, <span class="fu">atan</span>(<span class="dv">2</span> <span class="sc">-</span> <span class="dv">2</span> <span class="sc">*</span> x_1<span class="sc">^</span><span class="dv">2</span>), <span class="fl">0.2</span>)</span>
-<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>datos <span class="ot">&lt;-</span> <span class="fu">tibble</span>(x_1, f_1)</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>y <span class="ot">&lt;-</span> <span class="fu">rnorm</span>(<span class="dv">10</span>, <span class="fu">atan</span>(<span class="dv">2</span> <span class="sc">-</span> <span class="dv">2</span> <span class="sc">*</span> x_1<span class="sc">^</span><span class="dv">2</span>), <span class="fl">0.2</span>)</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>datos <span class="ot">&lt;-</span> <span class="fu">tibble</span>(x_1, y)</span>
 <span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>dat_f <span class="ot">&lt;-</span> <span class="fu">tibble</span>(x, f)</span>
 <span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>g <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(dat_f) <span class="sc">+</span> <span class="fu">geom_line</span>(<span class="fu">aes</span>(x, f))</span>
 <span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>g</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <p><img src="06-redes-neuronales-1_files/figure-html/unnamed-chunk-6-1.png" class="img-fluid" width="480"></p>
 </div>
-<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>g <span class="sc">+</span> <span class="fu">geom_point</span>(<span class="at">data =</span> datos, <span class="fu">aes</span>(<span class="at">x =</span> x_1, <span class="at">y =</span> f_1), <span class="at">colour =</span> <span class="st">'red'</span>)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>g <span class="sc">+</span> <span class="fu">geom_point</span>(<span class="at">data =</span> datos, <span class="fu">aes</span>(<span class="at">x =</span> x_1, <span class="at">y =</span> y), <span class="at">colour =</span> <span class="st">'red'</span>)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <p><img src="06-redes-neuronales-1_files/figure-html/unnamed-chunk-6-2.png" class="img-fluid" width="480"></p>
 </div>
@@ -332,24 +332,26 @@ La función logística está dada por <span class="math display">\[h(x)=\frac{e^
 </div>
 <p>Si las escalamos y sumamos, obtenemos</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>dat_a <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">x=</span>x, <span class="at">a_1 =</span> <span class="sc">-</span><span class="dv">1</span> <span class="sc">+</span> <span class="dv">3</span> <span class="sc">*</span> a_1, <span class="at">a_2 =</span> <span class="sc">-</span><span class="dv">3</span> <span class="sc">*</span> a_2, <span class="at">suma =</span> <span class="sc">-</span><span class="dv">1</span> <span class="sc">+</span> <span class="dv">3</span> <span class="sc">*</span> a_1 <span class="sc">-</span> <span class="dv">3</span> <span class="sc">*</span> a_2)</span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>dat_a_2 <span class="ot">&lt;-</span> dat_a <span class="sc">|&gt;</span> <span class="fu">gather</span>(variable, valor, a_1<span class="sc">:</span>suma)</span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(dat_a_2, <span class="fu">aes</span>(<span class="at">x =</span> x, <span class="at">y =</span> valor, <span class="at">colour =</span> variable, <span class="at">group =</span> variable)) <span class="sc">+</span> <span class="fu">geom_line</span>()</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>dat_a <span class="ot">&lt;-</span> <span class="fu">tibble</span>(<span class="at">x=</span>x, <span class="at">a_1 =</span> a_1, <span class="at">a_2 =</span>  a_2, </span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">suma =</span> <span class="sc">-</span><span class="fl">1.5</span> <span class="sc">+</span>  <span class="dv">6</span> <span class="sc">*</span> a_1 <span class="sc">-</span>  <span class="dv">6</span> <span class="sc">*</span> a_2)</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>dat_a_2 <span class="ot">&lt;-</span> dat_a <span class="sc">|&gt;</span> </span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_longer</span>(a_1<span class="sc">:</span>suma, <span class="at">names_to =</span> <span class="st">"variable"</span>, <span class="at">values_to =</span> <span class="st">"valor"</span>)</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(dat_a_2, <span class="fu">aes</span>(<span class="at">x =</span> x, <span class="at">y =</span> valor, <span class="at">colour =</span> variable, <span class="at">group =</span> variable)) <span class="sc">+</span> <span class="fu">geom_line</span>()</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <p><img src="06-redes-neuronales-1_files/figure-html/unnamed-chunk-10-1.png" class="img-fluid" width="480"></p>
 </div>
 </div>
-<p>y finalmente, aplicando <span class="math inline">\(h\)</span>:</p>
+<p>y finalmente obtenemos:</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>dat_2 <span class="ot">&lt;-</span> <span class="fu">tibble</span>(x, <span class="at">f2 =</span> (<span class="sc">-</span><span class="fl">1.5</span> <span class="sc">+</span> <span class="dv">6</span> <span class="sc">*</span> a_1 <span class="sc">-</span> <span class="dv">6</span> <span class="sc">*</span> a_2))</span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(dat_2, <span class="fu">aes</span>(<span class="at">x=</span>x, <span class="at">y =</span> f2)) <span class="sc">+</span> <span class="fu">geom_line</span>()<span class="sc">+</span></span>
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>dat_2 <span class="ot">&lt;-</span> <span class="fu">tibble</span>(x, <span class="at">f =</span> (<span class="sc">-</span><span class="fl">1.5</span> <span class="sc">+</span> <span class="dv">6</span> <span class="sc">*</span> a_1 <span class="sc">-</span> <span class="dv">6</span> <span class="sc">*</span> a_2))</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(dat_2, <span class="fu">aes</span>(<span class="at">x=</span>x, <span class="at">y =</span> f)) <span class="sc">+</span> <span class="fu">geom_line</span>()<span class="sc">+</span></span>
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="fu">geom_line</span>(<span class="at">data=</span>dat_f, <span class="fu">aes</span>(<span class="at">x=</span>x,<span class="at">y=</span>f), <span class="at">col=</span><span class="st">'red'</span>) <span class="sc">+</span></span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>   <span class="fu">geom_point</span>(<span class="at">data =</span> datos, <span class="fu">aes</span>(<span class="at">x =</span> x_1, <span class="at">y =</span> f_1))</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>   <span class="fu">geom_point</span>(<span class="at">data =</span> datos, <span class="fu">aes</span>(<span class="at">x =</span> x_1, <span class="at">y =</span> y))</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <p><img src="06-redes-neuronales-1_files/figure-html/unnamed-chunk-11-1.png" class="img-fluid" width="480"></p>
 </div>
 </div>
-<p>que da un ajuste razonable. Este es un ejemplo de cómo la mezcla de dos funciones logísticas puede replicar esta función con forma de chipote.</p>
+<p>que da un ajuste razonable. Este es un ejemplo de cómo la mezcla de dos funciones logísticas puede replicar esta función con forma de chipote. Otras funciones más complejas se pueden obtener incluyendo más <span class="math inline">\(a_j\)</span>’s que son versiones escaladas y desplazadas de la función logística. El mecanismo para combinar estas <span class="math inline">\(a_j\)</span>’s es similar al de los splines que vimos en la sección anterior.</p>
 </section>
 <section id="cómo-ajustar-los-parámetros" class="level3 unnumbered">
 <h3 class="unnumbered anchored" data-anchor-id="cómo-ajustar-los-parámetros">¿Cómo ajustar los parámetros?</h3>
@@ -372,28 +374,28 @@ La función logística está dada por <span class="math display">\[h(x)=\frac{e^
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>    <span class="co"># esta función es una fábrica de funciones</span></span>
 <span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>   perdida_cuad <span class="ot">&lt;-</span> <span class="cf">function</span>(beta){</span>
 <span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>      f <span class="ot">&lt;-</span> <span class="fu">feed_fow</span>(beta, x)</span>
-<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>      <span class="fu">sum</span>((y <span class="sc">-</span> f)<span class="sc">^</span><span class="dv">2</span>)</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>      <span class="fu">mean</span>((y <span class="sc">-</span> f)<span class="sc">^</span><span class="dv">2</span>)</span>
 <span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>   }</span>
 <span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>  perdida_cuad</span>
 <span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Por ejemplo:</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>perdida_cuad <span class="ot">&lt;-</span> <span class="fu">perdida_cuad_fun</span>(x_1, f_1) <span class="co"># crea función</span></span>
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>perdida_cuad <span class="ot">&lt;-</span> <span class="fu">perdida_cuad_fun</span>(x_1, y) <span class="co"># crea función</span></span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="do">## ahora dev toma solamente los 7 parámetros beta:</span></span>
 <span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="fu">perdida_cuad</span>(<span class="fu">c</span>(<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>))</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>[1] 10.34101</code></pre>
+<pre><code>[1] 1.034101</code></pre>
 </div>
 </div>
-<p>Finalmente, optimizamos la devianza. Para esto usaremos la función <em>optim</em> de R:</p>
+<p>Finalmente, intentamos resolver el problema de minimización de la pérdida cuadrática de los datos de entrenamiento. Para esto usaremos la función <em>optim</em> de R:</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">5</span>)</span>
 <span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>salida <span class="ot">&lt;-</span> <span class="fu">optim</span>(<span class="fu">rnorm</span>(<span class="dv">7</span>), perdida_cuad, <span class="at">method =</span> <span class="st">'BFGS'</span>) <span class="co"># inicializar al azar punto inicial</span></span>
 <span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>beta <span class="ot">&lt;-</span> salida<span class="sc">$</span>par</span>
 <span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>beta</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>[1] -8.206850  4.746303 -6.963456 -6.753229  1.093029 -3.496124 -2.488785</code></pre>
+<pre><code>[1] -9.097577  5.315080 -6.973249 -6.762489  1.093208 -3.309966 -2.488820</code></pre>
 </div>
 </div>
 <p>Y ahora podemos graficar con el vector <span class="math inline">\(\beta\)</span> encontrado:</p>
@@ -403,7 +405,7 @@ La función logística está dada por <span class="math display">\[h(x)=\frac{e^
 <span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>dat_2 <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(x, <span class="at">p_2 =</span> p_2)</span>
 <span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(dat_2, <span class="fu">aes</span>(<span class="at">x =</span> x, <span class="at">y =</span> p_2)) <span class="sc">+</span> <span class="fu">geom_line</span>()<span class="sc">+</span></span>
 <span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="fu">geom_line</span>(<span class="at">data =</span> dat_f, <span class="fu">aes</span>(<span class="at">x =</span> x, <span class="at">y =</span> f), <span class="at">col=</span><span class="st">'red'</span>) <span class="sc">+</span></span>
-<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>   <span class="fu">geom_point</span>(<span class="at">data =</span> datos, <span class="fu">aes</span>(<span class="at">x =</span> x_1, <span class="at">y =</span> f_1))</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>   <span class="fu">geom_point</span>(<span class="at">data =</span> datos, <span class="fu">aes</span>(<span class="at">x =</span> x_1, <span class="at">y =</span> y))</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <p><img src="06-redes-neuronales-1_files/figure-html/unnamed-chunk-16-1.png" class="img-fluid" width="480"></p>
 </div>
@@ -412,7 +414,7 @@ La función logística está dada por <span class="math display">\[h(x)=\frac{e^
 <div class="cell">
 <div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>beta <span class="sc">|&gt;</span> <span class="fu">round</span>(<span class="dv">2</span>)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>[1] -8.21  4.75 -6.96 -6.75  1.09 -3.50 -2.49</code></pre>
+<pre><code>[1] -9.10  5.32 -6.97 -6.76  1.09 -3.31 -2.49</code></pre>
 </div>
 </div>
 <p>que parecen ser muy grandes. Igualmente, de la figura vemos que el ajuste no parece ser muy estable (esto se puede confirmar corriendo con distintos conjuntos de entrenamiento). Podemos entonces regularizar ligeramente la devianza para resolver este problema. En primer lugar, definimos la devianza regularizada (ridge), donde penalizamos todos los coeficientes que multiplican a una variable, pero no los intercepts:</p>
@@ -422,29 +424,29 @@ La función logística está dada por <span class="math display">\[h(x)=\frac{e^
 <span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>   perdida_reg <span class="ot">&lt;-</span> <span class="cf">function</span>(beta){</span>
 <span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>         f <span class="ot">&lt;-</span> <span class="fu">feed_fow</span>(beta, x)</span>
 <span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>         <span class="co"># en esta regularizacion quitamos sesgos, pero puede hacerse también con sesgos.</span></span>
-<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>         <span class="fu">sum</span>((y <span class="sc">-</span> f)<span class="sc">^</span><span class="dv">2</span>) <span class="sc">+</span> lambda <span class="sc">*</span> <span class="fu">sum</span>(beta[<span class="sc">-</span><span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">3</span>,<span class="dv">5</span>)]<span class="sc">^</span><span class="dv">2</span>) </span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>         <span class="fu">mean</span>((y <span class="sc">-</span> f)<span class="sc">^</span><span class="dv">2</span>) <span class="sc">+</span> lambda <span class="sc">*</span> <span class="fu">sum</span>(beta[<span class="fu">c</span>(<span class="dv">2</span>,<span class="dv">4</span>,<span class="dv">6</span><span class="sc">:</span><span class="dv">7</span>)]<span class="sc">^</span><span class="dv">2</span>) </span>
 <span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>   }</span>
 <span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>  perdida_reg</span>
 <span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>perdida_r <span class="ot">&lt;-</span> <span class="fu">perdida_cuad_fun_r</span>(x_1, f_1, <span class="fl">0.01</span>) <span class="co"># crea función dev</span></span>
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>perdida_r <span class="ot">&lt;-</span> <span class="fu">perdida_cuad_fun_r</span>(x_1, y, <span class="fl">0.001</span>) <span class="co"># crea función dev</span></span>
 <span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">5</span>)</span>
 <span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>salida <span class="ot">&lt;-</span> <span class="fu">optim</span>(<span class="fu">rnorm</span>(<span class="dv">7</span>, <span class="dv">0</span>, <span class="dv">1</span>), perdida_r, <span class="at">method =</span> <span class="st">'BFGS'</span>) <span class="co"># inicializar al azar punto inicial</span></span>
 <span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>beta <span class="ot">&lt;-</span> salida<span class="sc">$</span>par</span>
 <span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a><span class="fu">perdida_cuad</span>(beta) <span class="sc">/</span> <span class="fu">nrow</span>(datos)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>[1] 0.01837429</code></pre>
+<pre><code>[1] 0.001831033</code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>p_2 <span class="ot">&lt;-</span> <span class="fu">feed_fow</span>(beta, x)</span>
-<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>dat_2 <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(x, <span class="at">p_2 =</span> p_2)</span>
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>f_2 <span class="ot">&lt;-</span> <span class="fu">feed_fow</span>(beta, x)</span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>dat_2 <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(x, <span class="at">f_2 =</span> f_2)</span>
 <span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>beta</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>[1] -2.046311  2.117196 -4.290177 -4.202192  1.471246 -3.071258 -2.964481</code></pre>
+<pre><code>[1] -2.072798  2.136928 -4.317303 -4.221802  1.458438 -3.053558 -2.952405</code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(dat_2, <span class="fu">aes</span>(<span class="at">x =</span> x, <span class="at">y =</span> p_2)) <span class="sc">+</span> <span class="fu">geom_line</span>() <span class="sc">+</span></span>
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(dat_2, <span class="fu">aes</span>(<span class="at">x =</span> x, <span class="at">y =</span> f_2)) <span class="sc">+</span> <span class="fu">geom_line</span>() <span class="sc">+</span></span>
 <span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a><span class="fu">geom_line</span>(<span class="at">data =</span> dat_f, <span class="fu">aes</span>(<span class="at">x =</span> x, <span class="at">y =</span> f), <span class="at">col=</span><span class="st">'red'</span>) <span class="sc">+</span></span>
-<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>   <span class="fu">geom_point</span>(<span class="at">data =</span> datos, <span class="fu">aes</span>(<span class="at">x =</span> x_1, <span class="at">y =</span> f_1))</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>   <span class="fu">geom_point</span>(<span class="at">data =</span> datos, <span class="fu">aes</span>(<span class="at">x =</span> x_1, <span class="at">y =</span> y))</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <p><img src="06-redes-neuronales-1_files/figure-html/unnamed-chunk-19-1.png" class="img-fluid" width="480"></p>
 </div>
@@ -464,10 +466,10 @@ La función logística está dada por <span class="math display">\[h(x)=\frac{e^
 </div>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>x_mat <span class="ot">&lt;-</span> <span class="fu">as.matrix</span>(datos<span class="sc">$</span>x_1, <span class="at">ncol =</span> <span class="dv">1</span>)</span>
-<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>y <span class="ot">&lt;-</span> datos<span class="sc">$</span>f_1</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>y <span class="ot">&lt;-</span> datos<span class="sc">$</span>y</span>
 <span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a><span class="co"># usamos devianza como medida de error y descenso en gradiente:</span></span>
 <span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>ejemplo_mod <span class="sc">|&gt;</span> <span class="fu">compile</span>(<span class="at">loss =</span> <span class="st">"mse"</span>, </span>
-<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">optimizer =</span> <span class="fu">optimizer_sgd</span>(<span class="at">learning_rate =</span> <span class="fl">0.5</span>),</span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">optimizer =</span> <span class="fu">optimizer_sgd</span>(<span class="at">learning_rate =</span> <span class="fl">0.1</span>),</span>
 <span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">metrics =</span> <span class="st">"mse"</span>)</span>
 <span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a><span class="co"># nota: esta learning rate (lr) es demasiado alta para problemas típicos</span></span>
 <span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a>historia <span class="ot">&lt;-</span> ejemplo_mod <span class="sc">|&gt;</span> </span>
@@ -479,7 +481,7 @@ La función logística está dada por <span class="math display">\[h(x)=\frac{e^
 <div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>dat_3 <span class="ot">&lt;-</span> <span class="fu">tibble</span>(<span class="at">x =</span> x, <span class="at">f_2 =</span> <span class="fu">predict</span>(ejemplo_mod, <span class="fu">as.matrix</span>(x, <span class="at">ncol =</span> <span class="dv">1</span>)))</span>
 <span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(dat_3, <span class="fu">aes</span>(<span class="at">x =</span> x, <span class="at">y =</span> f_2)) <span class="sc">+</span> <span class="fu">geom_line</span>()<span class="sc">+</span></span>
 <span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a><span class="fu">geom_line</span>(<span class="at">data =</span> dat_3, <span class="fu">aes</span>(<span class="at">x =</span> x, <span class="at">y =</span> f), <span class="at">col=</span><span class="st">'red'</span>) <span class="sc">+</span></span>
-<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>   <span class="fu">geom_point</span>(<span class="at">data =</span> datos, <span class="fu">aes</span>(<span class="at">x =</span> x_1, <span class="at">y =</span> f_1))</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>   <span class="fu">geom_point</span>(<span class="at">data =</span> datos, <span class="fu">aes</span>(<span class="at">x =</span> x_1, <span class="at">y =</span> y))</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <p><img src="06-redes-neuronales-1_files/figure-html/unnamed-chunk-22-1.png" class="img-fluid" width="480"></p>
 </div>
@@ -489,19 +491,19 @@ La función logística está dada por <span class="math display">\[h(x)=\frac{e^
 <div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="fu">get_weights</span>(ejemplo_mod)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>[[1]]
-         [,1]     [,2]
-[1,] -2.94429 1.904243
+          [,1]      [,2]
+[1,] 0.9907706 -2.972263
 
 [[2]]
-[1]  4.520096 -3.905534
+[1] -0.3580218  3.0519383
 
 [[3]]
-           [,1]
-[1,]  1.7131453
-[2,] -0.3978416
+         [,1]
+[1,] 1.158342
+[2,] 2.115002
 
 [[4]]
-[1] -1.499675</code></pre>
+[1] -2.189087</code></pre>
 </div>
 </div>
 <p><strong>Ejercicio</strong>: compara los coeficientes que obtuviste en este ejemplo con los anteriores.</p>
@@ -620,10 +622,10 @@ Coefficients:
 <span id="cb39-6"><a href="#cb39-6" aria-hidden="true" tabindex="-1"></a>pred_mat</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>         [,1] [,2] [,3] [,4]
-apagadas 0.00 0.06 0.06 0.63
-segunda  0.07 0.00 0.66 0.07
-primera  0.05 0.62 0.00 0.06
-ambas    0.58 0.05 0.05 0.00</code></pre>
+apagadas 0.01 0.75 0.21 0.74
+segunda  0.14 0.13 0.67 0.99
+primera  0.06 0.10 0.01 0.30
+ambas    0.55 0.01 0.08 0.94</code></pre>
 </div>
 </div>
 <p>Los pesos de la última capa son:</p>
@@ -632,13 +634,13 @@ ambas    0.58 0.05 0.05 0.00</code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code>[[1]]
           [,1]
-[1,]  5.027476
-[2,] -4.405095
-[3,] -4.257364
-[4,]  4.492746
+[1,]  4.796213
+[2,]  5.331263
+[3,] -5.726117
+[4,]  4.506207
 
 [[2]]
-[1] 1.951751</code></pre>
+[1] -2.119535</code></pre>
 </div>
 </div>
 <p><strong>Ejercicio</strong>: interpreta la red en términos de qué unidades están <em>encendidas</em> (valor cercano a 1) o <em>apagadas</em> (valor cercano a 0). ¿Puedes ajustar este modelo con dos tres unidades intermedias? Haz varias pruebas: ¿qué dificultades encuentras?</p>
