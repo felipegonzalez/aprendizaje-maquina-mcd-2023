@@ -34,7 +34,7 @@ variables **transformadas**.
 
 
  Modelamos ahora la respuesta usando las entradas derivadas en lugar de las 
- originales:
+ originales en una regresión lineal:
  
 $a_1, . . . , a_m$:
 $$f(x) =  \beta_0 + \sum_{j=1}^m \beta_ja_j$$ 
@@ -112,12 +112,12 @@ x <- seq(-2, 2, 0.1)
 f <- atan(2 - 2 * x^2)
 set.seed(2805721)
 x_1 <- runif(10, -2, 2)
-f_1 <- rnorm(10, atan(2 - 2 * x_1^2), 0.2)
-datos <- tibble(x_1, f_1)
+y <- rnorm(10, atan(2 - 2 * x_1^2), 0.2)
+datos <- tibble(x_1, y)
 dat_f <- tibble(x, f)
 g <- ggplot(dat_f) + geom_line(aes(x, f))
 g
-g + geom_point(data = datos, aes(x = x_1, y = f_1), colour = 'red')
+g + geom_point(data = datos, aes(x = x_1, y = y), colour = 'red')
 ```
 
 donde adicionalmente graficamos 30 datos simulados.  Recordamos que queremos
@@ -162,22 +162,27 @@ ggplot(dat_a_2, aes(x=x, y=valor, colour=variable, group=variable)) + geom_line(
 
 Si las escalamos y sumamos, obtenemos
 ```{r}
-dat_a <- data.frame(x=x, a_1 = -1 + 3 * a_1, a_2 = -3 * a_2, suma = -1 + 3 * a_1 - 3 * a_2)
-dat_a_2 <- dat_a |> gather(variable, valor, a_1:suma)
+dat_a <- tibble(x=x, a_1 = a_1, a_2 =  a_2, 
+  suma = -1.5 +  6 * a_1 -  6 * a_2)
+dat_a_2 <- dat_a |> 
+  pivot_longer(a_1:suma, names_to = "variable", values_to = "valor")
 ggplot(dat_a_2, aes(x = x, y = valor, colour = variable, group = variable)) + geom_line()
 ```
 
-y finalmente,  aplicando $h$:
+y finalmente obtenemos:
 ```{r}
-dat_2 <- tibble(x, f2 = (-1.5 + 6 * a_1 - 6 * a_2))
-ggplot(dat_2, aes(x=x, y = f2)) + geom_line()+
+dat_2 <- tibble(x, f = (-1.5 + 6 * a_1 - 6 * a_2))
+ggplot(dat_2, aes(x=x, y = f)) + geom_line()+
 geom_line(data=dat_f, aes(x=x,y=f), col='red') +
-   geom_point(data = datos, aes(x = x_1, y = f_1))
+   geom_point(data = datos, aes(x = x_1, y = y))
 ```
 
 que da un ajuste razonable. Este es un ejemplo de cómo
 la mezcla de dos funciones logísticas puede 
-replicar esta función con forma de chipote.
+replicar esta función con forma de chipote. Otras funciones más complejas
+se pueden obtener incluyendo más $a_j$'s que son versiones escaladas
+y desplazadas de la función logística. El mecanismo para combinar estas
+$a_j$'s es similar al de los splines que vimos en la sección anterior.
 
 
 ### ¿Cómo ajustar los parámetros? {-}
@@ -220,7 +225,7 @@ perdida_cuad_fun <- function(x, y){
     # esta función es una fábrica de funciones
    perdida_cuad <- function(beta){
       f <- feed_fow(beta, x)
-      sum((y - f)^2)
+      mean((y - f)^2)
    }
   perdida_cuad
 }
@@ -228,12 +233,13 @@ perdida_cuad_fun <- function(x, y){
 
 Por ejemplo:
 ```{r}
-perdida_cuad <- perdida_cuad_fun(x_1, f_1) # crea función
+perdida_cuad <- perdida_cuad_fun(x_1, y) # crea función
 ## ahora dev toma solamente los 7 parámetros beta:
 perdida_cuad(c(0,0,0,0,0,0,0))
 ```
 
-Finalmente, optimizamos la devianza. Para esto usaremos
+Finalmente, intentamos resolver el problema de minimización
+de la pérdida cuadrática de los datos de entrenamiento. Para esto usaremos
 la función *optim* de R:
 
 ```{r}
@@ -251,7 +257,7 @@ p_2 <- feed_fow(beta, x)
 dat_2 <- data.frame(x, p_2 = p_2)
 ggplot(dat_2, aes(x = x, y = p_2)) + geom_line()+
 geom_line(data = dat_f, aes(x = x, y = f), col='red') +
-   geom_point(data = datos, aes(x = x_1, y = f_1))
+   geom_point(data = datos, aes(x = x_1, y = y))
 ```
 
 Los coeficientes estimados, que en este caso muchas veces se llaman
@@ -275,24 +281,24 @@ perdida_cuad_fun_r <- function(x, y, lambda){
    perdida_reg <- function(beta){
          f <- feed_fow(beta, x)
          # en esta regularizacion quitamos sesgos, pero puede hacerse también con sesgos.
-         sum((y - f)^2) + lambda * sum(beta[-c(1,3,5)]^2) 
+         mean((y - f)^2) + lambda * sum(beta[c(2,4,6:7)]^2) 
    }
   perdida_reg
 }
 ```
 
 ```{r}
-perdida_r <- perdida_cuad_fun_r(x_1, f_1, 0.01) # crea función dev
+perdida_r <- perdida_cuad_fun_r(x_1, y, 0.001) # crea función dev
 set.seed(5)
 salida <- optim(rnorm(7, 0, 1), perdida_r, method = 'BFGS') # inicializar al azar punto inicial
 beta <- salida$par
 perdida_cuad(beta) / nrow(datos)
-p_2 <- feed_fow(beta, x)
-dat_2 <- data.frame(x, p_2 = p_2)
+f_2 <- feed_fow(beta, x)
+dat_2 <- data.frame(x, f_2 = f_2)
 beta
-ggplot(dat_2, aes(x = x, y = p_2)) + geom_line() +
+ggplot(dat_2, aes(x = x, y = f_2)) + geom_line() +
 geom_line(data = dat_f, aes(x = x, y = f), col='red') +
-   geom_point(data = datos, aes(x = x_1, y = f_1))
+   geom_point(data = datos, aes(x = x_1, y = y))
 ```
 
 
@@ -316,10 +322,10 @@ ejemplo_mod |>
 
 ```{r}
 x_mat <- as.matrix(datos$x_1, ncol = 1)
-y <- datos$f_1
+y <- datos$y
 # usamos devianza como medida de error y descenso en gradiente:
 ejemplo_mod |> compile(loss = "mse", 
-  optimizer = optimizer_sgd(learning_rate = 0.5),
+  optimizer = optimizer_sgd(learning_rate = 0.1),
   metrics = "mse")
 # nota: esta learning rate (lr) es demasiado alta para problemas típicos
 historia <- ejemplo_mod |> 
@@ -334,7 +340,7 @@ Después de verificar convergencia (chécalo examinando la variable
 dat_3 <- tibble(x = x, f_2 = predict(ejemplo_mod, as.matrix(x, ncol = 1)))
 ggplot(dat_3, aes(x = x, y = f_2)) + geom_line()+
 geom_line(data = dat_3, aes(x = x, y = f), col='red') +
-   geom_point(data = datos, aes(x = x_1, y = f_1))
+   geom_point(data = datos, aes(x = x_1, y = y))
 ```
 
 Los coeficientes obtenidos se muestran abajo. Nótese: la primera componente de
