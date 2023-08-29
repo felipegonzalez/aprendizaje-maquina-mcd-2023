@@ -310,7 +310,7 @@ en gradiente se define como:
 ```{r, message = FALSE}
 library(keras)
 # para reproducibilidad:
-tensorflow::tf$random$set_seed(13)
+tensorflow::set_random_seed(13) 
 # construir modelo
 ejemplo_mod <- keras_model_sequential()
 ejemplo_mod |> 
@@ -325,21 +325,21 @@ x_mat <- as.matrix(datos$x_1, ncol = 1)
 y <- datos$y
 # usamos devianza como medida de error y descenso en gradiente:
 ejemplo_mod |> compile(loss = "mse", 
-  optimizer = optimizer_sgd(learning_rate = 0.1),
+  optimizer = optimizer_sgd(learning_rate = 0.2),
   metrics = "mse")
 # nota: esta learning rate (lr) es demasiado alta para problemas típicos
 historia <- ejemplo_mod |> 
   fit(x_mat, y, 
-      batch_size = nrow(x_mat), epochs = 1000, verbose = 0)
+      batch_size = nrow(x_mat), epochs = 500, verbose = 1)
 ```
 
 Después de verificar convergencia (chécalo examinando la variable
 *historia*), graficamos para ver que obtuvimos resultados similares:
 
 ```{r}
-dat_3 <- tibble(x = x, f_2 = predict(ejemplo_mod, as.matrix(x, ncol = 1)))
+dat_3 <- tibble(x = x, f_2 = predict(ejemplo_mod, as.matrix(x, ncol = 1))[,1])
 ggplot(dat_3, aes(x = x, y = f_2)) + geom_line()+
-geom_line(data = dat_3, aes(x = x, y = f), col='red') +
+geom_line(data = dat_f, aes(x = x, y = f), col='red') +
    geom_point(data = datos, aes(x = x_1, y = y))
 ```
 
@@ -417,6 +417,7 @@ tibble(y_hat = fitted(mod_2), y = dat_ent$y) |>
 Ahora consideramos qué red neuronal puede ser apropiada.
 
 ```{r}
+tensorflow::set_random_seed(421) 
 mod_inter <- keras_model_sequential()
 mod_inter |> 
   layer_dense(units = 4, activation = "sigmoid",
@@ -427,11 +428,11 @@ mod_inter |>
 
 ```{r}
 mod_inter |> compile(loss = "mse", 
-  optimizer = optimizer_sgd(learning_rate = 0.1))
+  optimizer = optimizer_sgd(learning_rate = 0.3, momentum = 0.5))
 historia <- mod_inter |> 
   fit(dat_ent |> select(x1, x2) |> as.matrix(), dat_ent$y,
-      batch_size = 10,
-      epochs = 100, verbose = 0)
+      batch_size = 20,
+      epochs = 100, verbose = 1)
 ```
 
 Verificamos que esta red captura la interacción:
@@ -444,6 +445,14 @@ ggplot(dat, aes(x = x1, y = x2)) +
   geom_tile(aes(fill = f_red))
 ```
 
+```{r}
+preds_ent <- predict(mod_inter, dat_ent |> select(x1, x2) |> as.matrix())
+tibble(pred = preds_ent[,1], f = dat_ent$y) |> 
+  ggplot(aes(x = pred, y = f)) +
+  geom_point() +
+  geom_abline(colour = "red") +
+  coord_obs_pred()
+```
 
 
 Aunque podemos extraer los cálculos de la red ajustada,
