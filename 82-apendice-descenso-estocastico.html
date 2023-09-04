@@ -282,28 +282,27 @@ Descenso estocástico por minilotes
 <p>La muestra de entrenamiento se divide entonces (al azar) en minilotes, y recorremos todos los minilotes haciendo una actualización de nuestros parámetros en cada minilote. Un recorrido sobre todos los minilotes se llama una <strong>época</strong> (las iteraciones se entienden sobre los minilotes).</p>
 </div>
 </div>
-<p>Antes de escribir el algoritmo mostramos una implementación para regresión logística. Usamos las mismas funciones para calcular devianza y gradiente.</p>
+<p>Antes de escribir el algoritmo mostramos una implementación para regresión:</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>h <span class="ot">&lt;-</span> <span class="cf">function</span>(x){<span class="dv">1</span><span class="sc">/</span>(<span class="dv">1</span><span class="sc">+</span><span class="fu">exp</span>(<span class="sc">-</span>x))}</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="co"># la devianza es la misma</span></span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>devianza_calc <span class="ot">&lt;-</span> <span class="cf">function</span>(x, y){</span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  dev_fun <span class="ot">&lt;-</span> <span class="cf">function</span>(beta){</span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    p_beta <span class="ot">&lt;-</span> <span class="fu">h</span>(<span class="fu">as.matrix</span>(<span class="fu">cbind</span>(<span class="dv">1</span>, x)) <span class="sc">%*%</span> beta) </span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>   <span class="sc">-</span><span class="dv">2</span> <span class="sc">*</span> <span class="fu">mean</span>(y <span class="sc">*</span> <span class="fu">log</span>(p_beta) <span class="sc">+</span> (<span class="dv">1</span> <span class="sc">-</span> y) <span class="sc">*</span> <span class="fu">log</span>(<span class="dv">1</span> <span class="sc">-</span> p_beta))</span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>  dev_fun</span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="co"># el cálculo del gradiente es el mismo, pero x_ent y y_ent serán diferentes</span></span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>grad_calc <span class="ot">&lt;-</span> <span class="cf">function</span>(x_ent, y_ent){</span>
-<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>  salida_grad <span class="ot">&lt;-</span> <span class="cf">function</span>(beta){</span>
-<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>    p_beta <span class="ot">&lt;-</span> <span class="fu">h</span>(<span class="fu">as.matrix</span>(<span class="fu">cbind</span>(<span class="dv">1</span>, x_ent)) <span class="sc">%*%</span> beta) </span>
-<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>    e <span class="ot">&lt;-</span> y_ent <span class="sc">-</span> p_beta</span>
-<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>    grad_out <span class="ot">&lt;-</span> <span class="sc">-</span><span class="dv">2</span> <span class="sc">*</span> <span class="fu">as.numeric</span>(<span class="fu">t</span>(<span class="fu">cbind</span>(<span class="dv">1</span>,x_ent)) <span class="sc">%*%</span> e) <span class="sc">/</span> <span class="fu">nrow</span>(x_ent)</span>
-<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>    <span class="fu">names</span>(grad_out) <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">'Intercept'</span>, <span class="fu">colnames</span>(x_ent))</span>
-<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>    grad_out</span>
-<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>  salida_grad</span>
-<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># usamos pérdida cuadrática</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>perdida_calc <span class="ot">&lt;-</span> <span class="cf">function</span>(x, y){</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  perdida_fun <span class="ot">&lt;-</span> <span class="cf">function</span>(beta){</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    f_beta <span class="ot">&lt;-</span> <span class="fu">as.matrix</span>(<span class="fu">cbind</span>(<span class="dv">1</span>, x)) <span class="sc">%*%</span> beta</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mean</span>((y <span class="sc">-</span> f_beta)<span class="sc">^</span><span class="dv">2</span>)</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  perdida_fun</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="co"># el cálculo del gradiente_</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>grad_calc <span class="ot">&lt;-</span> <span class="cf">function</span>(x_ent, y_ent){</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>  salida_grad <span class="ot">&lt;-</span> <span class="cf">function</span>(beta){</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>    f_beta <span class="ot">&lt;-</span> <span class="fu">as.matrix</span>(<span class="fu">cbind</span>(<span class="dv">1</span>, x_ent)) <span class="sc">%*%</span> beta</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>    e <span class="ot">&lt;-</span> y_ent <span class="sc">-</span> f_beta</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>    grad_out <span class="ot">&lt;-</span> <span class="sc">-</span><span class="dv">2</span> <span class="sc">*</span> <span class="fu">as.numeric</span>(<span class="fu">t</span>(<span class="fu">cbind</span>(<span class="dv">1</span>,x_ent)) <span class="sc">%*%</span> e) <span class="sc">/</span> <span class="fu">nrow</span>(x_ent)</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>    <span class="fu">names</span>(grad_out) <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">'Intercept'</span>, <span class="fu">colnames</span>(x_ent))</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>    grad_out</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>  salida_grad</span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Y comparamos los dos algoritmos:</p>
 <div class="cell">
@@ -314,62 +313,64 @@ Descenso estocástico por minilotes
 <span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span>(i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>(n<span class="dv">-1</span>)){</span>
 <span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    z[i<span class="sc">+</span><span class="dv">1</span>, ] <span class="ot">&lt;-</span> z[i, ] <span class="sc">-</span> eta <span class="sc">*</span> <span class="fu">h_deriv</span>(z[i, ])</span>
 <span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>  z</span>
-<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="co"># esta implementación es solo para este ejemplo:</span></span>
-<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>descenso_estocastico <span class="ot">&lt;-</span> <span class="cf">function</span>(n_epocas, z_0, eta, minilotes){</span>
-<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>  <span class="co">#minilotes es una lista</span></span>
-<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>  m <span class="ot">&lt;-</span> <span class="fu">length</span>(minilotes)</span>
-<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>  z <span class="ot">&lt;-</span> <span class="fu">matrix</span>(<span class="dv">0</span>, m<span class="sc">*</span>n_epocas, <span class="fu">length</span>(z_0))</span>
-<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>  z[<span class="dv">1</span>, ] <span class="ot">&lt;-</span> z_0</span>
-<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span>(i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>(m<span class="sc">*</span>n_epocas<span class="dv">-1</span>)){</span>
-<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>    k <span class="ot">&lt;-</span> i <span class="sc">%%</span> m <span class="sc">+</span> <span class="dv">1</span></span>
-<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span>(i <span class="sc">%%</span> m <span class="sc">==</span> <span class="dv">0</span>){</span>
-<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>      <span class="co">#comenzar nueva época y reordenar minilotes al azar</span></span>
-<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>      minilotes <span class="ot">&lt;-</span> minilotes[<span class="fu">sample</span>(<span class="dv">1</span><span class="sc">:</span>m, m)]</span>
-<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>    }</span>
-<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>    h_deriv <span class="ot">&lt;-</span> <span class="fu">grad_calc</span>(minilotes[[k]]<span class="sc">$</span>x, minilotes[[k]]<span class="sc">$</span>y)</span>
-<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>    z[i<span class="sc">+</span><span class="dv">1</span>, ] <span class="ot">&lt;-</span> z[i, ] <span class="sc">-</span> eta <span class="sc">*</span> <span class="fu">h_deriv</span>(z[i, ])</span>
-<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>  z</span>
-<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">colnames</span>(z) <span class="ot">&lt;-</span> <span class="fu">names</span>(z_0)</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>  z</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="co"># esta implementación es solo para este ejemplo:</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>descenso_estocastico <span class="ot">&lt;-</span> <span class="cf">function</span>(n_epocas, z_0, eta, minilotes){</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>  <span class="co">#minilotes es una lista</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>  m <span class="ot">&lt;-</span> <span class="fu">length</span>(minilotes)</span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>  z <span class="ot">&lt;-</span> <span class="fu">matrix</span>(<span class="dv">0</span>, m<span class="sc">*</span>n_epocas, <span class="fu">length</span>(z_0))</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>  z[<span class="dv">1</span>, ] <span class="ot">&lt;-</span> z_0</span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span>(i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>(m<span class="sc">*</span>n_epocas<span class="dv">-1</span>)){</span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>    k <span class="ot">&lt;-</span> i <span class="sc">%%</span> m <span class="sc">+</span> <span class="dv">1</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span>(i <span class="sc">%%</span> m <span class="sc">==</span> <span class="dv">0</span>){</span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>      <span class="co">#comenzar nueva época y reordenar minilotes al azar</span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>      minilotes <span class="ot">&lt;-</span> minilotes[<span class="fu">sample</span>(<span class="dv">1</span><span class="sc">:</span>m, m)]</span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>    h_deriv <span class="ot">&lt;-</span> <span class="fu">grad_calc</span>(minilotes[[k]]<span class="sc">$</span>x, minilotes[[k]]<span class="sc">$</span>y)</span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>    z[i<span class="sc">+</span><span class="dv">1</span>, ] <span class="ot">&lt;-</span> z[i, ] <span class="sc">-</span> eta <span class="sc">*</span> <span class="fu">h_deriv</span>(z[i, ])</span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>  <span class="fu">colnames</span>(z) <span class="ot">&lt;-</span> <span class="fu">names</span>(z_0)</span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a>  z</span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Usaremos un ejemplo simulado de regresión para hacer algunos experimentos:</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>p_1 <span class="ot">&lt;-</span> <span class="cf">function</span>(x){</span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ifelse</span>(x <span class="sc">&lt;</span> <span class="dv">30</span>, <span class="fl">0.9</span>, <span class="fl">0.9</span> <span class="sc">-</span> <span class="fl">0.01</span> <span class="sc">*</span> (x <span class="sc">-</span> <span class="dv">30</span>))</span>
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>f_1 <span class="ot">&lt;-</span> <span class="cf">function</span>(x){</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="fl">0.05</span> <span class="sc">*</span> <span class="fu">ifelse</span>(x <span class="sc">&lt;</span> <span class="dv">30</span>, <span class="dv">40</span>, <span class="dv">40</span> <span class="sc">-</span> <span class="fl">0.01</span> <span class="sc">*</span> (<span class="dv">2</span> <span class="sc">*</span> x<span class="sc">^</span><span class="dv">2</span> <span class="sc">-</span> <span class="dv">2</span> <span class="sc">*</span> <span class="dv">30</span><span class="sc">^</span><span class="dv">2</span>)) </span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>}</span>
 <span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">4912</span>)</span>
 <span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>sim_datos <span class="ot">&lt;-</span> <span class="cf">function</span>(n){</span>
 <span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  x <span class="ot">&lt;-</span> <span class="fu">runif</span>(n, <span class="dv">0</span>, <span class="dv">100</span>)</span>
-<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>  probs <span class="ot">&lt;-</span> <span class="fu">p_1</span>(x)</span>
-<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>  g <span class="ot">&lt;-</span> <span class="fu">rbinom</span>(<span class="fu">length</span>(x), <span class="dv">1</span>, probs)</span>
-<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>  <span class="co"># con dos variables de ruido:</span></span>
-<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>  dat <span class="ot">&lt;-</span> <span class="fu">tibble</span>(<span class="at">x_1 =</span> (x <span class="sc">-</span> <span class="fu">mean</span>(x))<span class="sc">/</span><span class="fu">sd</span>(x), </span>
-<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>                <span class="at">x_2 =</span> <span class="fu">rnorm</span>(<span class="fu">length</span>(x), <span class="dv">0</span>, <span class="dv">1</span>),</span>
-<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>                <span class="at">x_3 =</span> <span class="fu">rnorm</span>(<span class="fu">length</span>(x), <span class="dv">0</span>, <span class="dv">1</span>),</span>
-<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>                <span class="at">p_1 =</span> probs, g)</span>
-<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>  dat <span class="sc">%&gt;%</span> <span class="fu">select</span>(x_1, x_2, x_3, g) </span>
-<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>dat_ent <span class="ot">&lt;-</span> <span class="fu">sim_datos</span>(<span class="dv">100</span>)</span>
-<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>dat_valid <span class="ot">&lt;-</span> <span class="fu">sim_datos</span>(<span class="dv">1000</span>)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>  y <span class="ot">&lt;-</span> <span class="fu">f_1</span>(x) <span class="sc">+</span> <span class="fu">rnorm</span>(n, <span class="dv">0</span>, <span class="dv">1</span>)</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>  <span class="co"># con dos variables de ruido:</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>  dat <span class="ot">&lt;-</span> <span class="fu">tibble</span>(<span class="at">x_1 =</span> (x <span class="sc">-</span> <span class="fu">mean</span>(x))<span class="sc">/</span><span class="fu">sd</span>(x), </span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>                <span class="at">x_2 =</span> <span class="fu">rnorm</span>(<span class="fu">length</span>(x), <span class="dv">0</span>, <span class="dv">1</span>),</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>                <span class="at">x_3 =</span> <span class="fu">rnorm</span>(<span class="fu">length</span>(x), <span class="dv">0</span>, <span class="dv">1</span>),</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>                <span class="at">f =</span> <span class="fu">f_1</span>(x), y)</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>  dat <span class="sc">|&gt;</span> <span class="fu">select</span>(x_1, x_2, x_3, y) </span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>dat_ent <span class="ot">&lt;-</span> <span class="fu">sim_datos</span>(<span class="dv">100</span>)</span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>dat_valid <span class="ot">&lt;-</span> <span class="fu">sim_datos</span>(<span class="dv">1000</span>)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>Los parámetros que minimizan la devianza son:</p>
+<p>Los parámetros que minimizan el error son:</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">glm</span>(g <span class="sc">~</span> x_1 <span class="sc">+</span> x_2<span class="sc">+</span> x_3 , <span class="at">data =</span> dat_ent, <span class="at">family =</span> <span class="st">'binomial'</span>) <span class="sc">%&gt;%</span> coef</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">lm</span>(y <span class="sc">~</span> x_1 <span class="sc">+</span> x_2<span class="sc">+</span> x_3 , <span class="at">data =</span> dat_ent) <span class="sc">|&gt;</span> <span class="fu">coef</span>()</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>(Intercept)         x_1         x_2         x_3 
-  1.0283403  -1.8447727   0.4352569  -0.0604981 </code></pre>
+-0.36904266 -2.46877687 -0.07368414  0.06632769 </code></pre>
 </div>
 </div>
 <p>Hacemos primero descenso en gradiente:</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>iteraciones_descenso <span class="ot">&lt;-</span> <span class="fu">descenso</span>(<span class="dv">500</span>, <span class="fu">rep</span>(<span class="dv">0</span>,<span class="dv">4</span>), <span class="fl">0.8</span>,</span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>         <span class="at">h_deriv =</span> <span class="fu">grad_calc</span>(<span class="at">x_ent =</span> <span class="fu">as.matrix</span>(dat_ent[,<span class="fu">c</span>(<span class="st">'x_1'</span>,<span class="st">'x_2'</span>,<span class="st">'x_3'</span>), <span class="at">drop =</span><span class="cn">FALSE</span>]), </span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>                             <span class="at">y_ent=</span>dat_ent<span class="sc">$</span>g)) <span class="sc">%&gt;%</span></span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  data.frame <span class="sc">%&gt;%</span> <span class="fu">rename</span>(<span class="at">beta_1 =</span> X2, <span class="at">beta_2 =</span> X3)</span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(iteraciones_descenso, <span class="fu">aes</span>(<span class="at">x=</span>beta_1, <span class="at">y=</span>beta_2)) <span class="sc">+</span> <span class="fu">geom_point</span>()</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>z_0 <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="at">Intercept =</span> <span class="dv">0</span>, <span class="at">x_1 =</span> <span class="dv">0</span>, <span class="at">x_2 =</span> <span class="dv">0</span>, <span class="at">x_3 =</span> <span class="dv">0</span>)</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>iteraciones_descenso <span class="ot">&lt;-</span> <span class="fu">descenso</span>(<span class="dv">200</span>, z_0, <span class="fl">0.1</span>,</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>         <span class="at">h_deriv =</span> <span class="fu">grad_calc</span>(<span class="at">x_ent =</span> <span class="fu">as.matrix</span>(dat_ent[,<span class="fu">c</span>(<span class="st">'x_1'</span>,<span class="st">'x_2'</span>,<span class="st">'x_3'</span>), <span class="at">drop =</span><span class="cn">FALSE</span>]), </span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>                             <span class="at">y_ent=</span>dat_ent<span class="sc">$</span>y)) <span class="sc">|&gt;</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as_tibble</span>() <span class="sc">|&gt;</span> <span class="fu">rename</span>(<span class="at">beta_1 =</span> x_1, <span class="at">beta_2 =</span> x_2)</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(iteraciones_descenso, <span class="fu">aes</span>(<span class="at">x=</span>beta_1, <span class="at">y=</span>beta_2)) <span class="sc">+</span> <span class="fu">geom_point</span>()</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <p><img src="82-apendice-descenso-estocastico_files/figure-html/unnamed-chunk-6-1.png" class="img-fluid" width="480"></p>
 </div>
@@ -378,10 +379,10 @@ Descenso estocástico por minilotes
 <div class="cell">
 <div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">231</span>)</span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>dat_ent<span class="sc">$</span>minilote <span class="ot">&lt;-</span> <span class="fu">rep</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">10</span>, <span class="at">each =</span> <span class="dv">10</span>)</span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>split_ml <span class="ot">&lt;-</span> <span class="fu">split</span>(dat_ent <span class="sc">%&gt;%</span> <span class="fu">sample_n</span>(<span class="fu">nrow</span>(dat_ent)), dat_ent<span class="sc">$</span>minilote) </span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>minilotes <span class="ot">&lt;-</span> <span class="fu">lapply</span>(split_ml, <span class="cf">function</span>(dat_ml){</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>split_ml <span class="ot">&lt;-</span> <span class="fu">split</span>(dat_ent <span class="sc">|&gt;</span> <span class="fu">sample_n</span>(<span class="fu">nrow</span>(dat_ent)), dat_ent<span class="sc">$</span>minilote) </span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>minilotes <span class="ot">&lt;-</span> <span class="fu">map</span>(split_ml, <span class="cf">function</span>(dat_ml){</span>
 <span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">list</span>(<span class="at">x =</span> <span class="fu">as.matrix</span>(dat_ml[, <span class="fu">c</span>(<span class="st">'x_1'</span>,<span class="st">'x_2'</span>,<span class="st">'x_3'</span>), <span class="at">drop=</span><span class="cn">FALSE</span>]),</span>
-<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>       <span class="at">y =</span> dat_ml<span class="sc">$</span>g)</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>       <span class="at">y =</span> dat_ml<span class="sc">$</span>y)</span>
 <span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>})</span>
 <span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="fu">length</span>(minilotes)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
@@ -390,8 +391,8 @@ Descenso estocástico por minilotes
 </div>
 <p>Ahora iteramos. Nótese cómo descenso en gradiente tiene un patrón aleatorio de avance hacia el mínimo, y una vez que llega a una región oscila alrededor de este mínimo.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>iter_estocastico <span class="ot">&lt;-</span> <span class="fu">descenso_estocastico</span>(<span class="dv">50</span>, <span class="fu">rep</span>(<span class="dv">0</span>, <span class="dv">4</span>), <span class="fl">0.2</span>, minilotes) <span class="sc">%&gt;%</span></span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  data.frame <span class="sc">%&gt;%</span> <span class="fu">rename</span>(<span class="at">beta_0 =</span> X1, <span class="at">beta_1 =</span> X2, <span class="at">beta_2 =</span> X3)</span>
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>iter_estocastico <span class="ot">&lt;-</span> <span class="fu">descenso_estocastico</span>(<span class="dv">20</span>, z_0, <span class="fl">0.05</span>, minilotes) <span class="sc">|&gt;</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as_tibble</span>() <span class="sc">|&gt;</span> <span class="fu">rename</span>(<span class="at">beta_0 =</span> Intercept, <span class="at">beta_1 =</span> x_1, <span class="at">beta_2 =</span> x_2)</span>
 <span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(iteraciones_descenso, <span class="fu">aes</span>(<span class="at">x=</span>beta_1, <span class="at">y=</span>beta_2)) <span class="sc">+</span> <span class="fu">geom_path</span>() <span class="sc">+</span></span>
 <span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>() <span class="sc">+</span></span>
 <span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_path</span>(<span class="at">data =</span> iter_estocastico, <span class="at">colour =</span><span class="st">'red'</span>, <span class="at">alpha=</span><span class="fl">0.2</span>) <span class="sc">+</span></span>
@@ -407,7 +408,7 @@ Descenso estocástico por minilotes
 <span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>descenso <span class="ot">&lt;-</span> iteraciones_descenso</span>
 <span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>estocastico<span class="sc">$</span>epoca <span class="ot">&lt;-</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">nrow</span>(estocastico) <span class="sc">/</span> <span class="fl">10.0</span></span>
 <span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>descenso<span class="sc">$</span>epoca <span class="ot">&lt;-</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">nrow</span>(descenso) <span class="sc">/</span> <span class="fl">1.0</span></span>
-<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>descenso <span class="ot">&lt;-</span> <span class="fu">filter</span>(descenso, epoca <span class="sc">&lt;=</span> <span class="dv">50</span>)</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>descenso <span class="ot">&lt;-</span> <span class="fu">filter</span>(descenso, epoca <span class="sc">&lt;=</span> <span class="dv">20</span>)</span>
 <span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>g_de <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(estocastico, <span class="fu">aes</span>(<span class="at">x =</span> beta_1, <span class="at">y =</span> beta_2)) <span class="sc">+</span> </span>
 <span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_path</span>(<span class="at">colour =</span> <span class="st">"red"</span>) <span class="sc">+</span> <span class="fu">geom_point</span>(<span class="at">colour =</span> <span class="st">"red"</span>) <span class="sc">+</span></span>
 <span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_path</span>(<span class="at">data =</span> descenso) <span class="sc">+</span></span>
@@ -420,24 +421,23 @@ Descenso estocástico por minilotes
 </div>
 <p>Podemos ver cómo se ve la devianza de entrenamiento:</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>dev_ent <span class="ot">&lt;-</span> <span class="fu">devianza_calc</span>(<span class="at">x =</span> <span class="fu">as.matrix</span>(dat_ent[,<span class="fu">c</span>(<span class="st">'x_1'</span>,<span class="st">'x_2'</span>,<span class="st">'x_3'</span>), <span class="at">drop =</span><span class="cn">FALSE</span>]), </span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>                             <span class="at">y=</span>dat_ent<span class="sc">$</span>g)</span>
-<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>dev_valid <span class="ot">&lt;-</span> <span class="fu">devianza_calc</span>(<span class="at">x =</span> <span class="fu">as.matrix</span>(dat_valid[,<span class="fu">c</span>(<span class="st">'x_1'</span>,<span class="st">'x_2'</span>,<span class="st">'x_3'</span>), <span class="at">drop =</span><span class="cn">FALSE</span>]),</span>
-<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>                             <span class="at">y=</span>dat_valid<span class="sc">$</span>g)</span>
-<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>dat_dev <span class="ot">&lt;-</span> <span class="fu">tibble</span>(<span class="at">iteracion =</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">nrow</span>(iteraciones_descenso)) <span class="sc">%&gt;%</span></span>
-<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">descenso =</span> <span class="fu">apply</span>(iteraciones_descenso, <span class="dv">1</span>, dev_ent),</span>
-<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>        <span class="at">descenso_estocastico =</span> <span class="fu">apply</span>(iter_estocastico, <span class="dv">1</span>, dev_ent)) <span class="sc">%&gt;%</span></span>
-<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">gather</span>(algoritmo, dev_ent, <span class="sc">-</span>iteracion) <span class="sc">%&gt;%</span> <span class="fu">mutate</span>(<span class="at">tipo =</span><span class="st">'entrenamiento'</span>)</span>
-<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>dat_dev_valid <span class="ot">&lt;-</span> <span class="fu">tibble</span>(<span class="at">iteracion =</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">nrow</span>(iteraciones_descenso)) <span class="sc">%&gt;%</span></span>
-<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">descenso =</span> <span class="fu">apply</span>(iteraciones_descenso, <span class="dv">1</span>, dev_valid),</span>
-<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>         <span class="at">descenso_estocastico =</span> <span class="fu">apply</span>(iter_estocastico, <span class="dv">1</span>, dev_valid)) <span class="sc">%&gt;%</span></span>
-<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">gather</span>(algoritmo, dev_ent, <span class="sc">-</span>iteracion) <span class="sc">%&gt;%</span> <span class="fu">mutate</span>(<span class="at">tipo =</span><span class="st">'validación'</span>)</span>
-<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a>dat_dev <span class="ot">&lt;-</span> <span class="fu">bind_rows</span>(dat_dev, dat_dev_valid)</span>
-<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(<span class="fu">filter</span>(dat_dev, tipo<span class="sc">==</span><span class="st">'entrenamiento'</span>), </span>
-<span id="cb11-17"><a href="#cb11-17" aria-hidden="true" tabindex="-1"></a>       <span class="fu">aes</span>(<span class="at">x=</span>iteracion, <span class="at">y=</span>dev_ent, <span class="at">colour=</span>algoritmo)) <span class="sc">+</span> <span class="fu">geom_line</span>() <span class="sc">+</span></span>
-<span id="cb11-18"><a href="#cb11-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">size =</span> <span class="fl">0.8</span>) <span class="sc">+</span> <span class="fu">facet_wrap</span>(<span class="sc">~</span>tipo)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>dev_ent <span class="ot">&lt;-</span> <span class="fu">perdida_calc</span>(<span class="at">x =</span> <span class="fu">as.matrix</span>(dat_ent[,<span class="fu">c</span>(<span class="st">'x_1'</span>,<span class="st">'x_2'</span>,<span class="st">'x_3'</span>), </span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>                <span class="at">drop =</span><span class="cn">FALSE</span>]), <span class="at">y=</span>dat_ent<span class="sc">$</span>y)</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>dev_valid <span class="ot">&lt;-</span> <span class="fu">perdida_calc</span>(<span class="at">x =</span> <span class="fu">as.matrix</span>(dat_valid[,<span class="fu">c</span>(<span class="st">'x_1'</span>,<span class="st">'x_2'</span>,<span class="st">'x_3'</span>), <span class="at">drop =</span><span class="cn">FALSE</span>]), <span class="at">y=</span>dat_valid<span class="sc">$</span>y)</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>dat_dev <span class="ot">&lt;-</span> <span class="fu">tibble</span>(<span class="at">iteracion =</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">nrow</span>(iteraciones_descenso)) <span class="sc">|&gt;</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">descenso =</span> <span class="fu">apply</span>(iteraciones_descenso, <span class="dv">1</span>, dev_ent),</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>        <span class="at">descenso_estocastico =</span> <span class="fu">apply</span>(iter_estocastico, <span class="dv">1</span>, dev_ent)) <span class="sc">|&gt;</span></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">gather</span>(algoritmo, dev_ent, <span class="sc">-</span>iteracion) <span class="sc">|&gt;</span> <span class="fu">mutate</span>(<span class="at">tipo =</span><span class="st">'entrenamiento'</span>)</span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>dat_dev_valid <span class="ot">&lt;-</span> <span class="fu">tibble</span>(<span class="at">iteracion =</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">nrow</span>(iteraciones_descenso)) <span class="sc">|&gt;</span></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">descenso =</span> <span class="fu">apply</span>(iteraciones_descenso, <span class="dv">1</span>, dev_valid),</span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>         <span class="at">descenso_estocastico =</span> <span class="fu">apply</span>(iter_estocastico, <span class="dv">1</span>, dev_valid)) <span class="sc">|&gt;</span></span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">gather</span>(algoritmo, dev_ent, <span class="sc">-</span>iteracion) <span class="sc">|&gt;</span> <span class="fu">mutate</span>(<span class="at">tipo =</span><span class="st">'validación'</span>)</span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a>dat_dev <span class="ot">&lt;-</span> <span class="fu">bind_rows</span>(dat_dev, dat_dev_valid)</span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(<span class="fu">filter</span>(dat_dev, tipo<span class="sc">==</span><span class="st">'entrenamiento'</span>, iteracion <span class="sc">&lt;=</span> <span class="dv">100</span>), </span>
+<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a>       <span class="fu">aes</span>(<span class="at">x=</span>iteracion, <span class="at">y=</span>dev_ent, <span class="at">colour=</span>algoritmo)) <span class="sc">+</span> <span class="fu">geom_line</span>() <span class="sc">+</span></span>
+<span id="cb11-17"><a href="#cb11-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">size =</span> <span class="fl">0.8</span>) <span class="sc">+</span> <span class="fu">facet_wrap</span>(<span class="sc">~</span>tipo)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <p><img src="82-apendice-descenso-estocastico_files/figure-html/unnamed-chunk-10-1.png" class="img-fluid" width="480"></p>
 </div>
@@ -472,11 +472,12 @@ Descenso estocástico
 <ol type="1">
 <li><p>Muchas veces no es necesario usar todos los datos para encontrar una buena dirección de descenso. Podemos ver la dirección de descenso en gradiente como un valor esperado sobre la muestra de entrenamiento (pues la pérdida es un promedio sobre el conjunto de entrenamiento). Una <strong>submuestra (minilote) puede ser suficiente para estimar ese valor esperado</strong>, con costo menor de cómputo. Adicionalmente, quizá no es tan buena idea intentar estimar el gradiente con la mejor precisión pues es solamente una dirección de descenso <em>local</em> (así que quizá no da la mejor decisión de a dónde moverse en cada punto). Es mejor hacer iteraciones más rápidas con direcciones estimadas.</p></li>
 <li><p>Desde este punto de vista, calcular el gradiente completo para descenso en gradiente es computacionalmente ineficiente. Si el conjunto de entrenamiento es masivo, descenso en gradiente puede no ser factible.</p></li>
-<li><p>¿Cuál es el mejor tamaño de minilote? Por un lado, minilotes más grandes nos dan mejores eficiencias en paralelización (multiplicación de matrices), especialmente en GPUs. Por otro lado, con minilotes más grandes puede ser que hagamos trabajo de más, por las razones expuestas en los incisos anteriores, y tengamos menos iteraciones en el mismo tiempo. El mejor punto está entre minilotes demasiado chicos (no aprovechamos paralelismo) o demasiado grande (hacemos demasiado trabajo por iteración).</p></li>
+<li><p>Desde el punto de vista de sobreajuste, el uso de distintos datos para cada paso <strong>evita mínimos sobreajustados o de bajo desempeño</strong> que están presentes en la pérdida calculada con todos los datos.</p></li>
+<li><p>¿Cuál es el mejor tamaño de minilote? Por un lado, minilotes más grandes nos dan mejores eficiencias en paralelización (multiplicación de matrices), especialmente en GPUs. Por otro lado, con minilotes más grandes puede ser que hagamos trabajo de más, por las razones expuestas en los incisos anteriores, y tengamos menos iteraciones en el mismo tiempo. El mejor punto está entre minilotes demasiado chicos (donde no aprovechamos paralelismo) o demasiado grande (donde hacemos demasiado trabajo por iteración).</p></li>
 </ol>
-<p>4.La propiedad más importante de descenso estocástico en minilotes es que su convergencia no depende del tamaño del conjunto de entrenamiento, es decir, el <strong>tiempo de iteración para descenso estocástico no crece con el número de casos totales</strong>. Podemos tener obtener buenos ajustes incluso con tamaños muy grandes de conjuntos de entrenamiento (por ejemplo, antes de procesar todos los datos de entrenamiento). Descenso estocástico <em>escala</em> bien en este sentido: el factor limitante es el tamaño de minilote y el número de iteraciones.</p>
+<p>4.Una propiedad importante de descenso estocástico en minilotes es que <strong>su convergencia no depende del tamaño del conjunto de entrenamiento</strong>, es decir, el tiempo de iteración para descenso estocástico no crece con el número de casos totales. Podemos tener obtener buenos ajustes incluso con tamaños muy grandes de conjuntos de entrenamiento (por ejemplo, antes de procesar todos los datos de entrenamiento). Descenso estocástico <em>escala</em> bien en este sentido: el factor limitante es el tamaño de minilote y el número de iteraciones.</p>
 <ol start="5" type="1">
-<li>Es importante permutar al azar los datos antes de hacer los minibatches, pues órdenes naturales en los datos pueden afectar la convergencia. Se ha observado también que permutar los minibatches en cada iteración típicamente acelera la convergencia (si se pueden tener los datos en memoria).</li>
+<li>Es importante <strong>permutar al azar</strong> los datos antes de hacer los minibatches, pues órdenes “naturales” en los datos pueden afectar la convergencia. Se ha observado también que permutar los minibatches en cada iteración típicamente acelera la convergencia (si se pueden tener los datos en memoria).</li>
 </ol>
 <section id="ejemplo" class="level4 unnumbered">
 <h4 class="unnumbered anchored" data-anchor-id="ejemplo">Ejemplo</h4>
@@ -504,15 +505,15 @@ Descenso estocástico
 </div>
 <p>Por ejemplo: tasa demasiado alta:</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>iter_estocastico <span class="ot">&lt;-</span> <span class="fu">descenso_estocastico</span>(<span class="dv">20</span>, <span class="fu">rep</span>(<span class="dv">0</span>,<span class="dv">4</span>), <span class="fl">0.95</span>, minilotes) <span class="sc">%&gt;%</span></span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>  data.frame <span class="sc">%&gt;%</span> <span class="fu">rename</span>(<span class="at">beta_0 =</span> X1, <span class="at">beta_1 =</span> X2)</span>
-<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>dev_ent <span class="ot">&lt;-</span> <span class="fu">devianza_calc</span>(<span class="at">x =</span> <span class="fu">as.matrix</span>(dat_ent[,<span class="fu">c</span>(<span class="st">'x_1'</span>,<span class="st">'x_2'</span>,<span class="st">'x_3'</span>), <span class="at">drop =</span><span class="cn">FALSE</span>]), </span>
-<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>                             <span class="at">y=</span>dat_ent<span class="sc">$</span>g)</span>
-<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>dev_valid <span class="ot">&lt;-</span> <span class="fu">devianza_calc</span>(<span class="at">x =</span> <span class="fu">as.matrix</span>(dat_valid[,<span class="fu">c</span>(<span class="st">'x_1'</span>,<span class="st">'x_2'</span>,<span class="st">'x_3'</span>), <span class="at">drop =</span><span class="cn">FALSE</span>]), </span>
-<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>                             <span class="at">y=</span>dat_valid<span class="sc">$</span>g)</span>
-<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>dat_dev <span class="ot">&lt;-</span> <span class="fu">data_frame</span>(<span class="at">iteracion =</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">nrow</span>(iter_estocastico)) <span class="sc">%&gt;%</span></span>
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>iter_estocastico <span class="ot">&lt;-</span> <span class="fu">descenso_estocastico</span>(<span class="dv">20</span>, z_0, <span class="fl">0.5</span>, minilotes) <span class="sc">|&gt;</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as_tibble</span>() </span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>dev_ent <span class="ot">&lt;-</span> <span class="fu">perdida_calc</span>(<span class="at">x =</span> <span class="fu">as.matrix</span>(dat_ent[,<span class="fu">c</span>(<span class="st">'x_1'</span>,<span class="st">'x_2'</span>,<span class="st">'x_3'</span>), <span class="at">drop =</span><span class="cn">FALSE</span>]), </span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>                             <span class="at">y=</span>dat_ent<span class="sc">$</span>y)</span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>dev_valid <span class="ot">&lt;-</span> <span class="fu">perdida_calc</span>(<span class="at">x =</span> <span class="fu">as.matrix</span>(dat_valid[,<span class="fu">c</span>(<span class="st">'x_1'</span>,<span class="st">'x_2'</span>,<span class="st">'x_3'</span>), <span class="at">drop =</span><span class="cn">FALSE</span>]), </span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>                             <span class="at">y=</span>dat_valid<span class="sc">$</span>y)</span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>dat_dev <span class="ot">&lt;-</span> <span class="fu">data_frame</span>(<span class="at">iteracion =</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">nrow</span>(iter_estocastico)) <span class="sc">|&gt;</span></span>
 <span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>   <span class="fu">mutate</span>(<span class="at">entrena =</span> <span class="fu">apply</span>(iter_estocastico, <span class="dv">1</span>, dev_ent), </span>
-<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">validacion =</span> <span class="fu">apply</span>(iter_estocastico, <span class="dv">1</span>, dev_valid)) <span class="sc">%&gt;%</span></span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">validacion =</span> <span class="fu">apply</span>(iter_estocastico, <span class="dv">1</span>, dev_valid)) <span class="sc">|&gt;</span></span>
 <span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">gather</span>(tipo, devianza, entrena<span class="sc">:</span>validacion)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
 <pre><code>Warning: `data_frame()` was deprecated in tibble 1.1.0.
@@ -526,15 +527,15 @@ Descenso estocástico
 </div>
 <p>Tasa demasiado chica ( o hacer más iteraciones):</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>iter_estocastico <span class="ot">&lt;-</span> <span class="fu">descenso_estocastico</span>(<span class="dv">20</span>, <span class="fu">rep</span>(<span class="dv">0</span>,<span class="dv">4</span>), <span class="fl">0.01</span>, minilotes) <span class="sc">%&gt;%</span></span>
-<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>  data.frame <span class="sc">%&gt;%</span> <span class="fu">rename</span>(<span class="at">beta_0 =</span> X1, <span class="at">beta_1 =</span> X2)</span>
-<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>dev_ent <span class="ot">&lt;-</span> <span class="fu">devianza_calc</span>(<span class="at">x =</span> <span class="fu">as.matrix</span>(dat_ent[,<span class="fu">c</span>(<span class="st">'x_1'</span>,<span class="st">'x_2'</span>,<span class="st">'x_3'</span>), <span class="at">drop =</span><span class="cn">FALSE</span>]), </span>
-<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>                             <span class="at">y=</span>dat_ent<span class="sc">$</span>g)</span>
-<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>dev_valid <span class="ot">&lt;-</span> <span class="fu">devianza_calc</span>(<span class="at">x =</span> <span class="fu">as.matrix</span>(dat_valid[,<span class="fu">c</span>(<span class="st">'x_1'</span>,<span class="st">'x_2'</span>,<span class="st">'x_3'</span>), <span class="at">drop =</span><span class="cn">FALSE</span>]), </span>
-<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>                             <span class="at">y=</span>dat_valid<span class="sc">$</span>g)</span>
-<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>dat_dev <span class="ot">&lt;-</span> <span class="fu">data_frame</span>(<span class="at">iteracion =</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">nrow</span>(iter_estocastico)) <span class="sc">%&gt;%</span></span>
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>iter_estocastico <span class="ot">&lt;-</span> <span class="fu">descenso_estocastico</span>(<span class="dv">20</span>, z_0, <span class="fl">0.001</span>, minilotes) <span class="sc">|&gt;</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as_tibble</span>() </span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>dev_ent <span class="ot">&lt;-</span> <span class="fu">perdida_calc</span>(<span class="at">x =</span> <span class="fu">as.matrix</span>(dat_ent[,<span class="fu">c</span>(<span class="st">'x_1'</span>,<span class="st">'x_2'</span>,<span class="st">'x_3'</span>), <span class="at">drop =</span><span class="cn">FALSE</span>]), </span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>                             <span class="at">y=</span>dat_ent<span class="sc">$</span>y)</span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>dev_valid <span class="ot">&lt;-</span> <span class="fu">perdida_calc</span>(<span class="at">x =</span> <span class="fu">as.matrix</span>(dat_valid[,<span class="fu">c</span>(<span class="st">'x_1'</span>,<span class="st">'x_2'</span>,<span class="st">'x_3'</span>), <span class="at">drop =</span><span class="cn">FALSE</span>]), </span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>                             <span class="at">y=</span>dat_valid<span class="sc">$</span>y)</span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>dat_dev <span class="ot">&lt;-</span> <span class="fu">tibble</span>(<span class="at">iteracion =</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">nrow</span>(iter_estocastico)) <span class="sc">|&gt;</span></span>
 <span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>   <span class="fu">mutate</span>(<span class="at">entrena =</span> <span class="fu">apply</span>(iter_estocastico, <span class="dv">1</span>, dev_ent), </span>
-<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">validacion =</span> <span class="fu">apply</span>(iter_estocastico, <span class="dv">1</span>, dev_valid)) <span class="sc">%&gt;%</span></span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">validacion =</span> <span class="fu">apply</span>(iter_estocastico, <span class="dv">1</span>, dev_valid)) <span class="sc">|&gt;</span></span>
 <span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">gather</span>(tipo, devianza, entrena<span class="sc">:</span>validacion)</span>
 <span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(dat_dev, </span>
 <span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a>       <span class="fu">aes</span>(<span class="at">x=</span>iteracion, <span class="at">y=</span>devianza, <span class="at">colour=</span>tipo)) <span class="sc">+</span> <span class="fu">geom_line</span>() </span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -567,21 +568,22 @@ Descenso estocástico
 <span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a>    z[i<span class="sc">+</span><span class="dv">1</span>, ] <span class="ot">&lt;-</span> z[i, ] <span class="sc">-</span> eta <span class="sc">*</span> <span class="fu">h_deriv</span>(z[i, ])</span>
 <span id="cb18-14"><a href="#cb18-14" aria-hidden="true" tabindex="-1"></a>    eta <span class="ot">&lt;-</span> eta<span class="sc">*</span>(<span class="dv">1</span><span class="sc">/</span>(<span class="dv">1</span><span class="sc">+</span>decaimiento<span class="sc">*</span>i))</span>
 <span id="cb18-15"><a href="#cb18-15" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb18-16"><a href="#cb18-16" aria-hidden="true" tabindex="-1"></a>  z</span>
-<span id="cb18-17"><a href="#cb18-17" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb18-16"><a href="#cb18-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">colnames</span>(z) <span class="ot">&lt;-</span> <span class="fu">names</span>(z_0)</span>
+<span id="cb18-17"><a href="#cb18-17" aria-hidden="true" tabindex="-1"></a>  z</span>
+<span id="cb18-18"><a href="#cb18-18" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Y ahora vemos qué pasa con decaimiento:</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>iter_estocastico <span class="ot">&lt;-</span> <span class="fu">descenso_estocastico</span>(<span class="dv">50</span>, <span class="fu">c</span>(<span class="dv">0</span>,<span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">0</span>), <span class="fl">0.1</span>, </span>
-<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>                                         minilotes, <span class="at">decaimiento =</span> <span class="fl">1e-5</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>  data.frame <span class="sc">%&gt;%</span> <span class="fu">rename</span>(<span class="at">beta_0 =</span> X1, <span class="at">beta_1 =</span> X2, <span class="at">beta_2 =</span> X3, <span class="at">beta_3 =</span> X4)</span>
-<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>dev_ent <span class="ot">&lt;-</span> <span class="fu">devianza_calc</span>(<span class="at">x =</span> <span class="fu">as.matrix</span>(dat_ent[,<span class="fu">c</span>(<span class="st">'x_1'</span>,<span class="st">'x_2'</span>,<span class="st">'x_3'</span>), <span class="at">drop =</span><span class="cn">FALSE</span>]), </span>
-<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>                             <span class="at">y=</span>dat_ent<span class="sc">$</span>g)</span>
-<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>dev_valid <span class="ot">&lt;-</span> <span class="fu">devianza_calc</span>(<span class="at">x =</span> <span class="fu">as.matrix</span>(dat_valid[,<span class="fu">c</span>(<span class="st">'x_1'</span>,<span class="st">'x_2'</span>,<span class="st">'x_3'</span>), <span class="at">drop =</span><span class="cn">FALSE</span>]), </span>
-<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>                             <span class="at">y=</span>dat_valid<span class="sc">$</span>g)</span>
-<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>dat_dev <span class="ot">&lt;-</span> <span class="fu">data_frame</span>(<span class="at">iteracion =</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">nrow</span>(iter_estocastico)) <span class="sc">%&gt;%</span></span>
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>iter_estocastico <span class="ot">&lt;-</span> <span class="fu">descenso_estocastico</span>(<span class="dv">10</span>, z_0, <span class="fl">0.1</span>, </span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>                                         minilotes, <span class="at">decaimiento =</span> <span class="fl">1e-3</span>) <span class="sc">|&gt;</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as_tibble</span>() <span class="sc">|&gt;</span> <span class="fu">rename</span>(<span class="at">beta_0 =</span> Intercept, <span class="at">beta_1 =</span> x_1, <span class="at">beta_2 =</span> x_2, <span class="at">beta_3 =</span> x_3)</span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>dev_ent <span class="ot">&lt;-</span> <span class="fu">perdida_calc</span>(<span class="at">x =</span> <span class="fu">as.matrix</span>(dat_ent[,<span class="fu">c</span>(<span class="st">'x_1'</span>,<span class="st">'x_2'</span>,<span class="st">'x_3'</span>), <span class="at">drop =</span><span class="cn">FALSE</span>]), </span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>                             <span class="at">y=</span>dat_ent<span class="sc">$</span>y)</span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>dev_valid <span class="ot">&lt;-</span> <span class="fu">perdida_calc</span>(<span class="at">x =</span> <span class="fu">as.matrix</span>(dat_valid[,<span class="fu">c</span>(<span class="st">'x_1'</span>,<span class="st">'x_2'</span>,<span class="st">'x_3'</span>), <span class="at">drop =</span><span class="cn">FALSE</span>]), </span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>                             <span class="at">y=</span>dat_valid<span class="sc">$</span>y)</span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>dat_dev <span class="ot">&lt;-</span> <span class="fu">data_frame</span>(<span class="at">iteracion =</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">nrow</span>(iter_estocastico)) <span class="sc">|&gt;</span></span>
 <span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a>   <span class="fu">mutate</span>(<span class="at">entrena =</span> <span class="fu">apply</span>(iter_estocastico, <span class="dv">1</span>, dev_ent), </span>
-<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">validacion =</span> <span class="fu">apply</span>(iter_estocastico, <span class="dv">1</span>, dev_valid)) <span class="sc">%&gt;%</span></span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">validacion =</span> <span class="fu">apply</span>(iter_estocastico, <span class="dv">1</span>, dev_valid)) <span class="sc">|&gt;</span></span>
 <span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">gather</span>(tipo, devianza, entrena<span class="sc">:</span>validacion)</span>
 <span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(<span class="fu">filter</span>(dat_dev, iteracion<span class="sc">&gt;</span><span class="dv">1</span>), </span>
 <span id="cb19-13"><a href="#cb19-13" aria-hidden="true" tabindex="-1"></a>       <span class="fu">aes</span>(<span class="at">x=</span>iteracion, <span class="at">y=</span>devianza, <span class="at">colour=</span>tipo)) <span class="sc">+</span> <span class="fu">geom_line</span>() </span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -662,21 +664,22 @@ Descenso estocástico con momento
 <span id="cb21-17"><a href="#cb21-17" aria-hidden="true" tabindex="-1"></a>    v <span class="ot">&lt;-</span> momento<span class="sc">*</span>v <span class="sc">-</span> eta <span class="sc">*</span> <span class="fu">h_deriv</span>(z[i, ])</span>
 <span id="cb21-18"><a href="#cb21-18" aria-hidden="true" tabindex="-1"></a>    eta <span class="ot">&lt;-</span> eta<span class="sc">*</span>(<span class="dv">1</span><span class="sc">/</span>(<span class="dv">1</span><span class="sc">+</span>decaimiento<span class="sc">*</span>i))</span>
 <span id="cb21-19"><a href="#cb21-19" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb21-20"><a href="#cb21-20" aria-hidden="true" tabindex="-1"></a>  z</span>
-<span id="cb21-21"><a href="#cb21-21" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb21-20"><a href="#cb21-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">colnames</span>(z) <span class="ot">&lt;-</span> <span class="fu">names</span>(z_0)</span>
+<span id="cb21-21"><a href="#cb21-21" aria-hidden="true" tabindex="-1"></a>  z</span>
+<span id="cb21-22"><a href="#cb21-22" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Y ahora vemos que usando momento el algoritmo es más parecido a descenso en gradiente usual (pues tenemos cierta memoria de direcciones anteriores de descenso):</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">231</span>)</span>
-<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>iter_estocastico <span class="ot">&lt;-</span> <span class="fu">descenso_estocastico</span>(<span class="dv">10</span>, <span class="fu">c</span>(<span class="dv">0</span>,<span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">0</span>), <span class="fl">0.1</span>, minilotes, <span class="at">momento =</span> <span class="fl">0.9</span>, <span class="at">decaimiento =</span> <span class="fl">0.001</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>  data.frame <span class="sc">%&gt;%</span> <span class="fu">rename</span>(<span class="at">beta_0 =</span> X1, <span class="at">beta_1 =</span> X2, <span class="at">beta_2=</span>X3, <span class="at">beta_3=</span>X4)</span>
-<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>dev_ent <span class="ot">&lt;-</span> <span class="fu">devianza_calc</span>(<span class="at">x =</span> <span class="fu">as.matrix</span>(dat_ent[,<span class="fu">c</span>(<span class="st">'x_1'</span>,<span class="st">'x_2'</span>,<span class="st">'x_3'</span>), <span class="at">drop =</span><span class="cn">FALSE</span>]), </span>
-<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>                             <span class="at">y=</span>dat_ent<span class="sc">$</span>g)</span>
-<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>dev_valid <span class="ot">&lt;-</span> <span class="fu">devianza_calc</span>(<span class="at">x =</span> <span class="fu">as.matrix</span>(dat_valid[,<span class="fu">c</span>(<span class="st">'x_1'</span>,<span class="st">'x_2'</span>,<span class="st">'x_3'</span>), <span class="at">drop =</span><span class="cn">FALSE</span>]), </span>
-<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>                             <span class="at">y=</span>dat_valid<span class="sc">$</span>g)</span>
-<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a>dat_dev <span class="ot">&lt;-</span> <span class="fu">data_frame</span>(<span class="at">iteracion =</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">nrow</span>(iter_estocastico)) <span class="sc">%&gt;%</span></span>
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">232</span>)</span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>iter_estocastico <span class="ot">&lt;-</span> <span class="fu">descenso_estocastico</span>(<span class="dv">10</span>, z_0, <span class="fl">0.005</span>, minilotes, <span class="at">momento =</span> <span class="fl">0.9</span>, <span class="at">decaimiento =</span> <span class="fl">0.00001</span>) <span class="sc">|&gt;</span></span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as_tibble</span>() <span class="sc">|&gt;</span> <span class="fu">rename</span>(<span class="at">beta_0 =</span> Intercept, <span class="at">beta_1 =</span> x_1, <span class="at">beta_2 =</span> x_2, <span class="at">beta_3 =</span> x_3)</span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>dev_ent <span class="ot">&lt;-</span> <span class="fu">perdida_calc</span>(<span class="at">x =</span> <span class="fu">as.matrix</span>(dat_ent[,<span class="fu">c</span>(<span class="st">'x_1'</span>,<span class="st">'x_2'</span>,<span class="st">'x_3'</span>), <span class="at">drop =</span><span class="cn">FALSE</span>]), </span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>                             <span class="at">y=</span>dat_ent<span class="sc">$</span>y)</span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>dev_valid <span class="ot">&lt;-</span> <span class="fu">perdida_calc</span>(<span class="at">x =</span> <span class="fu">as.matrix</span>(dat_valid[,<span class="fu">c</span>(<span class="st">'x_1'</span>,<span class="st">'x_2'</span>,<span class="st">'x_3'</span>), <span class="at">drop =</span><span class="cn">FALSE</span>]), </span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>                             <span class="at">y=</span>dat_valid<span class="sc">$</span>y)</span>
+<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a>dat_dev <span class="ot">&lt;-</span> <span class="fu">data_frame</span>(<span class="at">iteracion =</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">nrow</span>(iter_estocastico)) <span class="sc">|&gt;</span></span>
 <span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a>   <span class="fu">mutate</span>(<span class="at">entrena =</span> <span class="fu">apply</span>(iter_estocastico, <span class="dv">1</span>, dev_ent), </span>
-<span id="cb22-10"><a href="#cb22-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">validacion =</span> <span class="fu">apply</span>(iter_estocastico, <span class="dv">1</span>, dev_valid)) <span class="sc">%&gt;%</span></span>
+<span id="cb22-10"><a href="#cb22-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">validacion =</span> <span class="fu">apply</span>(iter_estocastico, <span class="dv">1</span>, dev_valid)) <span class="sc">|&gt;</span></span>
 <span id="cb22-11"><a href="#cb22-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">gather</span>(tipo, devianza, entrena<span class="sc">:</span>validacion)</span>
 <span id="cb22-12"><a href="#cb22-12" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(<span class="fu">filter</span>(dat_dev, iteracion <span class="sc">&gt;</span> <span class="dv">1</span>), </span>
 <span id="cb22-13"><a href="#cb22-13" aria-hidden="true" tabindex="-1"></a>       <span class="fu">aes</span>(<span class="at">x=</span>iteracion, <span class="at">y=</span>devianza, <span class="at">colour=</span>tipo)) <span class="sc">+</span> <span class="fu">geom_line</span>() <span class="sc">+</span> <span class="fu">geom_point</span>()</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -711,32 +714,30 @@ Descenso estocástico con momento
 <div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">21321</span>)</span>
 <span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>x_ent <span class="ot">&lt;-</span> <span class="fu">as.matrix</span>(dat_ent[,<span class="fu">c</span>(<span class="st">'x_1'</span>,<span class="st">'x_2'</span>,<span class="st">'x_3'</span>)])</span>
 <span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>x_valid <span class="ot">&lt;-</span>  <span class="fu">as.matrix</span>(dat_valid[,<span class="fu">c</span>(<span class="st">'x_1'</span>,<span class="st">'x_2'</span>,<span class="st">'x_3'</span>)])</span>
-<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>y_ent <span class="ot">&lt;-</span> dat_ent<span class="sc">$</span>g</span>
-<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>y_valid <span class="ot">&lt;-</span> dat_valid<span class="sc">$</span>g</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>y_ent <span class="ot">&lt;-</span> dat_ent<span class="sc">$</span>y</span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>y_valid <span class="ot">&lt;-</span> dat_valid<span class="sc">$</span>y</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>Empezamos con regresión logística (sin capas ocultas), que se escribe y ajusta como sigue:</p>
+<p>Empezamos con regresión (sin capas ocultas), que se escribe y ajusta como sigue:</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>modelo <span class="ot">&lt;-</span> <span class="fu">keras_model_sequential</span>() </span>
-<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>modelo <span class="sc">%&gt;%</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>modelo <span class="sc">|&gt;</span></span>
 <span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">layer_dense</span>(<span class="at">units =</span> <span class="dv">1</span>, </span>
-<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>              <span class="at">activation =</span> <span class="st">'sigmoid'</span>,</span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>              <span class="at">activation =</span> <span class="st">"linear"</span>,</span>
 <span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>              <span class="at">input_shape =</span> <span class="fu">c</span>(<span class="dv">3</span>))</span>
 <span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a>modelo <span class="sc">%&gt;%</span> <span class="fu">compile</span>(<span class="at">loss =</span> <span class="st">'binary_crossentropy'</span>,</span>
-<span id="cb26-8"><a href="#cb26-8" aria-hidden="true" tabindex="-1"></a>                   <span class="at">optimizer =</span> <span class="fu">optimizer_sgd</span>(<span class="at">lr =</span> <span class="fl">0.2</span>, <span class="at">momentum =</span> <span class="dv">0</span>,</span>
-<span id="cb26-9"><a href="#cb26-9" aria-hidden="true" tabindex="-1"></a>                                             <span class="at">decay =</span> <span class="dv">0</span>),</span>
-<span id="cb26-10"><a href="#cb26-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">metrics =</span> <span class="fu">c</span>(<span class="st">'accuracy'</span>)</span>
-<span id="cb26-11"><a href="#cb26-11" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb26-12"><a href="#cb26-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb26-13"><a href="#cb26-13" aria-hidden="true" tabindex="-1"></a>history <span class="ot">&lt;-</span> modelo <span class="sc">%&gt;%</span> </span>
-<span id="cb26-14"><a href="#cb26-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">fit</span>(x_ent, y_ent, </span>
-<span id="cb26-15"><a href="#cb26-15" aria-hidden="true" tabindex="-1"></a>      <span class="at">epochs =</span> <span class="dv">50</span>, <span class="at">batch_size =</span> <span class="dv">64</span>, </span>
-<span id="cb26-16"><a href="#cb26-16" aria-hidden="true" tabindex="-1"></a>      <span class="at">verbose =</span> <span class="dv">0</span>,</span>
-<span id="cb26-17"><a href="#cb26-17" aria-hidden="true" tabindex="-1"></a>      <span class="at">validation_data =</span> <span class="fu">list</span>(x_valid, y_valid))</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a>modelo <span class="sc">|&gt;</span> <span class="fu">compile</span>(<span class="at">loss =</span> <span class="st">'mse'</span>,</span>
+<span id="cb26-8"><a href="#cb26-8" aria-hidden="true" tabindex="-1"></a>                   <span class="at">optimizer =</span> <span class="fu">optimizer_sgd</span>(<span class="at">learning_rate =</span> <span class="fl">0.1</span>, <span class="at">momentum =</span> <span class="dv">0</span>,</span>
+<span id="cb26-9"><a href="#cb26-9" aria-hidden="true" tabindex="-1"></a>                                             <span class="at">decay =</span> <span class="dv">0</span>))</span>
+<span id="cb26-10"><a href="#cb26-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-11"><a href="#cb26-11" aria-hidden="true" tabindex="-1"></a>history <span class="ot">&lt;-</span> modelo <span class="sc">|&gt;</span> </span>
+<span id="cb26-12"><a href="#cb26-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">fit</span>(x_ent, y_ent, </span>
+<span id="cb26-13"><a href="#cb26-13" aria-hidden="true" tabindex="-1"></a>      <span class="at">epochs =</span> <span class="dv">50</span>, <span class="at">batch_size =</span> <span class="dv">10</span>, </span>
+<span id="cb26-14"><a href="#cb26-14" aria-hidden="true" tabindex="-1"></a>      <span class="at">verbose =</span> <span class="dv">0</span>,</span>
+<span id="cb26-15"><a href="#cb26-15" aria-hidden="true" tabindex="-1"></a>      <span class="at">validation_data =</span> <span class="fu">list</span>(x_valid, y_valid))</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Podemos ver el progreso del algoritmo por época</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>aprendizaje <span class="ot">&lt;-</span> <span class="fu">as.data.frame</span>(history)</span>
+<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>aprendizaje <span class="ot">&lt;-</span> <span class="fu">as_tibble</span>(history)</span>
 <span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(aprendizaje, </span>
 <span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>       <span class="fu">aes</span>(<span class="at">x=</span>epoch, <span class="at">y=</span>value, <span class="at">colour=</span>data, <span class="at">group=</span>data)) <span class="sc">+</span></span>
 <span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_wrap</span>(<span class="sc">~</span>metric, <span class="at">ncol =</span> <span class="dv">1</span>) <span class="sc">+</span> <span class="fu">geom_line</span>() <span class="sc">+</span> <span class="fu">geom_point</span>(<span class="at">size =</span> <span class="fl">0.5</span>)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -749,26 +750,22 @@ Descenso estocástico con momento
 <div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="fu">get_weights</span>(modelo)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>[[1]]
-           [,1]
-[1,] -1.6229872
-[2,]  0.2387720
-[3,] -0.1401977
+            [,1]
+[1,] -2.47753596
+[2,] -0.20939836
+[3,] -0.02326288
 
 [[2]]
-[1] 0.8464189</code></pre>
+[1] -0.4696411</code></pre>
 </div>
 </div>
-<p>Y verificamos que concuerda con la salida de <em>glm</em>:</p>
+<p>Y verificamos que concuerda con la salida de <em>lm</em>:</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>mod_logistico <span class="ot">&lt;-</span> <span class="fu">glm</span>(g <span class="sc">~</span> x_1 <span class="sc">+</span> x_2<span class="sc">+</span> x_3, <span class="at">data =</span> dat_ent, <span class="at">family =</span> <span class="st">'binomial'</span>) </span>
-<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a><span class="fu">coef</span>(mod_logistico)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>mod_lineal <span class="ot">&lt;-</span> <span class="fu">lm</span>(y <span class="sc">~</span> x_1 <span class="sc">+</span> x_2<span class="sc">+</span> x_3, <span class="at">data =</span> dat_ent) </span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a><span class="fu">coef</span>(mod_lineal)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>(Intercept)         x_1         x_2         x_3 
-  1.0283403  -1.8447727   0.4352569  -0.0604981 </code></pre>
-</div>
-<div class="sourceCode cell-code" id="cb32"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="fl">0.5</span><span class="sc">*</span>mod_logistico<span class="sc">$</span>deviance<span class="sc">/</span><span class="fu">nrow</span>(dat_ent)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>[1] 0.4342591</code></pre>
+-0.36904266 -2.46877687 -0.07368414  0.06632769 </code></pre>
 </div>
 </div>
 
