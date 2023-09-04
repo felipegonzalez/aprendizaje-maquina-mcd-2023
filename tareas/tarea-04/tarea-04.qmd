@@ -1,0 +1,252 @@
+---
+title: "Tarea 4 - redes neuronales simples y regularización"
+format: html
+---
+
+```{r}
+library(tidyverse)
+```
+
+## Ejemplo de clase
+
+Primero examinamos con más detalle el ejemplo que vimos en clase, cuyos datos simulados
+son los siguientes:
+
+```{r}
+h <- function(x){
+    1/(1 + exp(-x)) # es lo mismo que exp(x)/(1 + exp(x))
+}
+x <- seq(-2, 2, 0.1)
+f <- atan(2 - 2 * x^2)
+set.seed(2805721)
+x_1 <- runif(10, -2, 2)
+y <- rnorm(10, atan(2 - 2 * x_1^2), 0.2)
+datos <- tibble(x_1, y)
+dat_f <- tibble(x, f)
+g <- ggplot(dat_f) + geom_line(aes(x, f))
+g
+g + geom_point(data = datos, aes(x = x_1, y = y), colour = 'red')
+```
+Recuerda que utilizamos una red neuronal con una capa oculta y dos unidades
+en la capa oculta. La capa de entrada tiene una sola unidad y la capa de salida
+también tiene una sola unidad.
+
+Usamos el siguente código de keras para hacer el ajuste:
+
+```{r, message = FALSE}
+library(keras)
+# para reproducibilidad, pero es más lento:
+tensorflow::set_random_seed(13) 
+# construir modelo
+ejemplo_mod <- keras_model_sequential()
+ejemplo_mod |> 
+   layer_dense(units = 2, 
+    activation = "sigmoid", kernel_regularizer = regularizer_l2(0.001)) |> 
+  layer_dense(units = 1, 
+    activation = "linear", kernel_regularizer = regularizer_l2(0.001))
+```
+
+```{r}
+x_mat <- as.matrix(datos$x_1, ncol = 1)
+y <- datos$y
+# usamos devianza como medida de error y descenso en gradiente:
+ejemplo_mod |> compile(loss = "mse", 
+  optimizer = optimizer_sgd(learning_rate = 0.4),
+  metrics = "mse")
+# nota: esta learning rate (lr) es demasiado alta para problemas típicos
+historia <- ejemplo_mod |> 
+  fit(x_mat, y, 
+      batch_size = nrow(x_mat), epochs = 200, verbose = 1)
+```
+
+
+**Pregunta 1**: observa la salida del proceso iterativo. ¿Parece que estamos llegando
+a convergencia? En la salida de arriba "loss" es la pérdida penalizada con regularización,
+y "mse" es el error cuadrático medio. ¿Cuál de las dos cantidades está intentando minimizar
+el optimizador, que en este caso es descenso en gradiente?
+
+
+
+Después de verificar convergencia (chécalo examinando la variable
+*historia*), graficamos para ver que obtuvimos resultados similares a los de la clase:
+
+```{r}
+dat_3 <- tibble(x = x, f_2 = predict(ejemplo_mod, as.matrix(x, ncol = 1))[,1])
+ggplot(dat_3, aes(x = x, y = f_2)) + geom_line()+
+geom_line(data = dat_f, aes(x = x, y = f), col='red') +
+   geom_point(data = datos, aes(x = x_1, y = y))
+```
+
+Los coeficientes obtenidos se muestran abajo. Nótese: la primera componente de
+la lista son los coeficientes de la unidad 1 y 2 para $x$. La segunda 
+son los sesgos u ordenadas al origen, la tercera los coeficientes
+de la respuesta para las unidades 1 y 2, y el cuarto es el sesgo u ordenada
+al origen de la unidad de salida:
+
+```{r}
+get_weights(ejemplo_mod)
+```
+
+**Pregunta 2** Examina esta última salida. En esta lista: 
+
+- la primera componente son los pesos que multiplican a la primera capa para obtener la segunda capa, y la segunda componente son los sesgos. Recuerda que a = h(sesgo + peso *x) según las notas.
+- La componente 3 son los pesos de las unidades de la segunda capa para obtener la capa
+de salida, y la componente es el sesgo de la unidad de salida. Identifica estos valores 
+según las ecuaciones del modelo:
+
+$$a_1(x)=h(\beta_{1,0} + \beta_{1,1} x_1),$$
+$$a_2(x)=h(\beta_{2,0} + \beta_{2,1} x_1).$$
+$$f(a) = \beta_0 + \beta_1a_1+\beta_2 a_2,$$
+¿Cuáles son las betas para el ejemplo anterior?
+
+
+**Pregunta 3**: prueba este mismo ejemplo usando un tasa de aprendizaje
+mucho más alta (por ejemplo 0.9) y una mucho más baja (por ejemplo 0.001).
+¿Qué problemas observas en estos casos?
+
+## Un ejemplo más complicado
+
+
+En este ejercicio intentaremos ajustar con una red neuronal un patrón más
+complejo para $f(x)$, el predictor óptimo
+
+
+```{r}
+h <- function(x){
+    exp(x)/(1 + exp(x))
+}
+# Probabilidades reales
+x <- seq(-3,3,0.05)
+f_optima <- \(x) ( 2 * x - 3 * x ^ 2 + 5 * cos(4 * x)) / 10
+f <- f_optima(x)
+dat_f <- tibble(x, f)
+# Simulador de datos para este modelo:
+set.seed(280572)
+generar_datos <- function(n = 400){
+  x_2 <- runif(n, -3, 3)
+  y_2 <- f_optima(x_2) + rnorm(n, 0, 0.1)
+  datos <- tibble(x = x_2, y = y_2)
+  datos
+}
+datos_ent <- generar_datos(n = 400)
+datos_prueba <- generar_datos(n = 3000)
+g <- qplot(x, f, geom = "line", col ="red")
+g + geom_jitter(data = datos_ent, aes(x = x, y = y), col = "black",
+  position = position_jitter(height = 0.05), alpha = 0.4)
+```
+
+
+Prueba usando el siguiente código, donde intentamos ajustar una red como
+la que vimos en clase, con: 
+
+- Una capa de entradas con una sola unidad
+- Una capa oculta con 2 unidades (cambiaremos este valor más adelante)
+- Una cada de salida lineal, pues es un problema de regresión.
+
+Por el momento no usaremos regularización L2, pero utilizaremos descenso
+estocástico por minilotes:
+
+```{r, message = FALSE}
+library(keras)
+
+# construir modelo
+construye_modelo <- function(num_unidades, lambda_reg){
+  ejemplo_mod <- keras_model_sequential()
+  ejemplo_mod |> 
+     layer_dense(units = num_unidades, 
+        activation = "sigmoid", kernel_regularizer = regularizer_l2(lambda_reg)) |> 
+     layer_dense(units = 1, 
+        activation = "linear", kernel_regularizer = regularizer_l2(lambda_reg))
+  ejemplo_mod
+}
+```
+
+Al ajustar podemos ver el progreso de optimización: *loss* es la
+el error o pérdida de de entrenamiento y *val_loss* es el error o pérdida de
+validación/prueba:
+
+```{r}
+# preparar modelo
+ejemplo_mod <- construye_modelo(num_unidades = 2, lambda_reg = 1e-20)
+# preparar datos
+x_mat <- as.matrix(datos_ent$x, ncol = 1)
+y <- datos_ent$y
+# usamos error cuadrático medio y descenso en gradiente estocástico:
+ejemplo_mod |> compile(loss = "mse", 
+  optimizer = optimizer_sgd(learning_rate = 0.4))
+# nota: esta learning rate (lr) es demasiado alta para problemas típicos
+historia <- ejemplo_mod |> 
+  fit(x_mat, y, 
+      #validation_data = list(datos_prueba$x, datos_prueba$y),
+      batch_size = 50, epochs = 300, verbose = 1)
+```
+
+
+Checa la convergencia del optimizador con la siguiente gráfica:
+
+
+```{r}
+plot(historia, smooth = FALSE)
+```
+
+Y podemos ver cómo se ve la curva predictiva que construimos comparada con
+la $f$ óptima:
+
+```{r}
+graficar_modelo <- function(mod, f_optima){
+  x_graf <- seq(-3, 3, 0.01)
+preds_tbl <- tibble(x = x_graf, pred = predict(mod, x_graf)) |> 
+  mutate(f_optima = f_optima(x)) |> 
+  pivot_longer(cols = pred:f_optima, names_to = "tipo", values_to = "valor")
+ggplot(preds_tbl, aes(x = x, y = valor, colour = tipo)) + 
+  geom_line()
+}
+graficar_modelo(ejemplo_mod, f_optima)
+```
+**Pregunta 4**: ¿es buena idea intentar usar regularización L2 más grande para
+mejorar el ajuste? Explica tu respuesta. Explica por qué con dos unidades intermedias
+no es posible ajustar bien la forma de curva óptima.
+
+**Pregunta 5**: ¿crees que incrementando el número de iteraciones / afinando 
+la tasa de aprendizaje puedes obtener
+en este caso un ajuste con sesgo bajo? Experimenta con tasas de aprendizaje
+mucho más bajas o más altas.
+
+
+## Aumentando el número de unidades ocultas
+
+Repetimos ahora con un número más grande de unidades, y sin regularización. Usaremos
+el descenso en gradiente estocástico con momento (es decir, la actualización se
+hace un una dirección promedio entre la dirección del minilote y la dirección
+promedio actual). Usamos un minilote de tamaño 20. Aunque discutiremos en clase,
+**revisa el apéndice de las notas** para entender mejor esto si lo crees necesario.
+
+**Recuerda monitorear el valor del "loss", que indica si el optimizador está
+reduciendo la función objetivo**:
+
+```{r}
+# preparar modelo
+ejemplo_mod_2 <- construye_modelo(num_unidades = 10, lambda_reg = 1e-60)
+ejemplo_mod_2
+# usamos error cuadrático medio y descenso en gradiente estocástico:
+ejemplo_mod_2 |> compile(loss = "mse", 
+  optimizer = optimizer_sgd(learning_rate = 0.15, momentum = 0.9))
+# nota: esta learning rate (lr) es demasiado alta para problemas típicos
+historia <- ejemplo_mod_2 |> 
+  fit(x_mat, y, 
+      #validation_data = list(datos_prueba$x, datos_prueba$y),
+      batch_size = 20, epochs = 400, verbose = 1)
+```
+
+
+Nota el error (loss) alcanzado. Graficamos:
+
+```{r}
+graficar_modelo(ejemplo_mod_2, f_optima)
+```
+
+**Pregunta 6**: ¿Qué tan bueno es el resultado que obtuviste? ¿Qué pasa si pones una
+tasa de aprendizaje muy alta o muy baja?. 
+
+**Pregunta 7**: Intenta usar el mismo algoritmo pero con descenso en gradiente usual (sustituye batch_size arriba por el tamaño
+del los datos, que es 400). ¿Por qué crees que no obtienes un resultado tan bueno?
