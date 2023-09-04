@@ -29,24 +29,22 @@ parámetros en cada minilote. Un recorrido sobre todos los minilotes se llama
 una **época** (las iteraciones se entienden sobre los minilotes).
 :::
 
-Antes de escribir el algoritmo mostramos una implementación para regresión logística.
-Usamos las mismas funciones para calcular devianza y gradiente.
+Antes de escribir el algoritmo mostramos una implementación para regresión:
 
 ```{r, message=FALSE, warning = FALSE}
-h <- function(x){1/(1+exp(-x))}
-# la devianza es la misma
-devianza_calc <- function(x, y){
-  dev_fun <- function(beta){
-    p_beta <- h(as.matrix(cbind(1, x)) %*% beta) 
-   -2 * mean(y * log(p_beta) + (1 - y) * log(1 - p_beta))
+# usamos pérdida cuadrática
+perdida_calc <- function(x, y){
+  perdida_fun <- function(beta){
+    f_beta <- as.matrix(cbind(1, x)) %*% beta
+    mean((y - f_beta)^2)
   }
-  dev_fun
+  perdida_fun
 }
-# el cálculo del gradiente es el mismo, pero x_ent y y_ent serán diferentes
+# el cálculo del gradiente_
 grad_calc <- function(x_ent, y_ent){
   salida_grad <- function(beta){
-    p_beta <- h(as.matrix(cbind(1, x_ent)) %*% beta) 
-    e <- y_ent - p_beta
+    f_beta <- as.matrix(cbind(1, x_ent)) %*% beta
+    e <- y_ent - f_beta
     grad_out <- -2 * as.numeric(t(cbind(1,x_ent)) %*% e) / nrow(x_ent)
     names(grad_out) <- c('Intercept', colnames(x_ent))
     grad_out
@@ -65,6 +63,7 @@ descenso <- function(n, z_0, eta, h_deriv){
   for(i in 1:(n-1)){
     z[i+1, ] <- z[i, ] - eta * h_deriv(z[i, ])
   }
+  colnames(z) <- names(z_0)
   z
 }
 # esta implementación es solo para este ejemplo:
@@ -82,6 +81,7 @@ descenso_estocastico <- function(n_epocas, z_0, eta, minilotes){
     h_deriv <- grad_calc(minilotes[[k]]$x, minilotes[[k]]$y)
     z[i+1, ] <- z[i, ] - eta * h_deriv(z[i, ])
   }
+  colnames(z) <- names(z_0)
   z
 }
 
@@ -91,38 +91,38 @@ descenso_estocastico <- function(n_epocas, z_0, eta, minilotes){
 Usaremos un ejemplo simulado de regresión para hacer algunos experimentos:
 
 ```{r}
-p_1 <- function(x){
-  ifelse(x < 30, 0.9, 0.9 - 0.01 * (x - 30))
+f_1 <- function(x){
+  0.05 * ifelse(x < 30, 40, 40 - 0.01 * (2 * x^2 - 2 * 30^2)) 
 }
 
 set.seed(4912)
 sim_datos <- function(n){
   x <- runif(n, 0, 100)
-  probs <- p_1(x)
-  g <- rbinom(length(x), 1, probs)
+  y <- f_1(x) + rnorm(n, 0, 1)
   # con dos variables de ruido:
   dat <- tibble(x_1 = (x - mean(x))/sd(x), 
                 x_2 = rnorm(length(x), 0, 1),
                 x_3 = rnorm(length(x), 0, 1),
-                p_1 = probs, g)
-  dat %>% select(x_1, x_2, x_3, g) 
+                f = f_1(x), y)
+  dat |> select(x_1, x_2, x_3, y) 
 }
 dat_ent <- sim_datos(100)
 dat_valid <- sim_datos(1000)
 ```
 
-Los parámetros que minimizan la devianza son:
+Los parámetros que minimizan el error son:
 
 ```{r}
-glm(g ~ x_1 + x_2+ x_3 , data = dat_ent, family = 'binomial') %>% coef
+lm(y ~ x_1 + x_2+ x_3 , data = dat_ent) |> coef()
 ```
 Hacemos primero descenso en gradiente:
 
 ```{r}
-iteraciones_descenso <- descenso(500, rep(0,4), 0.8,
+z_0 <- c(Intercept = 0, x_1 = 0, x_2 = 0, x_3 = 0)
+iteraciones_descenso <- descenso(200, z_0, 0.1,
          h_deriv = grad_calc(x_ent = as.matrix(dat_ent[,c('x_1','x_2','x_3'), drop =FALSE]), 
-                             y_ent=dat_ent$g)) %>%
-  data.frame %>% rename(beta_1 = X2, beta_2 = X3)
+                             y_ent=dat_ent$y)) |>
+  as_tibble() |> rename(beta_1 = x_1, beta_2 = x_2)
 ggplot(iteraciones_descenso, aes(x=beta_1, y=beta_2)) + geom_point()
 ```
 
@@ -131,10 +131,10 @@ Y ahora hacemos descenso estocástico. Vamos a hacer minilotes de tamaño 10:
 ```{r}
 set.seed(231)
 dat_ent$minilote <- rep(1:10, each = 10)
-split_ml <- split(dat_ent %>% sample_n(nrow(dat_ent)), dat_ent$minilote) 
-minilotes <- lapply(split_ml, function(dat_ml){
+split_ml <- split(dat_ent |> sample_n(nrow(dat_ent)), dat_ent$minilote) 
+minilotes <- map(split_ml, function(dat_ml){
   list(x = as.matrix(dat_ml[, c('x_1','x_2','x_3'), drop=FALSE]),
-       y = dat_ml$g)
+       y = dat_ml$y)
 })
 length(minilotes)
 ```
@@ -144,8 +144,8 @@ de avance hacia el mínimo, y una vez que llega a una región oscila
 alrededor de este mínimo.
 
 ```{r}
-iter_estocastico <- descenso_estocastico(50, rep(0, 4), 0.2, minilotes) %>%
-  data.frame %>% rename(beta_0 = X1, beta_1 = X2, beta_2 = X3)
+iter_estocastico <- descenso_estocastico(20, z_0, 0.05, minilotes) |>
+  as_tibble() |> rename(beta_0 = Intercept, beta_1 = x_1, beta_2 = x_2)
 ggplot(iteraciones_descenso, aes(x=beta_1, y=beta_2)) + geom_path() +
   geom_point() +
   geom_path(data = iter_estocastico, colour ='red', alpha=0.2) +
@@ -160,7 +160,7 @@ estocastico <- iter_estocastico
 descenso <- iteraciones_descenso
 estocastico$epoca <- 1:nrow(estocastico) / 10.0
 descenso$epoca <- 1:nrow(descenso) / 1.0
-descenso <- filter(descenso, epoca <= 50)
+descenso <- filter(descenso, epoca <= 20)
 g_de <- ggplot(estocastico, aes(x = beta_1, y = beta_2)) + 
   geom_path(colour = "red") + geom_point(colour = "red") +
   geom_path(data = descenso) +
@@ -174,22 +174,21 @@ animate(g_de, duration = 10)
 Podemos ver cómo se ve la devianza de entrenamiento:
 
 ```{r}
-dev_ent <- devianza_calc(x = as.matrix(dat_ent[,c('x_1','x_2','x_3'), drop =FALSE]), 
-                             y=dat_ent$g)
-dev_valid <- devianza_calc(x = as.matrix(dat_valid[,c('x_1','x_2','x_3'), drop =FALSE]),
-                             y=dat_valid$g)
-dat_dev <- tibble(iteracion = 1:nrow(iteraciones_descenso)) %>%
+dev_ent <- perdida_calc(x = as.matrix(dat_ent[,c('x_1','x_2','x_3'), 
+                drop =FALSE]), y=dat_ent$y)
+dev_valid <- perdida_calc(x = as.matrix(dat_valid[,c('x_1','x_2','x_3'), drop =FALSE]), y=dat_valid$y)
+dat_dev <- tibble(iteracion = 1:nrow(iteraciones_descenso)) |>
   mutate(descenso = apply(iteraciones_descenso, 1, dev_ent),
-        descenso_estocastico = apply(iter_estocastico, 1, dev_ent)) %>%
-  gather(algoritmo, dev_ent, -iteracion) %>% mutate(tipo ='entrenamiento')
+        descenso_estocastico = apply(iter_estocastico, 1, dev_ent)) |>
+  gather(algoritmo, dev_ent, -iteracion) |> mutate(tipo ='entrenamiento')
 
-dat_dev_valid <- tibble(iteracion = 1:nrow(iteraciones_descenso)) %>%
+dat_dev_valid <- tibble(iteracion = 1:nrow(iteraciones_descenso)) |>
   mutate(descenso = apply(iteraciones_descenso, 1, dev_valid),
-         descenso_estocastico = apply(iter_estocastico, 1, dev_valid)) %>%
-  gather(algoritmo, dev_ent, -iteracion) %>% mutate(tipo ='validación')
+         descenso_estocastico = apply(iter_estocastico, 1, dev_valid)) |>
+  gather(algoritmo, dev_ent, -iteracion) |> mutate(tipo ='validación')
 
 dat_dev <- bind_rows(dat_dev, dat_dev_valid)
-ggplot(filter(dat_dev, tipo=='entrenamiento'), 
+ggplot(filter(dat_dev, tipo=='entrenamiento', iteracion <= 100), 
        aes(x=iteracion, y=dev_ent, colour=algoritmo)) + geom_line() +
   geom_point(size = 0.8) + facet_wrap(~tipo)
 ```
@@ -230,25 +229,28 @@ estimadas.
 es computacionalmente ineficiente. Si el conjunto de entrenamiento es masivo,
 descenso en gradiente puede no ser factible.
 
-3. ¿Cuál es el mejor tamaño de minilote? Por un lado, minilotes más grandes nos
+3. Desde el punto de vista de sobreajuste, el uso de distintos datos
+para cada paso **evita mínimos sobreajustados o de bajo desempeño** que 
+están presentes en la pérdida calculada con todos los datos.
+
+4. ¿Cuál es el mejor tamaño de minilote? Por un lado, minilotes más grandes nos
 dan mejores eficiencias en paralelización (multiplicación de matrices), especialmente 
 en GPUs. Por otro lado, con minilotes más grandes puede ser que hagamos trabajo
 de más, por las razones expuestas en los incisos anteriores, y tengamos menos
 iteraciones en el mismo tiempo. El mejor punto está entre minilotes demasiado
-chicos (no aprovechamos paralelismo) o demasiado grande (hacemos demasiado trabajo
+chicos (donde no aprovechamos paralelismo) o demasiado grande (donde hacemos demasiado trabajo
 por iteración).
 
-4.La propiedad más importante de descenso estocástico en minilotes es que su convergencia no depende del tamaño del conjunto de entrenamiento, es decir,
-el 
-**tiempo de iteración para descenso estocástico
-no crece con el número de casos totales**. Podemos tener obtener
+4.Una propiedad importante de descenso estocástico en minilotes es que **su convergencia no depende del tamaño del conjunto de entrenamiento**, es decir,
+el tiempo de iteración para descenso estocástico
+no crece con el número de casos totales. Podemos tener obtener
 buenos ajustes
 incluso con tamaños muy grandes de conjuntos de entrenamiento (por ejemplo, antes
 de procesar todos los datos de entrenamiento). Descenso estocástico *escala* bien
 en este sentido: el factor limitante es el tamaño de minilote y el número de iteraciones.
 
-5. Es importante permutar al azar los datos antes de hacer los minibatches,
-pues órdenes naturales en los datos pueden afectar la convergencia. Se ha observado
+5. Es importante **permutar al azar** los datos antes de hacer los minibatches,
+pues órdenes "naturales" en los datos pueden afectar la convergencia. Se ha observado
 también que permutar los minibatches en cada iteración típicamente acelera
 la convergencia (si se pueden tener los datos en memoria).
 
@@ -291,15 +293,15 @@ ggplot(filter(dat_dev, algoritmo=='descenso_estocastico'),
 
 Por ejemplo: tasa demasiado alta:
 ```{r}
-iter_estocastico <- descenso_estocastico(20, rep(0,4), 0.95, minilotes) %>%
-  data.frame %>% rename(beta_0 = X1, beta_1 = X2)
-dev_ent <- devianza_calc(x = as.matrix(dat_ent[,c('x_1','x_2','x_3'), drop =FALSE]), 
-                             y=dat_ent$g)
-dev_valid <- devianza_calc(x = as.matrix(dat_valid[,c('x_1','x_2','x_3'), drop =FALSE]), 
-                             y=dat_valid$g)
-dat_dev <- data_frame(iteracion = 1:nrow(iter_estocastico)) %>%
+iter_estocastico <- descenso_estocastico(20, z_0, 0.5, minilotes) |>
+  as_tibble() 
+dev_ent <- perdida_calc(x = as.matrix(dat_ent[,c('x_1','x_2','x_3'), drop =FALSE]), 
+                             y=dat_ent$y)
+dev_valid <- perdida_calc(x = as.matrix(dat_valid[,c('x_1','x_2','x_3'), drop =FALSE]), 
+                             y=dat_valid$y)
+dat_dev <- data_frame(iteracion = 1:nrow(iter_estocastico)) |>
    mutate(entrena = apply(iter_estocastico, 1, dev_ent), 
-  validacion = apply(iter_estocastico, 1, dev_valid)) %>%
+  validacion = apply(iter_estocastico, 1, dev_valid)) |>
   gather(tipo, devianza, entrena:validacion)
 ggplot(dat_dev, 
        aes(x=iteracion, y=devianza, colour=tipo)) + geom_line() 
@@ -308,15 +310,15 @@ ggplot(dat_dev,
 
 Tasa demasiado chica ( o hacer más iteraciones):
 ```{r}
-iter_estocastico <- descenso_estocastico(20, rep(0,4), 0.01, minilotes) %>%
-  data.frame %>% rename(beta_0 = X1, beta_1 = X2)
-dev_ent <- devianza_calc(x = as.matrix(dat_ent[,c('x_1','x_2','x_3'), drop =FALSE]), 
-                             y=dat_ent$g)
-dev_valid <- devianza_calc(x = as.matrix(dat_valid[,c('x_1','x_2','x_3'), drop =FALSE]), 
-                             y=dat_valid$g)
-dat_dev <- data_frame(iteracion = 1:nrow(iter_estocastico)) %>%
+iter_estocastico <- descenso_estocastico(20, z_0, 0.001, minilotes) |>
+  as_tibble() 
+dev_ent <- perdida_calc(x = as.matrix(dat_ent[,c('x_1','x_2','x_3'), drop =FALSE]), 
+                             y=dat_ent$y)
+dev_valid <- perdida_calc(x = as.matrix(dat_valid[,c('x_1','x_2','x_3'), drop =FALSE]), 
+                             y=dat_valid$y)
+dat_dev <- tibble(iteracion = 1:nrow(iter_estocastico)) |>
    mutate(entrena = apply(iter_estocastico, 1, dev_ent), 
-  validacion = apply(iter_estocastico, 1, dev_valid)) %>%
+  validacion = apply(iter_estocastico, 1, dev_valid)) |>
   gather(tipo, devianza, entrena:validacion)
 ggplot(dat_dev, 
        aes(x=iteracion, y=devianza, colour=tipo)) + geom_line() 
@@ -354,6 +356,7 @@ descenso_estocastico <- function(n_epocas, z_0, eta, minilotes, decaimiento = 0.
     z[i+1, ] <- z[i, ] - eta * h_deriv(z[i, ])
     eta <- eta*(1/(1+decaimiento*i))
   }
+  colnames(z) <- names(z_0)
   z
 }
 ```
@@ -361,16 +364,16 @@ descenso_estocastico <- function(n_epocas, z_0, eta, minilotes, decaimiento = 0.
 Y ahora vemos qué pasa con decaimiento:
 
 ```{r}
-iter_estocastico <- descenso_estocastico(50, c(0,0, 0, 0), 0.1, 
-                                         minilotes, decaimiento = 1e-5) %>%
-  data.frame %>% rename(beta_0 = X1, beta_1 = X2, beta_2 = X3, beta_3 = X4)
-dev_ent <- devianza_calc(x = as.matrix(dat_ent[,c('x_1','x_2','x_3'), drop =FALSE]), 
-                             y=dat_ent$g)
-dev_valid <- devianza_calc(x = as.matrix(dat_valid[,c('x_1','x_2','x_3'), drop =FALSE]), 
-                             y=dat_valid$g)
-dat_dev <- data_frame(iteracion = 1:nrow(iter_estocastico)) %>%
+iter_estocastico <- descenso_estocastico(10, z_0, 0.1, 
+                                         minilotes, decaimiento = 1e-3) |>
+  as_tibble() |> rename(beta_0 = Intercept, beta_1 = x_1, beta_2 = x_2, beta_3 = x_3)
+dev_ent <- perdida_calc(x = as.matrix(dat_ent[,c('x_1','x_2','x_3'), drop =FALSE]), 
+                             y=dat_ent$y)
+dev_valid <- perdida_calc(x = as.matrix(dat_valid[,c('x_1','x_2','x_3'), drop =FALSE]), 
+                             y=dat_valid$y)
+dat_dev <- data_frame(iteracion = 1:nrow(iter_estocastico)) |>
    mutate(entrena = apply(iter_estocastico, 1, dev_ent), 
-  validacion = apply(iter_estocastico, 1, dev_valid)) %>%
+  validacion = apply(iter_estocastico, 1, dev_valid)) |>
   gather(tipo, devianza, entrena:validacion)
 ggplot(filter(dat_dev, iteracion>1), 
        aes(x=iteracion, y=devianza, colour=tipo)) + geom_line() 
@@ -453,6 +456,7 @@ descenso_estocastico <- function(n_epocas, z_0, eta, minilotes,
     v <- momento*v - eta * h_deriv(z[i, ])
     eta <- eta*(1/(1+decaimiento*i))
   }
+  colnames(z) <- names(z_0)
   z
 }
 ```
@@ -461,16 +465,16 @@ Y ahora vemos que usando momento el algoritmo es más parecido a descenso en gra
 usual (pues tenemos cierta memoria de direcciones anteriores de descenso):
 
 ```{r}
-set.seed(231)
-iter_estocastico <- descenso_estocastico(10, c(0,0, 0, 0), 0.1, minilotes, momento = 0.9, decaimiento = 0.001) %>%
-  data.frame %>% rename(beta_0 = X1, beta_1 = X2, beta_2=X3, beta_3=X4)
-dev_ent <- devianza_calc(x = as.matrix(dat_ent[,c('x_1','x_2','x_3'), drop =FALSE]), 
-                             y=dat_ent$g)
-dev_valid <- devianza_calc(x = as.matrix(dat_valid[,c('x_1','x_2','x_3'), drop =FALSE]), 
-                             y=dat_valid$g)
-dat_dev <- data_frame(iteracion = 1:nrow(iter_estocastico)) %>%
+set.seed(232)
+iter_estocastico <- descenso_estocastico(10, z_0, 0.005, minilotes, momento = 0.9, decaimiento = 0.00001) |>
+  as_tibble() |> rename(beta_0 = Intercept, beta_1 = x_1, beta_2 = x_2, beta_3 = x_3)
+dev_ent <- perdida_calc(x = as.matrix(dat_ent[,c('x_1','x_2','x_3'), drop =FALSE]), 
+                             y=dat_ent$y)
+dev_valid <- perdida_calc(x = as.matrix(dat_valid[,c('x_1','x_2','x_3'), drop =FALSE]), 
+                             y=dat_valid$y)
+dat_dev <- data_frame(iteracion = 1:nrow(iter_estocastico)) |>
    mutate(entrena = apply(iter_estocastico, 1, dev_ent), 
-  validacion = apply(iter_estocastico, 1, dev_valid)) %>%
+  validacion = apply(iter_estocastico, 1, dev_valid)) |>
   gather(tipo, devianza, entrena:validacion)
 ggplot(filter(dat_dev, iteracion > 1), 
        aes(x=iteracion, y=devianza, colour=tipo)) + geom_line() + geom_point()
@@ -512,29 +516,27 @@ library(keras)
 set.seed(21321)
 x_ent <- as.matrix(dat_ent[,c('x_1','x_2','x_3')])
 x_valid <-  as.matrix(dat_valid[,c('x_1','x_2','x_3')])
-y_ent <- dat_ent$g
-y_valid <- dat_valid$g
+y_ent <- dat_ent$y
+y_valid <- dat_valid$y
 ```
 
-Empezamos con regresión logística (sin capas ocultas), que se escribe y
+Empezamos con regresión (sin capas ocultas), que se escribe y
 ajusta como sigue:
 
 ```{r}
 modelo <- keras_model_sequential() 
-modelo %>%
+modelo |>
   layer_dense(units = 1, 
-              activation = 'sigmoid',
+              activation = "linear",
               input_shape = c(3))
 
-modelo %>% compile(loss = 'binary_crossentropy',
-                   optimizer = optimizer_sgd(lr = 0.2, momentum = 0,
-                                             decay = 0),
-  metrics = c('accuracy')
-)
+modelo |> compile(loss = 'mse',
+                   optimizer = optimizer_sgd(learning_rate = 0.1, momentum = 0,
+                                             decay = 0))
 
-history <- modelo %>% 
+history <- modelo |> 
   fit(x_ent, y_ent, 
-      epochs = 50, batch_size = 64, 
+      epochs = 50, batch_size = 10, 
       verbose = 0,
       validation_data = list(x_valid, y_valid))
 
@@ -543,7 +545,7 @@ history <- modelo %>%
 Podemos ver el progreso del algoritmo por época
 
 ```{r}
-aprendizaje <- as.data.frame(history)
+aprendizaje <- as_tibble(history)
 ggplot(aprendizaje, 
        aes(x=epoch, y=value, colour=data, group=data)) +
   facet_wrap(~metric, ncol = 1) + geom_line() + geom_point(size = 0.5)
@@ -555,10 +557,9 @@ Ver los pesos:
 get_weights(modelo)
 ```
 
-Y verificamos que concuerda con la salida de *glm*:
+Y verificamos que concuerda con la salida de *lm*:
 
 ```{r}
-mod_logistico <- glm(g ~ x_1 + x_2+ x_3, data = dat_ent, family = 'binomial') 
-coef(mod_logistico)
-0.5*mod_logistico$deviance/nrow(dat_ent)
+mod_lineal <- lm(y ~ x_1 + x_2+ x_3, data = dat_ent) 
+coef(mod_lineal)
 ```
