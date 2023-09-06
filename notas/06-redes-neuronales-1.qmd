@@ -330,7 +330,7 @@ ejemplo_mod |> compile(loss = "mse",
 # nota: esta learning rate (lr) es demasiado alta para problemas típicos
 historia <- ejemplo_mod |> 
   fit(x_mat, y, 
-      batch_size = nrow(x_mat), epochs = 500, verbose = 1)
+      batch_size = nrow(x_mat), epochs = 500, verbose = 0)
 ```
 
 Después de verificar convergencia (chécalo examinando la variable
@@ -432,7 +432,7 @@ mod_inter |> compile(loss = "mse",
 historia <- mod_inter |> 
   fit(dat_ent |> select(x1, x2) |> as.matrix(), dat_ent$y,
       batch_size = 20,
-      epochs = 100, verbose = 1)
+      epochs = 100, verbose = 0)
 ```
 
 Verificamos que esta red captura la interacción:
@@ -489,8 +489,708 @@ beta[3:4]
 ```
 
 
-
 **Ejercicio**: interpreta la red en términos de qué unidades
 están *encendidas* (valor cercano a 1) o *apagadas* (valor cercano a 0).
 ¿Puedes ajustar este modelo con dos tres unidades intermedias? Haz varias pruebas: ¿qué dificultades
 encuentras?
+
+
+
+
+## Cálculo en redes: feed-forward
+
+Ahora generalizamos lo que vimos arriba para definir la arquitectura
+básica de redes neuronales y cómo se hacen cálculos en las redes.
+
+::: callout-tip
+
+A las variables originales les llamamos *capa de entrada* de la red,
+y a la variable de salida *capa de salida*. Puede haber más de una 
+capa intermedia. A estas les llamamos *capas ocultas*.
+
+Cuando todas las conexiones posibles de cada capa a la siguiente están presente,
+decimos que la red es *completamente conexa*.
+::: 
+
+
+
+```{r, echo=FALSE, fig.width=8, fig.height=5, out.width = "500px"}
+ gr <- graph(
+   c(1,4,1,5,1,6,2,4,2,5,2,6,2,4,2,5,2,6,3,4,3,5,3,6,4,7,4,8,5,7,5,8,6,7,6,8,7,8,7,9,8,9))
+plot(gr, layout=matrix(c(-1,1,-1,0,-1,-1,0,1,0,0,0,-1,1,0.5,1,-0.5,2,0), byrow=T,ncol=2),
+     vertex.label=c(expression(a[1]^{(1)}), expression(a[2]^{(1)}),expression(a[3]^{(1)}),
+                    expression(a[1]^{(2)}),expression(a[2]^{(2)}),expression(a[3]^{(3)}),
+                    expression(a[1]^{(3)}),expression(a[2]^{(3)}),                        expression(a[1]^{(4)})),
+      vertex.size=30, vertex.color=c('salmon'), asp = 0.5, vertex.label.cex = 1.5,
+     vertex.frame.color=NA, edge.curved=FALSE)
+```
+
+Como vimos en el ejemplo de arriba, para hacer cálculos en la red empezamos
+con la primera capa, hacemos combinaciones lineales y aplicamos nuestra función
+no lineal $h$. Una vez que calculamos la segunda capa, podemos calcular
+la siguiente de la misma forma: combinaciones lineales y aplicación de $h$. Y así
+sucesivamente hasta que llegamos a la capa final.
+
+## Notación 
+
+Sea $L$ el número total de capas. En primer lugar, para un cierto caso de entrada $x = (x_1,x_2,\ldots, x_p)$, 
+denotamos por:
+
+- $a^{(l)}_j$ el valor que toma la unidad $j$ de la capa $l$, para $j=0,1,\ldots, n_{l}$, donde
+$n_l$ es el número de unidades de la capa $l$.
+- Ponemos $a^{(l)}_0=1$ para lidiar con los sesgos.
+- *En particular, ponemos $a^{(1)}_j = x_j$, que son los valores de las entradas (primera capa)
+- Para un problema de regresión, la última capa solo tiene un elemento, que es
+$y = a^{(L)}$. 
+
+Adicionalmente, escribimos
+
+$\theta_{i,k}^{(l)}=$ es el peso de entrada $a_{k}^{(l-1)}$  de capa $l-1$ 
+en la entrada $a_{i}^{(l)}$ de la capa $l$.
+
+Los sesgos están dados por
+$$\theta_{i,0}^{(l)}$$
+
+#### Ejemplo {-}
+En nuestro ejemplo, tenemos que en la capa $l=3$ hay dos unidades. Así que
+podemos calcular los valores $a^{(3)}_1$ y $a^{(3)}_2$. Están dados
+por
+
+$$a_1^{(3)} = h(\theta_{1,0}^{(2)} + \theta_{1,1}^{(2)} a_1^{(2)}+ \theta_{1,2}^{(2)}a_2^{(2)}+ \theta_{1,3}^{(2)} a_3^{(2)})$$
+$$a_2^{(3)} = h(\theta_{2,0}^{(2)} + \theta_{2,1}^{(2)} a_1^{(2)}+ \theta_{2,2}^{(2)}a_2^{(2)}+ \theta_{2,3}^{(2)} a_3^{(2)})$$
+
+Como se ilustra en la siguiente gráfica:
+
+
+```{r, echo=FALSE, fig.width=8, fig.height = 5, out.width = "550px"}
+ gr <- graph(
+   c(c(1,4,1,5,2,4,2,5,3,4,3,5)))
+ plot(gr, layout = matrix(c(-6,2,-6,0,-6,-2,0,1,0,-1), byrow=T, ncol=2),
+      vertex.label=c(expression(a[1]^{(2)}),expression(a[2]^{(2)}),expression(a[3]^{(2)}),
+        expression(a[1]^{(3)}), expression(a[2]^{(3)})), 
+      vertex.size=30, vertex.color=c('salmon','salmon','salmon','red','red'), vertex.label.cex=1.5, asp= 0.5,
+      edge.color = c("red", "gray", "red", "gray", "red", "gray"),
+      edge.label.color = c("black", "gray50"),
+      vertex.label.color='white',vertex.frame.color=NA,
+      edge.label.cex = 1.2,
+   edge.label=c(expression(theta[11]^{(2)}),expression(theta[21]^{(2)}),
+     expression(theta[12]^{(2)}),  expression(theta[22]^{(2)}),
+      expression(theta[13]^{(2)}), expression(theta[23]^{(2)})))
+```
+
+Para visualizar las ordenadas (que también se llaman  **sesgos** en este contexto),
+ponemos $a_{0}^{(2)}=1$.
+```{r, echo=FALSE, fig.width=8, fig.height = 5, out.width = "550px"}
+ gr <- graph(
+   c(c(1,5,1,6,2,5,2,6,3,5,3,6,4,5,4,6)))
+ plot(gr, layout = matrix(c(-4,4,-4,2,-4,0,-4,-2,0,1,0,-1), byrow=T, ncol=2),
+      vertex.label=c(expression(a[0]^{(2)}), expression(a[1]^{(2)}),
+        expression(a[2]^{(2)}),expression(a[3]^{(2)}),
+        expression(a[1]^3), expression(a[2]^3)), 
+      vertex.size=30, 
+   vertex.color=c('gray','salmon','salmon','salmon','red','red'),
+         edge.color = c("red", "gray", "red", "gray", "red", "gray", "red", "gray"),
+      edge.label.color = c("black", "gray50"),
+   vertex.label.cex=1.5, asp = 0.5,
+      vertex.label.color='white',vertex.frame.color=NA,
+   edge.label=c(expression(theta[10]^{(2)}),expression(theta[20]^{(2)}),
+     expression(theta[11]^{(2)}),expression(theta[21]^{(2)}), expression(theta[12]^{(2)}),  expression(theta[22]^{(2)}), expression(theta[13]^{(2)}), expression(theta[23]^{(2)})))
+```
+
+
+#### Ejemplo {-}
+
+Consideremos propagar a la capa 3 a partir de la capa 2. Usaremos los siguientes pesos para capa 3 y valores de la
+capa 2 (en gris están los sesgos):
+```{r, echo =FALSE, fig.width=8, fig.height = 5, out.width = "500px"}
+ gr <- graph(
+   c(c(1,4,1,5,2,4,2,5,3,4,3,5, 6, 4, 6, 5)))
+ plot(gr, layout = matrix(c(-4,3,-4,0,-4,-7,0,2,0,-2, -4, -3), byrow=T, ncol=2),
+      vertex.label=c('-2','5','1','a_1 ?','a_2 ?','3'), vertex.label.cex=1.5,
+      vertex.size=30, vertex.color=c('salmon','salmon','gray','red','red'), vertex.label.cex=2, asp =0.5, edge.label.cex = 1.5,
+      vertex.label.color='white',vertex.frame.color=NA,
+   edge.label=c(1.5,2,-1,0.5,3,1,-0.5,-0.2))
+```
+
+
+Que en nuestra notación escribimos como
+$$a^{(2)}_0 = 1, a^{(2)}_1 = -2, a^{(2)}_2 = 5, a^{(2)}=3$$
+y los pesos son, para la primera unidad:
+$$\theta^{(2)}_{1,0} = 3,  \,\,\, \theta^{(2)}_{1,1} = 1.5,\,\,\,\theta^{(2)}_{1,2} = -1,\,\,\theta^{(2)}_{1,3} = -0.5 $$
+y para la segunda unidad
+$$\theta^{(2)}_{2,0} = 1,  \,\,\, \theta^{(2)}_{2,1} = 2,\,\,\,\theta^{(2)}_{2,2} = 0.5,\,\, \theta^{(2)}_{2,3} = -0.2$$
+Y ahora queremos calcular los valores que toman las unidades de la capa 3, 
+que son $a^{(3)}_1$ y  $a^{(3)}_2$$
+
+Para hacer feed forward a la siguiente capa, hacemos entonces
+
+$$a^{(3)}_1 = h(3 + a^{(2)}_1 - a^{(2)}_2 -0.5 a_3^{(2)}),$$
+$$a^{(3)}_2 = h(1 + 2a^{(2)}_1 + 0.5a^{(2)}_2 - 0.2 a_3^{(2)}),$$
+
+Ponemos los pesos y valores de la capa 2 (incluyendo sesgo):
+
+```{r}
+a_2 <- c(1, -2, 5, 3) # ponemos un 1 al principio para el sesgo
+theta_2_1 = c(3, 1.5, -1.0, -0.5)
+theta_2_2 = c(1, 2, 0.5, -0.2)
+```
+
+y calculamos
+
+```{r}
+a_3 <- c(1, h(sum(theta_2_1*a_2)),h(sum(theta_2_2*a_2))) # ponemos un 1 al principio
+a_3
+```
+
+
+```{r, echo =FALSE, fig.width=8, fig.height = 5, out.width = "500px"}
+ gr <- graph(
+   c(c(1,4,1,5,2,4,2,5,3,4,3,5, 6, 4, 6, 5)))
+ plot(gr, layout = matrix(c(-4,3,-4,0,-4,-7,0,2,0,-2, -4, -3), byrow=T, ncol=2),
+      vertex.label=c('-2','5','1','0.002','0.250','3'), 
+      vertex.size=30, vertex.color=c('salmon','salmon','gray','red','red'), vertex.label.cex=1.5,asp =0.5, edge.label.cex = 1.5,
+      vertex.label.color='white',vertex.frame.color=NA,
+   edge.label=c(1.5,2,-1,0.5,3,1,-0.5,-0.2))
+```
+
+
+
+## Algoritmo de Feed forward
+
+Para calcular los valores de salida de una red a partir de pesos y datos de entrada,
+usamos el algoritmo feed-forward, calculando capa por capa.
+
+::: callout-note
+# Feed-forward
+
+Para la primera capa,
+escribimos las variables de entrada:
+$$a^{(1)}_j = x_j, j=1\ldots,n_1$$
+Para la primera capa oculta, o la segunda capa
+$$a^{(2)}_j = h\left( \theta_{j,0}^{(1)}+ \sum_{k=1}^{n_1}  \theta_{j,k}^{(1)}  a^{(1)}_k    \right), j=1\ldots,n_2$$
+para la $l$-ésima capa:
+$$a^{(l)}_j = h\left( \theta_{j,0}^{(l-1)}+ \sum_{k=1}^{n_{l-1}}  \theta_{j,k}^{(l-1)}  a^{(l-1)}_k    \right), j=1\ldots,n_{l}$$
+y así sucesivamente. 
+Para la capa final o de salida en un problema de regresión, suponiendo
+que tenemos $L$ capas ($L-2$ capas ocultas):
+$$f(x) =     \theta_{1,0}^{(L-1)}+ \sum_{k=1}^{n_{L-1}}  \theta_{1,k}^{(L-1)}  a^{(L-1)}_k     .$$
+:::
+
+Nótese que entonces:
+
+::: callout-tip
+
+Cada capa se caracteriza por el conjunto de parámetros $\Theta^{(l)}$, que es una matriz
+de $n_l\times n_{l-1}$.
+
+La red completa entonces se caracteriza por:
+
+- La estructura elegida (número de capas ocultas y número de nodos en cada capa oculta).
+- Las matrices de pesos en cada capa $\Theta^{(1)},\Theta^{(2)},\ldots, \Theta^{(L-1)}$
+:::
+
+Adicionalmente, escribimos en forma vectorial:
+$$a^{(l)} = (a^{(l)}_0, a^{(l)}_1, a^{(l)}_2, \ldots, a^{(l)}_{n_l})^t$$
+
+Para calcular la salidas, igual que hicimos, antes, propagaremos hacia
+adelante los valores de las variables de entrada usando los *pesos*.
+Agregando entradas adicionales en cada capa $a_0^{(l)}$, $l=1,2,\ldots, L-1$,
+donde $a_0^{l}=1$, y agregando a $\Theta^{(l)}$ una columna con
+las ordenadas al origen (o sesgos) podemos escribir:
+
+::: callout-note
+## Feed-forward matricial
+
+
+- Capa 1 (vector de entradas)
+$$ a^{(1)} = x$$
+- Capa 2
+$$ a^{(2)} = h(\Theta^{(1)}a^{(1)})$$
+- Capa $l$ (oculta)
+$$ a^{(l)} = h(\Theta^{(l-1)}a^{(l-1)})$$
+donde $h$ se aplica componente a componente sobre los vectores correspondientes. 
+
+- Capa de salida:
+    
+En un problema de regresión, la capa de salida se calcula como
+un regresión lineal:
+$$a^{(L)}= f(x) = \Theta^{(L-1)}a^{(L-1)}$$
+Nótese
+que feed-foward consiste principalmente de multiplicaciones de matrices con
+algunas aplicaciones de $h$
+    
+:::
+
+
+## Algoritmo de Backpropagation: cálculo del gradiente (regresión)
+
+Para ajustar los pesos y sesgos de las redes (valores $\theta$),
+utilizaremos descenso en gradiente y otros algoritmos derivados del gradiente
+(descenso estocástico).
+En esta parte entonces veremos cómo calcular estos gradientes con el algoritmo
+de *back-propagation*, que es una aplicación de la regla de la cadena para derivar.
+Back-propagation resulta en una fórmula recursiva donde propagamos errores de la red
+como gradientes
+desde el final de red (capa de salida) hasta el principio, capa por capa.
+
+**Consideramos el problema de regresión**
+
+Recordamos que la pérdida cuadrática (con regularización ridge, dividiendo
+entre 2 por conveniencia) es
+
+$$D = -\frac{1}{2n}\sum_{i=1}^n (y^{(i)} - f(x^{(i)}))^2  + \lambda \sum_{l=2}^{L} \sum_{k=1}^{n_{l-1}} \sum_{j=1}^{n_l}(\theta_{j,k}^{(l)})^2.$$
+
+
+Queremos entonces calcular las derivadas de la devianza o función de
+pérdida con respecto a cada
+parámetro $\theta_{j,k}^{(l)}$. Esto nos proporciona el gradiente para
+nuestro algoritmo de descenso.
+
+**Consideramos aquí el problema de regresión con pérdida cuadrática
+y sin regularización**. La parte de la parcial que corresponde al término
+de regularización es fácil de agregar al final.
+
+Recordamos también nuestra notación para la función logística (o sigmoide):
+
+$$h(z)=\frac{1}{1+e^{-z}}.$$
+Necesitaremos su derivada, que está dada por (cálculala):
+$$h'(z) = h(z)(1-h(z))$$
+
+### Cálculo para un caso de entrenamiento {-}
+
+Primero simplificamos el problema 
+y consideramos calcular 
+las parciales *para un solo caso de entrenamiento* $(x,y)$:
+$$ D=  \frac{1}{2}\left ( y -f(x)\right)^2 . $$
+
+Después sumaremos sobre toda la muestra de entrenamiento. Entonces queremos
+calcular 
+$$\frac{\partial D}{\partial \theta_{j,k}^{(l)}}$$
+
+Y escribiremos, con la notación de arriba, 
+$$a^{(l+1)}_j = h(z^{(l+1)}_j)$$
+donde 
+$$z^{(l+1)} = \Theta^{(l)} a^{(l)},$$
+que coordenada a coordenada se escribe como
+$$z^{(l+1)}_j =  \sum_{k=0}^{n_{l}}  \theta_{j,k}^{(l)}  a^{(l)}_k$$
+
+#### Paso 1: Derivar respecto a capa $l+1$ {-}
+
+Como los valores de cada capa determinan los valores de salida y la devianza,
+podemos escribir (recordemos que $a_0^{(l)}=1$ es constante):
+$$D=D(a_0^{(l+1)},a_1^{(l+1)},a_2^{(l+1)},\ldots, a_{n_{l+1}}^{(l+1)})=D(a_1^{(l+1)},a_2^{(l+1)},\ldots, a_{n_{l+1}}^{(l+1)})$$
+
+Así que por la regla de la cadena para varias variables:
+$$\frac{\partial D}{\partial \theta_{j,k}^{(l)}} =
+\sum_{t=1}^{n_{l}} \frac{\partial D}{\partial a_t^{(l+1)}}\frac{\partial a_t^{(l+1)}}
+{\partial \theta_{j,k}^{(l)} }$$
+
+Pero si vemos dónde aparece $\theta_{j,k}^{(l)}$ en la gráfica de la red:
+
+$$ \cdots a^{(l)}_k \xrightarrow{\theta_{j,k}^{(l)}} a^{(l+1)}_j  \cdots \rightarrow  D$$
+Entonces podemos concluir  que 
+$\frac{\partial a_t^{(l+1)}}{\partial \theta_{j,k}^{(l)}} =0$ cuando  $t\neq j$ (pues no
+ dependen de $\theta_{j,k}^{(l)}$),
+
+y entonces, para toda $j=1,2,\ldots, n_{l+1}, k=0,1,\ldots, n_{l}$
+$$
+\frac{\partial D}{\partial \theta_{j,k}^{(l)}} =
+\frac{\partial D}{\partial a_j^{(l+1)}}\frac{\partial a_j^{(l+1)}}{\partial \theta_{j,k}^{(l)} }.
+$$  {#eq-parcial}
+
+
+Adicionalmente, como
+$$a_j^{(l+1)} = h(z_j^{(l+1)}) = h\left (\sum_{k=0}^{n_{l}}  \theta_{j,k}^{(l)}  a^{(l)}_k \right )$$
+y las $a_k^{(l)}$ no dependen de $\theta_{j,k}^{(l)}$, tenemos por la regla de la cadena que
+
+$$
+\frac{\partial a_j^{(l+1)}}{\partial \theta_{j,k}^{(l)} } = h'(z_j^{(l+1)})a_k^{(l)}.
+$$
+
+Esta última expresión podemos calcularla pues sólo requiere la derivada de $h$ y 
+los valores otenidos en el paso de feed-forward.
+
+#### Paso 2: Obtener fórmula recursiva  {-}
+
+Así que sólo nos queda calcular las parciales ($j = 1,\ldots, n_l$)
+$$\frac{\partial D}{\partial a_j^{(l)}}$$ 
+
+Para obtener una fórmula recursiva para esta cantidad (hacia atrás), 
+aplicamos otra vez regla de la cadena, pero con respecto a la capa $l$ (ojo: queremos obtener
+una fórmula recursiva!):  
+
+$$\frac{\partial D}{\partial a_j^{(l)}}= \sum_{s=1}^{n_{l+1}}
+\frac{\partial D}{\partial a_s^{(l+1)}}\frac{\partial  a_s^{(l+1)}}{\partial a_j^{(l)}},$$
+
+que se puede entender a partir de este diagrama:
+```{r, echo=FALSE, fig.width=7}
+ gr <- graph(
+   c(1,2,1,3,1,4,2,5,3,5,4,5,1,6,1,7,1,8,1,9,6,5,7,5,8,5,9,5))
+plot(gr, layout=matrix(c(-1,0,0,1,0,0,0,-1,1,0,0,0.6,0,0.3,0,-0.6,0,-0.3), 
+                       byrow=T,ncol=2),
+      vertex.size=c(rep(50,5), rep(1,4)), vertex.color=c(rep('salmon',5),rep('white',5)),
+      vertex.label=c(expression(a[j]^{(l)}), 
+                     expression(a[1]^{(l+1)}),expression(a[s]^{(l+1)}),
+                     expression(a[n]^{(l+1)}),
+                    expression(D), rep('',4)),
+     vertex.frame.color=NA, edge.curved=FALSE)
+```
+
+Nótese que la suma empieza en $s=1$, no en $s=0$, pues $a_0^{(l+1)}$ no depende
+de $a_k^{(l)}$.
+
+En este caso los elementos de la suma no se anulan necesariamente. Primero
+consideramos la derivada de:
+
+$$\frac{\partial  a_s^{(l+1)}}{\partial a_j^{(l)}}=h'(z_s^{(l+1)})\theta_{s,j}^{(l)},$$
+
+de modo que
+
+$$\frac{\partial D}{\partial a_j^{(l)}}= \sum_{s=1}^{n_l}
+\frac{\partial D}{\partial a_s^{(l+1)}} h'(z_s^{(l+1)})\theta_{s,j}^{(l)}.$$
+
+
+Nótese que esto nos da una fórmula recursiva para las parciales que nos
+falta calcular (de $D$ con respecto a $a$), pues las otras cantidades las
+conocemos por backpropagation.
+
+#### Paso 3: Simplificación de la recursión {-}
+
+Definimos para $l=1,\ldots,L-2$:
+
+$$
+\delta_s^{ (l+1)}=\frac{\partial D}{\partial a_s^{(l+1)}} h'(z_s^{(l+1)})
+$$ {#eq-delta-def-a}
+
+de manera que la ecuación recursiva es
+
+$$
+\frac{\partial D}{\partial a_j^{(l)}} = \sum_{s=1}^{n_{l+1}}
+\delta_s^{(l+1)}\theta_{s,j}^{(l)}.
+$$ {#eq-delta-def}
+
+
+Tenemos que si $l=2,\ldots,L-1$, entonces podemos escribir (usando (@eq-delta-def))
+como fórmula recursiva:
+
+$$
+\delta_j^{(l)} 
+= \left (\sum_{s=1}^{n_l} \delta_s^{(l+1)} \theta_{s,j}^{(l)}\right ) h'(z_j^{(l)}),
+$$ {#eq-delta-recursion}
+para $j=1,2,\ldots, n_{l}$.
+
+
+
+#### Paso 4: Condiciones iniciales {-}
+
+
+Para la última capa, tenemos que (en 
+la ecuación de arriba, en este caso la activación $h$ es $h(z)=z$ para la última capa):
+
+$$\delta_1^{(L)}=-(y - f(x)).$$
+
+Nótese que esta cantidad indica hacia dónde tenemos que mover $f(x)$ para
+hacer el error más chico.
+
+#### Paso 5: Cálculo de parciales {-}
+
+Finalmente, usando (@eq-parcial) y (@eq-delta-def-a) , obtenemos
+$$\frac{\partial D}{\partial \theta_{j,k}^{(l)}} = \delta_j^{(l+1)}a_k^{(l)},$$
+
+y con esto ya podemos hacer backpropagation para calcular el gradiente
+sobre cada caso de entrenamiento, y solo resta acumular para obtener el gradiente
+sobre la muestra de entrenamiento.
+
+Muchas veces es útil escribir una versión vectorizada (importante para implementar):
+
+#### Paso 6: Versión matricial {-}
+
+Ahora podemos escribir estas ecuaciones en forma vectorial. En primer lugar,
+$$\delta^{(L)}=f(x)-y.$$
+Y además se puede ver de la ecuación (@eq-delta-recursion) que 
+($\Theta_{*}^{(l+1)}$ denota la matriz de pesos *sin* la columna correspondiente al sesgo):
+
+$$
+\delta^{(l)}=\left( \Theta_{*}^{(l)}    \right)^t\delta^{(l+1)} \circ h'(z^{(l)})
+$$ {#eq-delta-recursion-mat}
+
+donde $\circ$ denota el producto componente a componente.
+
+Ahora todo ya está calculado. Lo interesante es que las $\delta^{(l)}$ se calculan
+de manera recursiva.
+
+### Algoritmo de backpropagation {-}
+
+::: callout-note
+#Backpropagation 
+
+Para problema de clasificación con regularización $ \lambda \geq 0 $.
+Para $i=1,\ldots, N,$ tomamos el dato de entrenamiento  $(x^{(i)}, y^{(i)})$ y hacemos:
+
+1. Ponemos $a^{(1)}=x^{(i)}$ (vector de entradas, incluyendo 1).
+2. Calculamos $a^{(2)},a^{(3)},\ldots, a^{(L)}$ usando feed forward para la entrada $x^{(i)}.$
+3. Calculamos $\delta^{(L)}=a^{(L)}-y^{(i)}$, y luego
+$\delta^{(L-1)},\ldots, \delta^{(2)}$ según la recursión (@eq-delta-recursion).
+4. Acumulamos
+$\Delta_{j,k}^{(l)}=\Delta_{j,k}^{(l)} + \delta_j^{(l+1)}a_k^{(l)}$.
+5. Finalmente, ponemos, si $k\neq 0$,
+$$D_{j,k}^{(l)} = \frac{2}{N}\Delta_{j,k}^{(l)} + 2\lambda\theta_{j,k}^{(l)}$$
+y si $k=0$,
+$$D_{j,k}^{(l)} = \frac{2}{N}\Delta_{j,k}^{(l)} .$$
+Entonces:
+$$D_{j,k}^{(l)} =\frac{\partial D}{\partial \theta_{j,k}^{(l)}}.$$
+
+ Nótese
+que back-propagation consiste principalmente de multiplicaciones de matrices con
+algunas aplicaciones de $h$ y acumulaciones, igual que feed-forward.
+:::
+
+
+
+## Ajuste de parámetros (introducción)
+
+Consideramos la versión con regularización ridge (también llamada L2) 
+de la devianza de entrenamiento como nuestro función objetivo:
+
+::: callout-note
+# Ajuste de redes neuronales
+
+Para un problema de regresión, ajustamos los pesos 
+$\Theta^{(1)},\Theta^{(2)},\ldots, \Theta^{(L)}$
+de la red intentando minimizar el error cuadrático medio (penalizado) sobre la muestra de entrenamiento:
+$$D = -\frac{1}{2n}\sum_{i=1}^n (y^{(i)} - f(x^{i}))^2= + \lambda \sum_{l=2}^{L} \sum_{k=1}^{n_{l-1}} \sum_{j=1}^{n_l}(\theta_{j,k}^{(l)})^2.$$
+Este problema en general no es convexo y *puede tener múltiples mínimos*.
+:::
+
+Veremos el proceso de ajuste, selección de arquitectura, etc. más adelante.
+Por el momento hacemos unas observaciones acerca de este problema de minimización:
+
+- Hay varios algoritmos para minimizar este error,
+algunos avanzados incluyendo información de segundo orden (como Newton), pero 
+actualmente las técnicas más populares, para redes grandes, están 
+derivadas de descenso en gradiente. Más
+específicamente, una variación, que es *descenso estocástico*.
+
+- Que el algoritmo depende principalmente de multiplicaciones de matrices y
+acumulaciones implica que puede escalarse de diversas maneras. Una es paralelizando
+sobre la muestra de entrenamiento (y calcular acumulados al final), pero también
+se pueden paralelizar las multiplicaciones de matrices (para lo cual los GPUs
+se prestan muy bien).
+
+- Para redes neuronales, el gradiente se calcula con un algoritmo que se llama
+*back-propagation*, que es una aplicación de la regla de la cadena para propagar
+errores desde la capa de salida a lo largo de todas las capas para ajustar los pesos y sesgos.
+
+- En estos problemas no buscamos el mínimo global, sino un mínimo
+local de buen desempeño. Puede haber múltiples mínimos, puntos silla, regiones
+relativamente planas, precipicios (curvatura alta). Nótese que la simetría implica que podemos obtener la misma red cambiando
+pesos entre neuronas y las conexiones correspondientes. Esto implica que necesariamente
+hay varios mínimos.
+
+
+- Todo esto dificulta el
+entrenamiento de redes neuronales grandes. Para redes grandes, ni siquiera esperamos a alcanzar
+un mínimo local, sino que nos a veces detenemos prematuramente cuando obtenemos
+el mejor desempeño posible. 
+
+
+- Para este problema, no tiene sentido comenzar las iteraciones con todos los pesos
+igual a cero, pues las unidades de la red son simétricas: no hay nada que
+distinga una de otra si todos los pesos son iguales. Esto quiere decir que si iteramos, todas las neuronas van a aprender lo mismo.
+
+- Es importante
+no comenzar valores de los pesos grandes, pues las funciones logísticas pueden
+quedar en regiones planas donde la minimización es lenta, o podemos
+tener gradientes demasiado grandes y produzcan inestabilidad en el cálculo
+del gradiente.
+
+- El ajuste de la **tasa de aprendizaje es un parámetro importante**, más delicado que para problemas convexos. Generalmente lo tratamos con un hiperparámetro más que hay que afinar. Tasas demasiado grandes pueden llevarnos a mínimos locales relativamente malos.
+
+- Generalmente los pesos se inicializan al azar con variables independientes
+gaussianas o uniformes centradas en cero, y con varianza chica
+(por ejemplo $U(-0.5,0.5)$). Una recomendación es usar $U(-1/\sqrt{m}, 1/\sqrt{m})$
+donde $m$ es el número de entradas. En general, hay que experimentar con este 
+parámetro.
+
+
+El proceso para ajustar una red es entonces:
+
+
+- Definir número de capas ocultas, número de neuronas por cada capa, y un valor del parámetro de regularización. Estandarizar las entradas. Usualmente podemos
+probar comenzar con una o dos capas ocultas, de tamaño proporcional al número
+de entradas. Es buena idea comenzar con una red relativamente grande
+que tienen error bajo de entrenamiento aunque sobreajuste, y después regularizar
+y refinar su tamaño.
+- Seleccionar parámetros al azar para $\Theta^{(2)},\Theta^{(3)},\ldots, \Theta^{(L)}$.
+Se toman, por ejemplo, normales con media 0 y varianza chica. 
+- Correr un algoritmo de minimización del error mostrada arriba. **Es necesario experimentar con los parámetros del algoritmo de minimización**.
+- Verificar convergencia del algoritmo a un mínimo local (o el algoritmo no está mejorando).
+- Predecir usando el modelo ajustado. 
+
+
+Finalmente, podemos probar distintas arquitecturas y valores del parámetros de regularización,
+para afinar estos parámetros según validación cruzada o una muestra de validación.
+
+
+### Ejemplo (regresión) {-}
+
+```{r, message = FALSE}
+dat_grasa <- read_csv(file = '../datos/bodyfat.csv') 
+set.seed(183)
+grasa_particion <- initial_split(dat_grasa, 0.5)
+grasa_ent <- training(grasa_particion)
+grasa_pr <- testing(grasa_particion)
+nrow(grasa_ent)
+```
+
+Una exploración de este conjunto de datos revela algunos datos
+sospechosos. En particular un individuo con estatura de 30 pulgadas (alrededor
+de 75 cm), con peso normal. Probablemente no queremos incluir en entrenamiento
+este caso, y tampoco hacer predicciones para posibles personas que 
+tengan tales dimensiones:
+
+```{r}
+library(patchwork)
+g_1 <- grasa_ent |> ggplot(aes(x = estatura, y = peso)) + 
+  geom_point()
+g_2 <- grasa_ent |> ggplot(aes(x = abdomen, y = peso)) + 
+  geom_point()
+g_1 + g_2
+```
+
+
+```{r}
+grasa_receta <- recipe(grasacorp ~ ., grasa_ent) |> 
+  step_filter(estatura > 50) |>
+  step_normalize(all_predictors()) |> 
+  prep()
+```
+
+
+```{r, message=FALSE, warning=FALSE}
+library(keras)
+# entrenamiento
+x_grasa <- grasa_receta |> juice() |> 
+  select(-grasacorp) |> as.matrix()
+vars_nombres <- colnames(x_grasa)
+y_grasa <- grasa_receta |> juice() |> pull(grasacorp)
+# validación
+x_grasa_pr <- grasa_receta |> bake(grasa_pr) |> 
+  select(-grasacorp) |> as.matrix()
+y_grasa_pr <- grasa_receta |> bake(grasa_pr) |> pull(grasacorp)
+```
+
+
+```{r, message=FALSE, warning=FALSE}
+modelo_red <- keras_model_sequential() |> 
+  layer_dense(units = 50, activation = "sigmoid") |> 
+  layer_dense(units = 50, activation = "sigmoid") |> 
+  layer_dense(units = 1, activation = "linear")
+modelo_red |> compile(
+  loss = "mse", metrics = "mse",
+  optimizer = optimizer_sgd(learning_rate = 0.01, momentum = 0.9)
+)
+# esto es más eficiente hacerlo con callbacks en general:
+historia <- modelo_red |> fit(
+  x = x_grasa, y = y_grasa,
+  validation_data = list(x_grasa_pr, y_grasa_pr),
+  batch_size = 30, epochs = 250, verbose = 1)
+```
+
+Vemos que con esta red podemos alcanzar un error de entrenamiento cercano 
+a cero, aún cuando vemos que sobreajusta al evaluar con la muestra
+de validación. 
+
+```{r}
+plot(historia, smooth = FALSE)
+```
+Notamos que las predicciones no son muy buenas:
+
+```{r, message=FALSE, warning=FALSE}
+preds <- predict(modelo_red, x_grasa_pr) 
+preds |> head()
+```
+
+Y obtenemos el siguiente resultado:
+
+```{r}
+g_1 <- tibble(preds = preds[, 1], y = y_grasa_pr) |> 
+  ggplot(aes(x = preds, y = y)) + 
+  geom_point() + 
+  geom_abline(slope = 1, intercept = 0, color = "red") +
+  coord_obs_pred()
+g_1
+```
+Podemos ahora experimentar con los parámetros
+del optimizador, número de unidades, número de capas y 
+regularización L2. 
+
+- Cada cambio de número de unidades/capas o regularización requiere ajustes
+a la tasa de aprendizaje y otros parámetros del optimizador.
+- Varias arquitecturas (número de capas y unidades) pueden dar resultados
+similares. En este caso, usualmente escogemos el modelo más computacionalmente simple, 
+o dependiendo del tipo de errores de cada modelo.
+- Recordamos que una consecuencia del sobreajuste es que el error de prueba es mayor
+que el de entrenamiento (hay un *gap* de generalización). Para mejorar el desempeño,
+podemos reducir el error de entrenamiento (reducir sesgo), y/o reducir sobreajuste
+(*gap* entre entrenamiento y prueba). 
+
+
+
+```{r, message=FALSE, warning=FALSE}
+modelo_red_2 <- keras_model_sequential() |> 
+  layer_dense(units = 30, activation = "sigmoid", 
+              kernel_regularizer = regularizer_l2(0.1)) |> 
+  layer_dense(units = 30, activation = "sigmoid",
+              kernel_regularizer = regularizer_l2(0.1)) |> 
+  layer_dense(units = 1, activation = "linear", 
+              kernel_regularizer = regularizer_l2(0.01))
+modelo_red_2 |> compile(loss = "mse",metrics = c("mse"),
+  optimizer = optimizer_sgd(learning_rate = 0.0005, momentum = 0.95)
+)
+# esto es más eficiente hacerlo con callbacks en general:
+historia <- modelo_red_2 |> fit(
+  x = x_grasa, y = y_grasa,
+  validation_data = list(x_grasa_pr, y_grasa_pr),
+  batch_size = 30, epochs = 500, verbose = 1)
+```
+
+```{r}
+plot(historia, smooth = FALSE)
+```
+La afinación nos da mejores resultados:
+
+```{r, message=FALSE, warning=FALSE}
+preds_2 <- predict(modelo_red_2, x_grasa_pr) 
+g_2 <- tibble(preds_2 = preds_2[, 1], y = y_grasa_pr) |> 
+  ggplot(aes(x = preds_2, y = y)) + 
+  geom_point() + 
+  geom_abline(slope = 1, intercept = 0, color = "red") +
+  coord_obs_pred()
+g_1 + g_2
+```
+
+### Resumen {-}
+
+
+**Ejercicio**: En nuestra referencia *The Deep Learning Book*, puedes revisar la
+sección 11.4.1 (afinación manual) y 11.4.2 (afinación por búsqueda automática). 
+Explica qué efecto tienen sobre sesgo y sobreajuste los siguientes
+parámetros:
+
+- Número de capas
+- Número de unidades por capa oculta
+- Regularización L2 de los pesos
+- Tasa de aprendizaje (ojo, este parámetro es especial)
+
+En la parte 2 de redes neuronales veremos más estrategias de regularización, y cómo
+agregar estructura a redes adaptada a problemas particulares. Notamos para
+por el momento que las redes neuronales con solamente capas conexas no han sido particularmente
+exitosas para ningún problema particular. Típicamente requieren una gran cantidad de datos
+y entrenarlas es más difícil que otros métodos. Sin embargo, la historia
+es diferente cuando escogemos adecuadamente la arquitectura de la red para un problema
+dado, es decir, qué unidades
+están conectadas y bajo qué patrones. En estos casos, las conexiones pueden
+ser relativamente pocas comparadas con redes totalmente conexas con el mismo tamaño de unidades, y si 
+la estructura es correcta, no incurrimos en mucho sesgo. Ejemplos son procesamiento de imágenes, audio, o 
+lenguaje natural.
