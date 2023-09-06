@@ -222,6 +222,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#cómo-ajustar-los-parámetros" id="toc-cómo-ajustar-los-parámetros" class="nav-link" data-scroll-target="#cómo-ajustar-los-parámetros">¿Cómo ajustar los parámetros?</a></li>
   </ul></li>
   <li><a href="#interacciones-en-redes-neuronales" id="toc-interacciones-en-redes-neuronales" class="nav-link" data-scroll-target="#interacciones-en-redes-neuronales"><span class="header-section-number">6.2</span> Interacciones en redes neuronales</a></li>
+  <li><a href="#cálculo-en-redes-feed-forward" id="toc-cálculo-en-redes-feed-forward" class="nav-link" data-scroll-target="#cálculo-en-redes-feed-forward"><span class="header-section-number">6.3</span> Cálculo en redes: feed-forward</a></li>
+  <li><a href="#notación" id="toc-notación" class="nav-link" data-scroll-target="#notación"><span class="header-section-number">6.4</span> Notación</a></li>
+  <li><a href="#algoritmo-de-feed-forward" id="toc-algoritmo-de-feed-forward" class="nav-link" data-scroll-target="#algoritmo-de-feed-forward"><span class="header-section-number">6.5</span> Algoritmo de Feed forward</a></li>
+  <li><a href="#algoritmo-de-backpropagation-cálculo-del-gradiente-regresión" id="toc-algoritmo-de-backpropagation-cálculo-del-gradiente-regresión" class="nav-link" data-scroll-target="#algoritmo-de-backpropagation-cálculo-del-gradiente-regresión"><span class="header-section-number">6.6</span> Algoritmo de Backpropagation: cálculo del gradiente (regresión)</a>
+  <ul class="collapse">
+  <li><a href="#cálculo-para-un-caso-de-entrenamiento" id="toc-cálculo-para-un-caso-de-entrenamiento" class="nav-link" data-scroll-target="#cálculo-para-un-caso-de-entrenamiento">Cálculo para un caso de entrenamiento</a></li>
+  <li><a href="#algoritmo-de-backpropagation" id="toc-algoritmo-de-backpropagation" class="nav-link" data-scroll-target="#algoritmo-de-backpropagation">Algoritmo de backpropagation</a></li>
+  </ul></li>
+  <li><a href="#ajuste-de-parámetros-introducción" id="toc-ajuste-de-parámetros-introducción" class="nav-link" data-scroll-target="#ajuste-de-parámetros-introducción"><span class="header-section-number">6.7</span> Ajuste de parámetros (introducción)</a>
+  <ul class="collapse">
+  <li><a href="#ejemplo-regresión" id="toc-ejemplo-regresión" class="nav-link" data-scroll-target="#ejemplo-regresión">Ejemplo (regresión)</a></li>
+  <li><a href="#resumen" id="toc-resumen" class="nav-link" data-scroll-target="#resumen">Resumen</a></li>
+  </ul></li>
   </ul>
 </nav>
     </div>
@@ -474,7 +487,7 @@ La función logística está dada por <span class="math display">\[h(x)=\frac{e^
 <span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a><span class="co"># nota: esta learning rate (lr) es demasiado alta para problemas típicos</span></span>
 <span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a>historia <span class="ot">&lt;-</span> ejemplo_mod <span class="sc">|&gt;</span> </span>
 <span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">fit</span>(x_mat, y, </span>
-<span id="cb24-10"><a href="#cb24-10" aria-hidden="true" tabindex="-1"></a>      <span class="at">batch_size =</span> <span class="fu">nrow</span>(x_mat), <span class="at">epochs =</span> <span class="dv">500</span>, <span class="at">verbose =</span> <span class="dv">1</span>)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb24-10"><a href="#cb24-10" aria-hidden="true" tabindex="-1"></a>      <span class="at">batch_size =</span> <span class="fu">nrow</span>(x_mat), <span class="at">epochs =</span> <span class="dv">500</span>, <span class="at">verbose =</span> <span class="dv">0</span>)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Después de verificar convergencia (chécalo examinando la variable <em>historia</em>), graficamos para ver que obtuvimos resultados similares:</p>
 <div class="cell">
@@ -591,7 +604,7 @@ Coefficients:
 <span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a>historia <span class="ot">&lt;-</span> mod_inter <span class="sc">|&gt;</span> </span>
 <span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">fit</span>(dat_ent <span class="sc">|&gt;</span> <span class="fu">select</span>(x1, x2) <span class="sc">|&gt;</span> <span class="fu">as.matrix</span>(), dat_ent<span class="sc">$</span>y,</span>
 <span id="cb36-5"><a href="#cb36-5" aria-hidden="true" tabindex="-1"></a>      <span class="at">batch_size =</span> <span class="dv">20</span>,</span>
-<span id="cb36-6"><a href="#cb36-6" aria-hidden="true" tabindex="-1"></a>      <span class="at">epochs =</span> <span class="dv">100</span>, <span class="at">verbose =</span> <span class="dv">1</span>)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb36-6"><a href="#cb36-6" aria-hidden="true" tabindex="-1"></a>      <span class="at">epochs =</span> <span class="dv">100</span>, <span class="at">verbose =</span> <span class="dv">0</span>)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Verificamos que esta red captura la interacción:</p>
 <div class="cell">
@@ -656,8 +669,451 @@ ambas    0.05 0.56 0.00 0.06</code></pre>
 </div>
 </div>
 <p><strong>Ejercicio</strong>: interpreta la red en términos de qué unidades están <em>encendidas</em> (valor cercano a 1) o <em>apagadas</em> (valor cercano a 0). ¿Puedes ajustar este modelo con dos tres unidades intermedias? Haz varias pruebas: ¿qué dificultades encuentras?</p>
+</section>
+<section id="cálculo-en-redes-feed-forward" class="level2" data-number="6.3">
+<h2 data-number="6.3" class="anchored" data-anchor-id="cálculo-en-redes-feed-forward"><span class="header-section-number">6.3</span> Cálculo en redes: feed-forward</h2>
+<p>Ahora generalizamos lo que vimos arriba para definir la arquitectura básica de redes neuronales y cómo se hacen cálculos en las redes.</p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Tip
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>A las variables originales les llamamos <em>capa de entrada</em> de la red, y a la variable de salida <em>capa de salida</em>. Puede haber más de una capa intermedia. A estas les llamamos <em>capas ocultas</em>.</p>
+<p>Cuando todas las conexiones posibles de cada capa a la siguiente están presente, decimos que la red es <em>completamente conexa</em>.</p>
+</div>
+</div>
+<div class="cell">
+<div class="cell-output-display">
+<p><img src="06-redes-neuronales-1_files/figure-html/unnamed-chunk-35-1.png" class="img-fluid" width="500"></p>
+</div>
+</div>
+<p>Como vimos en el ejemplo de arriba, para hacer cálculos en la red empezamos con la primera capa, hacemos combinaciones lineales y aplicamos nuestra función no lineal <span class="math inline">\(h\)</span>. Una vez que calculamos la segunda capa, podemos calcular la siguiente de la misma forma: combinaciones lineales y aplicación de <span class="math inline">\(h\)</span>. Y así sucesivamente hasta que llegamos a la capa final.</p>
+</section>
+<section id="notación" class="level2" data-number="6.4">
+<h2 data-number="6.4" class="anchored" data-anchor-id="notación"><span class="header-section-number">6.4</span> Notación</h2>
+<p>Sea <span class="math inline">\(L\)</span> el número total de capas. En primer lugar, para un cierto caso de entrada <span class="math inline">\(x = (x_1,x_2,\ldots, x_p)\)</span>, denotamos por:</p>
+<ul>
+<li><span class="math inline">\(a^{(l)}_j\)</span> el valor que toma la unidad <span class="math inline">\(j\)</span> de la capa <span class="math inline">\(l\)</span>, para <span class="math inline">\(j=0,1,\ldots, n_{l}\)</span>, donde <span class="math inline">\(n_l\)</span> es el número de unidades de la capa <span class="math inline">\(l\)</span>.</li>
+<li>Ponemos <span class="math inline">\(a^{(l)}_0=1\)</span> para lidiar con los sesgos.</li>
+<li>*En particular, ponemos <span class="math inline">\(a^{(1)}_j = x_j\)</span>, que son los valores de las entradas (primera capa)</li>
+<li>Para un problema de regresión, la última capa solo tiene un elemento, que es <span class="math inline">\(y = a^{(L)}\)</span>.</li>
+</ul>
+<p>Adicionalmente, escribimos</p>
+<p><span class="math inline">\(\theta_{i,k}^{(l)}=\)</span> es el peso de entrada <span class="math inline">\(a_{k}^{(l-1)}\)</span> de capa <span class="math inline">\(l-1\)</span> en la entrada <span class="math inline">\(a_{i}^{(l)}\)</span> de la capa <span class="math inline">\(l\)</span>.</p>
+<p>Los sesgos están dados por <span class="math display">\[\theta_{i,0}^{(l)}\]</span></p>
+<section id="ejemplo" class="level4 unnumbered">
+<h4 class="unnumbered anchored" data-anchor-id="ejemplo">Ejemplo</h4>
+<p>En nuestro ejemplo, tenemos que en la capa <span class="math inline">\(l=3\)</span> hay dos unidades. Así que podemos calcular los valores <span class="math inline">\(a^{(3)}_1\)</span> y <span class="math inline">\(a^{(3)}_2\)</span>. Están dados por</p>
+<p><span class="math display">\[a_1^{(3)} = h(\theta_{1,0}^{(2)} + \theta_{1,1}^{(2)} a_1^{(2)}+ \theta_{1,2}^{(2)}a_2^{(2)}+ \theta_{1,3}^{(2)} a_3^{(2)})\]</span> <span class="math display">\[a_2^{(3)} = h(\theta_{2,0}^{(2)} + \theta_{2,1}^{(2)} a_1^{(2)}+ \theta_{2,2}^{(2)}a_2^{(2)}+ \theta_{2,3}^{(2)} a_3^{(2)})\]</span></p>
+<p>Como se ilustra en la siguiente gráfica:</p>
+<div class="cell">
+<div class="cell-output-display">
+<p><img src="06-redes-neuronales-1_files/figure-html/unnamed-chunk-36-1.png" class="img-fluid" width="550"></p>
+</div>
+</div>
+<p>Para visualizar las ordenadas (que también se llaman <strong>sesgos</strong> en este contexto), ponemos <span class="math inline">\(a_{0}^{(2)}=1\)</span>.</p>
+<div class="cell">
+<div class="cell-output-display">
+<p><img src="06-redes-neuronales-1_files/figure-html/unnamed-chunk-37-1.png" class="img-fluid" width="550"></p>
+</div>
+</div>
+</section>
+<section id="ejemplo-1" class="level4 unnumbered">
+<h4 class="unnumbered anchored" data-anchor-id="ejemplo-1">Ejemplo</h4>
+<p>Consideremos propagar a la capa 3 a partir de la capa 2. Usaremos los siguientes pesos para capa 3 y valores de la capa 2 (en gris están los sesgos):</p>
+<div class="cell">
+<div class="cell-output-display">
+<p><img src="06-redes-neuronales-1_files/figure-html/unnamed-chunk-38-1.png" class="img-fluid" width="500"></p>
+</div>
+</div>
+<p>Que en nuestra notación escribimos como <span class="math display">\[a^{(2)}_0 = 1, a^{(2)}_1 = -2, a^{(2)}_2 = 5, a^{(2)}=3\]</span> y los pesos son, para la primera unidad: <span class="math display">\[\theta^{(2)}_{1,0} = 3,  \,\,\, \theta^{(2)}_{1,1} = 1.5,\,\,\,\theta^{(2)}_{1,2} = -1,\,\,\theta^{(2)}_{1,3} = -0.5 \]</span> y para la segunda unidad <span class="math display">\[\theta^{(2)}_{2,0} = 1,  \,\,\, \theta^{(2)}_{2,1} = 2,\,\,\,\theta^{(2)}_{2,2} = 0.5,\,\, \theta^{(2)}_{2,3} = -0.2\]</span> Y ahora queremos calcular los valores que toman las unidades de la capa 3, que son <span class="math inline">\(a^{(3)}_1\)</span> y <span class="math inline">\(a^{(3)}_2\)</span>$</p>
+<p>Para hacer feed forward a la siguiente capa, hacemos entonces</p>
+<p><span class="math display">\[a^{(3)}_1 = h(3 + a^{(2)}_1 - a^{(2)}_2 -0.5 a_3^{(2)}),\]</span> <span class="math display">\[a^{(3)}_2 = h(1 + 2a^{(2)}_1 + 0.5a^{(2)}_2 - 0.2 a_3^{(2)}),\]</span></p>
+<p>Ponemos los pesos y valores de la capa 2 (incluyendo sesgo):</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb44"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a>a_2 <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="sc">-</span><span class="dv">2</span>, <span class="dv">5</span>, <span class="dv">3</span>) <span class="co"># ponemos un 1 al principio para el sesgo</span></span>
+<span id="cb44-2"><a href="#cb44-2" aria-hidden="true" tabindex="-1"></a>theta_2_1 <span class="ot">=</span> <span class="fu">c</span>(<span class="dv">3</span>, <span class="fl">1.5</span>, <span class="sc">-</span><span class="fl">1.0</span>, <span class="sc">-</span><span class="fl">0.5</span>)</span>
+<span id="cb44-3"><a href="#cb44-3" aria-hidden="true" tabindex="-1"></a>theta_2_2 <span class="ot">=</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>, <span class="fl">0.5</span>, <span class="sc">-</span><span class="fl">0.2</span>)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>y calculamos</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb45"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a>a_3 <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="fu">h</span>(<span class="fu">sum</span>(theta_2_1<span class="sc">*</span>a_2)),<span class="fu">h</span>(<span class="fu">sum</span>(theta_2_2<span class="sc">*</span>a_2))) <span class="co"># ponemos un 1 al principio</span></span>
+<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a>a_3</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 1.000000000 0.001501182 0.249739894</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="cell-output-display">
+<p><img src="06-redes-neuronales-1_files/figure-html/unnamed-chunk-41-1.png" class="img-fluid" width="500"></p>
+</div>
+</div>
+</section>
+</section>
+<section id="algoritmo-de-feed-forward" class="level2" data-number="6.5">
+<h2 data-number="6.5" class="anchored" data-anchor-id="algoritmo-de-feed-forward"><span class="header-section-number">6.5</span> Algoritmo de Feed forward</h2>
+<p>Para calcular los valores de salida de una red a partir de pesos y datos de entrada, usamos el algoritmo feed-forward, calculando capa por capa.</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Feed-forward
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Para la primera capa, escribimos las variables de entrada: <span class="math display">\[a^{(1)}_j = x_j, j=1\ldots,n_1\]</span> Para la primera capa oculta, o la segunda capa <span class="math display">\[a^{(2)}_j = h\left( \theta_{j,0}^{(1)}+ \sum_{k=1}^{n_1}  \theta_{j,k}^{(1)}  a^{(1)}_k    \right), j=1\ldots,n_2\]</span> para la <span class="math inline">\(l\)</span>-ésima capa: <span class="math display">\[a^{(l)}_j = h\left( \theta_{j,0}^{(l-1)}+ \sum_{k=1}^{n_{l-1}}  \theta_{j,k}^{(l-1)}  a^{(l-1)}_k    \right), j=1\ldots,n_{l}\]</span> y así sucesivamente. Para la capa final o de salida en un problema de regresión, suponiendo que tenemos <span class="math inline">\(L\)</span> capas (<span class="math inline">\(L-2\)</span> capas ocultas): <span class="math display">\[f(x) =     \theta_{1,0}^{(L-1)}+ \sum_{k=1}^{n_{L-1}}  \theta_{1,k}^{(L-1)}  a^{(L-1)}_k     .\]</span></p>
+</div>
+</div>
+<p>Nótese que entonces:</p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Tip
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Cada capa se caracteriza por el conjunto de parámetros <span class="math inline">\(\Theta^{(l)}\)</span>, que es una matriz de <span class="math inline">\(n_l\times n_{l-1}\)</span>.</p>
+<p>La red completa entonces se caracteriza por:</p>
+<ul>
+<li>La estructura elegida (número de capas ocultas y número de nodos en cada capa oculta).</li>
+<li>Las matrices de pesos en cada capa <span class="math inline">\(\Theta^{(1)},\Theta^{(2)},\ldots, \Theta^{(L-1)}\)</span></li>
+</ul>
+</div>
+</div>
+<p>Adicionalmente, escribimos en forma vectorial: <span class="math display">\[a^{(l)} = (a^{(l)}_0, a^{(l)}_1, a^{(l)}_2, \ldots, a^{(l)}_{n_l})^t\]</span></p>
+<p>Para calcular la salidas, igual que hicimos, antes, propagaremos hacia adelante los valores de las variables de entrada usando los <em>pesos</em>. Agregando entradas adicionales en cada capa <span class="math inline">\(a_0^{(l)}\)</span>, <span class="math inline">\(l=1,2,\ldots, L-1\)</span>, donde <span class="math inline">\(a_0^{l}=1\)</span>, y agregando a <span class="math inline">\(\Theta^{(l)}\)</span> una columna con las ordenadas al origen (o sesgos) podemos escribir:</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Feed-forward matricial
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<ul>
+<li><p>Capa 1 (vector de entradas) <span class="math display">\[ a^{(1)} = x\]</span></p></li>
+<li><p>Capa 2 <span class="math display">\[ a^{(2)} = h(\Theta^{(1)}a^{(1)})\]</span></p></li>
+<li><p>Capa <span class="math inline">\(l\)</span> (oculta) <span class="math display">\[ a^{(l)} = h(\Theta^{(l-1)}a^{(l-1)})\]</span> donde <span class="math inline">\(h\)</span> se aplica componente a componente sobre los vectores correspondientes.</p></li>
+<li><p>Capa de salida:</p></li>
+</ul>
+<p>En un problema de regresión, la capa de salida se calcula como un regresión lineal: <span class="math display">\[a^{(L)}= f(x) = \Theta^{(L-1)}a^{(L-1)}\]</span> Nótese que feed-foward consiste principalmente de multiplicaciones de matrices con algunas aplicaciones de <span class="math inline">\(h\)</span></p>
+</div>
+</div>
+</section>
+<section id="algoritmo-de-backpropagation-cálculo-del-gradiente-regresión" class="level2" data-number="6.6">
+<h2 data-number="6.6" class="anchored" data-anchor-id="algoritmo-de-backpropagation-cálculo-del-gradiente-regresión"><span class="header-section-number">6.6</span> Algoritmo de Backpropagation: cálculo del gradiente (regresión)</h2>
+<p>Para ajustar los pesos y sesgos de las redes (valores <span class="math inline">\(\theta\)</span>), utilizaremos descenso en gradiente y otros algoritmos derivados del gradiente (descenso estocástico). En esta parte entonces veremos cómo calcular estos gradientes con el algoritmo de <em>back-propagation</em>, que es una aplicación de la regla de la cadena para derivar. Back-propagation resulta en una fórmula recursiva donde propagamos errores de la red como gradientes desde el final de red (capa de salida) hasta el principio, capa por capa.</p>
+<p><strong>Consideramos el problema de regresión</strong></p>
+<p>Recordamos que la pérdida cuadrática (con regularización ridge, dividiendo entre 2 por conveniencia) es</p>
+<p><span class="math display">\[D = -\frac{1}{2n}\sum_{i=1}^n (y^{(i)} - f(x^{(i)}))^2  + \lambda \sum_{l=2}^{L} \sum_{k=1}^{n_{l-1}} \sum_{j=1}^{n_l}(\theta_{j,k}^{(l)})^2.\]</span></p>
+<p>Queremos entonces calcular las derivadas de la devianza o función de pérdida con respecto a cada parámetro <span class="math inline">\(\theta_{j,k}^{(l)}\)</span>. Esto nos proporciona el gradiente para nuestro algoritmo de descenso.</p>
+<p><strong>Consideramos aquí el problema de regresión con pérdida cuadrática y sin regularización</strong>. La parte de la parcial que corresponde al término de regularización es fácil de agregar al final.</p>
+<p>Recordamos también nuestra notación para la función logística (o sigmoide):</p>
+<p><span class="math display">\[h(z)=\frac{1}{1+e^{-z}}.\]</span> Necesitaremos su derivada, que está dada por (cálculala): <span class="math display">\[h'(z) = h(z)(1-h(z))\]</span></p>
+<section id="cálculo-para-un-caso-de-entrenamiento" class="level3 unnumbered">
+<h3 class="unnumbered anchored" data-anchor-id="cálculo-para-un-caso-de-entrenamiento">Cálculo para un caso de entrenamiento</h3>
+<p>Primero simplificamos el problema y consideramos calcular las parciales <em>para un solo caso de entrenamiento</em> <span class="math inline">\((x,y)\)</span>: <span class="math display">\[ D=  \frac{1}{2}\left ( y -f(x)\right)^2 . \]</span></p>
+<p>Después sumaremos sobre toda la muestra de entrenamiento. Entonces queremos calcular <span class="math display">\[\frac{\partial D}{\partial \theta_{j,k}^{(l)}}\]</span></p>
+<p>Y escribiremos, con la notación de arriba, <span class="math display">\[a^{(l+1)}_j = h(z^{(l+1)}_j)\]</span> donde <span class="math display">\[z^{(l+1)} = \Theta^{(l)} a^{(l)},\]</span> que coordenada a coordenada se escribe como <span class="math display">\[z^{(l+1)}_j =  \sum_{k=0}^{n_{l}}  \theta_{j,k}^{(l)}  a^{(l)}_k\]</span></p>
+<section id="paso-1-derivar-respecto-a-capa-l1" class="level4 unnumbered">
+<h4 class="unnumbered anchored" data-anchor-id="paso-1-derivar-respecto-a-capa-l1">Paso 1: Derivar respecto a capa <span class="math inline">\(l+1\)</span></h4>
+<p>Como los valores de cada capa determinan los valores de salida y la devianza, podemos escribir (recordemos que <span class="math inline">\(a_0^{(l)}=1\)</span> es constante): <span class="math display">\[D=D(a_0^{(l+1)},a_1^{(l+1)},a_2^{(l+1)},\ldots, a_{n_{l+1}}^{(l+1)})=D(a_1^{(l+1)},a_2^{(l+1)},\ldots, a_{n_{l+1}}^{(l+1)})\]</span></p>
+<p>Así que por la regla de la cadena para varias variables: <span class="math display">\[\frac{\partial D}{\partial \theta_{j,k}^{(l)}} =
+\sum_{t=1}^{n_{l}} \frac{\partial D}{\partial a_t^{(l+1)}}\frac{\partial a_t^{(l+1)}}
+{\partial \theta_{j,k}^{(l)} }\]</span></p>
+<p>Pero si vemos dónde aparece <span class="math inline">\(\theta_{j,k}^{(l)}\)</span> en la gráfica de la red:</p>
+<p><span class="math display">\[ \cdots a^{(l)}_k \xrightarrow{\theta_{j,k}^{(l)}} a^{(l+1)}_j  \cdots \rightarrow  D\]</span> Entonces podemos concluir que <span class="math inline">\(\frac{\partial a_t^{(l+1)}}{\partial \theta_{j,k}^{(l)}} =0\)</span> cuando <span class="math inline">\(t\neq j\)</span> (pues no dependen de <span class="math inline">\(\theta_{j,k}^{(l)}\)</span>),</p>
+<p>y entonces, para toda <span class="math inline">\(j=1,2,\ldots, n_{l+1}, k=0,1,\ldots, n_{l}\)</span> <span id="eq-parcial"><span class="math display">\[
+\frac{\partial D}{\partial \theta_{j,k}^{(l)}} =
+\frac{\partial D}{\partial a_j^{(l+1)}}\frac{\partial a_j^{(l+1)}}{\partial \theta_{j,k}^{(l)} }.
+\tag{6.1}\]</span></span></p>
+<p>Adicionalmente, como <span class="math display">\[a_j^{(l+1)} = h(z_j^{(l+1)}) = h\left (\sum_{k=0}^{n_{l}}  \theta_{j,k}^{(l)}  a^{(l)}_k \right )\]</span> y las <span class="math inline">\(a_k^{(l)}\)</span> no dependen de <span class="math inline">\(\theta_{j,k}^{(l)}\)</span>, tenemos por la regla de la cadena que</p>
+<p><span class="math display">\[
+\frac{\partial a_j^{(l+1)}}{\partial \theta_{j,k}^{(l)} } = h'(z_j^{(l+1)})a_k^{(l)}.
+\]</span></p>
+<p>Esta última expresión podemos calcularla pues sólo requiere la derivada de <span class="math inline">\(h\)</span> y los valores otenidos en el paso de feed-forward.</p>
+</section>
+<section id="paso-2-obtener-fórmula-recursiva" class="level4 unnumbered">
+<h4 class="unnumbered anchored" data-anchor-id="paso-2-obtener-fórmula-recursiva">Paso 2: Obtener fórmula recursiva</h4>
+<p>Así que sólo nos queda calcular las parciales (<span class="math inline">\(j = 1,\ldots, n_l\)</span>) <span class="math display">\[\frac{\partial D}{\partial a_j^{(l)}}\]</span></p>
+<p>Para obtener una fórmula recursiva para esta cantidad (hacia atrás), aplicamos otra vez regla de la cadena, pero con respecto a la capa <span class="math inline">\(l\)</span> (ojo: queremos obtener una fórmula recursiva!):</p>
+<p><span class="math display">\[\frac{\partial D}{\partial a_j^{(l)}}= \sum_{s=1}^{n_{l+1}}
+\frac{\partial D}{\partial a_s^{(l+1)}}\frac{\partial  a_s^{(l+1)}}{\partial a_j^{(l)}},\]</span></p>
+<p>que se puede entender a partir de este diagrama:</p>
+<div class="cell">
+<div class="cell-output-display">
+<p><img src="06-redes-neuronales-1_files/figure-html/unnamed-chunk-42-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+<p>Nótese que la suma empieza en <span class="math inline">\(s=1\)</span>, no en <span class="math inline">\(s=0\)</span>, pues <span class="math inline">\(a_0^{(l+1)}\)</span> no depende de <span class="math inline">\(a_k^{(l)}\)</span>.</p>
+<p>En este caso los elementos de la suma no se anulan necesariamente. Primero consideramos la derivada de:</p>
+<p><span class="math display">\[\frac{\partial  a_s^{(l+1)}}{\partial a_j^{(l)}}=h'(z_s^{(l+1)})\theta_{s,j}^{(l)},\]</span></p>
+<p>de modo que</p>
+<p><span class="math display">\[\frac{\partial D}{\partial a_j^{(l)}}= \sum_{s=1}^{n_l}
+\frac{\partial D}{\partial a_s^{(l+1)}} h'(z_s^{(l+1)})\theta_{s,j}^{(l)}.\]</span></p>
+<p>Nótese que esto nos da una fórmula recursiva para las parciales que nos falta calcular (de <span class="math inline">\(D\)</span> con respecto a <span class="math inline">\(a\)</span>), pues las otras cantidades las conocemos por backpropagation.</p>
+</section>
+<section id="paso-3-simplificación-de-la-recursión" class="level4 unnumbered">
+<h4 class="unnumbered anchored" data-anchor-id="paso-3-simplificación-de-la-recursión">Paso 3: Simplificación de la recursión</h4>
+<p>Definimos para <span class="math inline">\(l=1,\ldots,L-2\)</span>:</p>
+<p><span id="eq-delta-def-a"><span class="math display">\[
+\delta_s^{ (l+1)}=\frac{\partial D}{\partial a_s^{(l+1)}} h'(z_s^{(l+1)})
+\tag{6.2}\]</span></span></p>
+<p>de manera que la ecuación recursiva es</p>
+<p><span id="eq-delta-def"><span class="math display">\[
+\frac{\partial D}{\partial a_j^{(l)}} = \sum_{s=1}^{n_{l+1}}
+\delta_s^{(l+1)}\theta_{s,j}^{(l)}.
+\tag{6.3}\]</span></span></p>
+<p>Tenemos que si <span class="math inline">\(l=2,\ldots,L-1\)</span>, entonces podemos escribir (usando (<a href="#eq-delta-def">Ecuación&nbsp;<span>6.3</span></a>)) como fórmula recursiva:</p>
+<p><span id="eq-delta-recursion"><span class="math display">\[
+\delta_j^{(l)}
+= \left (\sum_{s=1}^{n_l} \delta_s^{(l+1)} \theta_{s,j}^{(l)}\right ) h'(z_j^{(l)}),
+\tag{6.4}\]</span></span> para <span class="math inline">\(j=1,2,\ldots, n_{l}\)</span>.</p>
+</section>
+<section id="paso-4-condiciones-iniciales" class="level4 unnumbered">
+<h4 class="unnumbered anchored" data-anchor-id="paso-4-condiciones-iniciales">Paso 4: Condiciones iniciales</h4>
+<p>Para la última capa, tenemos que (en la ecuación de arriba, en este caso la activación <span class="math inline">\(h\)</span> es <span class="math inline">\(h(z)=z\)</span> para la última capa):</p>
+<p><span class="math display">\[\delta_1^{(L)}=-(y - f(x)).\]</span></p>
+<p>Nótese que esta cantidad indica hacia dónde tenemos que mover <span class="math inline">\(f(x)\)</span> para hacer el error más chico.</p>
+</section>
+<section id="paso-5-cálculo-de-parciales" class="level4 unnumbered">
+<h4 class="unnumbered anchored" data-anchor-id="paso-5-cálculo-de-parciales">Paso 5: Cálculo de parciales</h4>
+<p>Finalmente, usando (<a href="#eq-parcial">Ecuación&nbsp;<span>6.1</span></a>) y (<a href="#eq-delta-def-a">Ecuación&nbsp;<span>6.2</span></a>) , obtenemos <span class="math display">\[\frac{\partial D}{\partial \theta_{j,k}^{(l)}} = \delta_j^{(l+1)}a_k^{(l)},\]</span></p>
+<p>y con esto ya podemos hacer backpropagation para calcular el gradiente sobre cada caso de entrenamiento, y solo resta acumular para obtener el gradiente sobre la muestra de entrenamiento.</p>
+<p>Muchas veces es útil escribir una versión vectorizada (importante para implementar):</p>
+</section>
+<section id="paso-6-versión-matricial" class="level4 unnumbered">
+<h4 class="unnumbered anchored" data-anchor-id="paso-6-versión-matricial">Paso 6: Versión matricial</h4>
+<p>Ahora podemos escribir estas ecuaciones en forma vectorial. En primer lugar, <span class="math display">\[\delta^{(L)}=f(x)-y.\]</span> Y además se puede ver de la ecuación (<a href="#eq-delta-recursion">Ecuación&nbsp;<span>6.4</span></a>) que (<span class="math inline">\(\Theta_{*}^{(l+1)}\)</span> denota la matriz de pesos <em>sin</em> la columna correspondiente al sesgo):</p>
+<p><span id="eq-delta-recursion-mat"><span class="math display">\[
+\delta^{(l)}=\left( \Theta_{*}^{(l)}    \right)^t\delta^{(l+1)} \circ h'(z^{(l)})
+\tag{6.5}\]</span></span></p>
+<p>donde <span class="math inline">\(\circ\)</span> denota el producto componente a componente.</p>
+<p>Ahora todo ya está calculado. Lo interesante es que las <span class="math inline">\(\delta^{(l)}\)</span> se calculan de manera recursiva.</p>
+</section>
+</section>
+<section id="algoritmo-de-backpropagation" class="level3 unnumbered">
+<h3 class="unnumbered anchored" data-anchor-id="algoritmo-de-backpropagation">Algoritmo de backpropagation</h3>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Nota
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>#Backpropagation</p>
+<p>Para problema de clasificación con regularización $ $. Para <span class="math inline">\(i=1,\ldots, N,\)</span> tomamos el dato de entrenamiento <span class="math inline">\((x^{(i)}, y^{(i)})\)</span> y hacemos:</p>
+<ol type="1">
+<li>Ponemos <span class="math inline">\(a^{(1)}=x^{(i)}\)</span> (vector de entradas, incluyendo 1).</li>
+<li>Calculamos <span class="math inline">\(a^{(2)},a^{(3)},\ldots, a^{(L)}\)</span> usando feed forward para la entrada <span class="math inline">\(x^{(i)}.\)</span></li>
+<li>Calculamos <span class="math inline">\(\delta^{(L)}=a^{(L)}-y^{(i)}\)</span>, y luego <span class="math inline">\(\delta^{(L-1)},\ldots, \delta^{(2)}\)</span> según la recursión (<a href="#eq-delta-recursion">Ecuación&nbsp;<span>6.4</span></a>).</li>
+<li>Acumulamos <span class="math inline">\(\Delta_{j,k}^{(l)}=\Delta_{j,k}^{(l)} + \delta_j^{(l+1)}a_k^{(l)}\)</span>.</li>
+<li>Finalmente, ponemos, si <span class="math inline">\(k\neq 0\)</span>, <span class="math display">\[D_{j,k}^{(l)} = \frac{2}{N}\Delta_{j,k}^{(l)} + 2\lambda\theta_{j,k}^{(l)}\]</span> y si <span class="math inline">\(k=0\)</span>, <span class="math display">\[D_{j,k}^{(l)} = \frac{2}{N}\Delta_{j,k}^{(l)} .\]</span> Entonces: <span class="math display">\[D_{j,k}^{(l)} =\frac{\partial D}{\partial \theta_{j,k}^{(l)}}.\]</span></li>
+</ol>
+<p>Nótese que back-propagation consiste principalmente de multiplicaciones de matrices con algunas aplicaciones de <span class="math inline">\(h\)</span> y acumulaciones, igual que feed-forward.</p>
+</div>
+</div>
+</section>
+</section>
+<section id="ajuste-de-parámetros-introducción" class="level2" data-number="6.7">
+<h2 data-number="6.7" class="anchored" data-anchor-id="ajuste-de-parámetros-introducción"><span class="header-section-number">6.7</span> Ajuste de parámetros (introducción)</h2>
+<p>Consideramos la versión con regularización ridge (también llamada L2) de la devianza de entrenamiento como nuestro función objetivo:</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Ajuste de redes neuronales
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Para un problema de regresión, ajustamos los pesos <span class="math inline">\(\Theta^{(1)},\Theta^{(2)},\ldots, \Theta^{(L)}\)</span> de la red intentando minimizar el error cuadrático medio (penalizado) sobre la muestra de entrenamiento: <span class="math display">\[D = -\frac{1}{2n}\sum_{i=1}^n (y^{(i)} - f(x^{i}))^2= + \lambda \sum_{l=2}^{L} \sum_{k=1}^{n_{l-1}} \sum_{j=1}^{n_l}(\theta_{j,k}^{(l)})^2.\]</span> Este problema en general no es convexo y <em>puede tener múltiples mínimos</em>.</p>
+</div>
+</div>
+<p>Veremos el proceso de ajuste, selección de arquitectura, etc. más adelante. Por el momento hacemos unas observaciones acerca de este problema de minimización:</p>
+<ul>
+<li><p>Hay varios algoritmos para minimizar este error, algunos avanzados incluyendo información de segundo orden (como Newton), pero actualmente las técnicas más populares, para redes grandes, están derivadas de descenso en gradiente. Más específicamente, una variación, que es <em>descenso estocástico</em>.</p></li>
+<li><p>Que el algoritmo depende principalmente de multiplicaciones de matrices y acumulaciones implica que puede escalarse de diversas maneras. Una es paralelizando sobre la muestra de entrenamiento (y calcular acumulados al final), pero también se pueden paralelizar las multiplicaciones de matrices (para lo cual los GPUs se prestan muy bien).</p></li>
+<li><p>Para redes neuronales, el gradiente se calcula con un algoritmo que se llama <em>back-propagation</em>, que es una aplicación de la regla de la cadena para propagar errores desde la capa de salida a lo largo de todas las capas para ajustar los pesos y sesgos.</p></li>
+<li><p>En estos problemas no buscamos el mínimo global, sino un mínimo local de buen desempeño. Puede haber múltiples mínimos, puntos silla, regiones relativamente planas, precipicios (curvatura alta). Nótese que la simetría implica que podemos obtener la misma red cambiando pesos entre neuronas y las conexiones correspondientes. Esto implica que necesariamente hay varios mínimos.</p></li>
+<li><p>Todo esto dificulta el entrenamiento de redes neuronales grandes. Para redes grandes, ni siquiera esperamos a alcanzar un mínimo local, sino que nos a veces detenemos prematuramente cuando obtenemos el mejor desempeño posible.</p></li>
+<li><p>Para este problema, no tiene sentido comenzar las iteraciones con todos los pesos igual a cero, pues las unidades de la red son simétricas: no hay nada que distinga una de otra si todos los pesos son iguales. Esto quiere decir que si iteramos, todas las neuronas van a aprender lo mismo.</p></li>
+<li><p>Es importante no comenzar valores de los pesos grandes, pues las funciones logísticas pueden quedar en regiones planas donde la minimización es lenta, o podemos tener gradientes demasiado grandes y produzcan inestabilidad en el cálculo del gradiente.</p></li>
+<li><p>El ajuste de la <strong>tasa de aprendizaje es un parámetro importante</strong>, más delicado que para problemas convexos. Generalmente lo tratamos con un hiperparámetro más que hay que afinar. Tasas demasiado grandes pueden llevarnos a mínimos locales relativamente malos.</p></li>
+<li><p>Generalmente los pesos se inicializan al azar con variables independientes gaussianas o uniformes centradas en cero, y con varianza chica (por ejemplo <span class="math inline">\(U(-0.5,0.5)\)</span>). Una recomendación es usar <span class="math inline">\(U(-1/\sqrt{m}, 1/\sqrt{m})\)</span> donde <span class="math inline">\(m\)</span> es el número de entradas. En general, hay que experimentar con este parámetro.</p></li>
+</ul>
+<p>El proceso para ajustar una red es entonces:</p>
+<ul>
+<li>Definir número de capas ocultas, número de neuronas por cada capa, y un valor del parámetro de regularización. Estandarizar las entradas. Usualmente podemos probar comenzar con una o dos capas ocultas, de tamaño proporcional al número de entradas. Es buena idea comenzar con una red relativamente grande que tienen error bajo de entrenamiento aunque sobreajuste, y después regularizar y refinar su tamaño.</li>
+<li>Seleccionar parámetros al azar para <span class="math inline">\(\Theta^{(2)},\Theta^{(3)},\ldots, \Theta^{(L)}\)</span>. Se toman, por ejemplo, normales con media 0 y varianza chica.</li>
+<li>Correr un algoritmo de minimización del error mostrada arriba. <strong>Es necesario experimentar con los parámetros del algoritmo de minimización</strong>.</li>
+<li>Verificar convergencia del algoritmo a un mínimo local (o el algoritmo no está mejorando).</li>
+<li>Predecir usando el modelo ajustado.</li>
+</ul>
+<p>Finalmente, podemos probar distintas arquitecturas y valores del parámetros de regularización, para afinar estos parámetros según validación cruzada o una muestra de validación.</p>
+<section id="ejemplo-regresión" class="level3 unnumbered">
+<h3 class="unnumbered anchored" data-anchor-id="ejemplo-regresión">Ejemplo (regresión)</h3>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb47"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a>dat_grasa <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="at">file =</span> <span class="st">'../datos/bodyfat.csv'</span>) </span>
+<span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">183</span>)</span>
+<span id="cb47-3"><a href="#cb47-3" aria-hidden="true" tabindex="-1"></a>grasa_particion <span class="ot">&lt;-</span> <span class="fu">initial_split</span>(dat_grasa, <span class="fl">0.5</span>)</span>
+<span id="cb47-4"><a href="#cb47-4" aria-hidden="true" tabindex="-1"></a>grasa_ent <span class="ot">&lt;-</span> <span class="fu">training</span>(grasa_particion)</span>
+<span id="cb47-5"><a href="#cb47-5" aria-hidden="true" tabindex="-1"></a>grasa_pr <span class="ot">&lt;-</span> <span class="fu">testing</span>(grasa_particion)</span>
+<span id="cb47-6"><a href="#cb47-6" aria-hidden="true" tabindex="-1"></a><span class="fu">nrow</span>(grasa_ent)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 126</code></pre>
+</div>
+</div>
+<p>Una exploración de este conjunto de datos revela algunos datos sospechosos. En particular un individuo con estatura de 30 pulgadas (alrededor de 75 cm), con peso normal. Probablemente no queremos incluir en entrenamiento este caso, y tampoco hacer predicciones para posibles personas que tengan tales dimensiones:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb49"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(patchwork)</span>
+<span id="cb49-2"><a href="#cb49-2" aria-hidden="true" tabindex="-1"></a>g_1 <span class="ot">&lt;-</span> grasa_ent <span class="sc">|&gt;</span> <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> estatura, <span class="at">y =</span> peso)) <span class="sc">+</span> </span>
+<span id="cb49-3"><a href="#cb49-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>()</span>
+<span id="cb49-4"><a href="#cb49-4" aria-hidden="true" tabindex="-1"></a>g_2 <span class="ot">&lt;-</span> grasa_ent <span class="sc">|&gt;</span> <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> abdomen, <span class="at">y =</span> peso)) <span class="sc">+</span> </span>
+<span id="cb49-5"><a href="#cb49-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>()</span>
+<span id="cb49-6"><a href="#cb49-6" aria-hidden="true" tabindex="-1"></a>g_1 <span class="sc">+</span> g_2</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="06-redes-neuronales-1_files/figure-html/unnamed-chunk-44-1.png" class="img-fluid" width="480"></p>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb50"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a>grasa_receta <span class="ot">&lt;-</span> <span class="fu">recipe</span>(grasacorp <span class="sc">~</span> ., grasa_ent) <span class="sc">|&gt;</span> </span>
+<span id="cb50-2"><a href="#cb50-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_filter</span>(estatura <span class="sc">&gt;</span> <span class="dv">50</span>) <span class="sc">|&gt;</span></span>
+<span id="cb50-3"><a href="#cb50-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_normalize</span>(<span class="fu">all_predictors</span>()) <span class="sc">|&gt;</span> </span>
+<span id="cb50-4"><a href="#cb50-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">prep</span>()</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb51"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(keras)</span>
+<span id="cb51-2"><a href="#cb51-2" aria-hidden="true" tabindex="-1"></a><span class="co"># entrenamiento</span></span>
+<span id="cb51-3"><a href="#cb51-3" aria-hidden="true" tabindex="-1"></a>x_grasa <span class="ot">&lt;-</span> grasa_receta <span class="sc">|&gt;</span> <span class="fu">juice</span>() <span class="sc">|&gt;</span> </span>
+<span id="cb51-4"><a href="#cb51-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span>grasacorp) <span class="sc">|&gt;</span> <span class="fu">as.matrix</span>()</span>
+<span id="cb51-5"><a href="#cb51-5" aria-hidden="true" tabindex="-1"></a>vars_nombres <span class="ot">&lt;-</span> <span class="fu">colnames</span>(x_grasa)</span>
+<span id="cb51-6"><a href="#cb51-6" aria-hidden="true" tabindex="-1"></a>y_grasa <span class="ot">&lt;-</span> grasa_receta <span class="sc">|&gt;</span> <span class="fu">juice</span>() <span class="sc">|&gt;</span> <span class="fu">pull</span>(grasacorp)</span>
+<span id="cb51-7"><a href="#cb51-7" aria-hidden="true" tabindex="-1"></a><span class="co"># validación</span></span>
+<span id="cb51-8"><a href="#cb51-8" aria-hidden="true" tabindex="-1"></a>x_grasa_pr <span class="ot">&lt;-</span> grasa_receta <span class="sc">|&gt;</span> <span class="fu">bake</span>(grasa_pr) <span class="sc">|&gt;</span> </span>
+<span id="cb51-9"><a href="#cb51-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span>grasacorp) <span class="sc">|&gt;</span> <span class="fu">as.matrix</span>()</span>
+<span id="cb51-10"><a href="#cb51-10" aria-hidden="true" tabindex="-1"></a>y_grasa_pr <span class="ot">&lt;-</span> grasa_receta <span class="sc">|&gt;</span> <span class="fu">bake</span>(grasa_pr) <span class="sc">|&gt;</span> <span class="fu">pull</span>(grasacorp)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb52"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a>modelo_red <span class="ot">&lt;-</span> <span class="fu">keras_model_sequential</span>() <span class="sc">|&gt;</span> </span>
+<span id="cb52-2"><a href="#cb52-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">layer_dense</span>(<span class="at">units =</span> <span class="dv">50</span>, <span class="at">activation =</span> <span class="st">"sigmoid"</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb52-3"><a href="#cb52-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">layer_dense</span>(<span class="at">units =</span> <span class="dv">50</span>, <span class="at">activation =</span> <span class="st">"sigmoid"</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb52-4"><a href="#cb52-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">layer_dense</span>(<span class="at">units =</span> <span class="dv">1</span>, <span class="at">activation =</span> <span class="st">"linear"</span>)</span>
+<span id="cb52-5"><a href="#cb52-5" aria-hidden="true" tabindex="-1"></a>modelo_red <span class="sc">|&gt;</span> <span class="fu">compile</span>(</span>
+<span id="cb52-6"><a href="#cb52-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">loss =</span> <span class="st">"mse"</span>, <span class="at">metrics =</span> <span class="st">"mse"</span>,</span>
+<span id="cb52-7"><a href="#cb52-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">optimizer =</span> <span class="fu">optimizer_sgd</span>(<span class="at">learning_rate =</span> <span class="fl">0.01</span>, <span class="at">momentum =</span> <span class="fl">0.9</span>)</span>
+<span id="cb52-8"><a href="#cb52-8" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb52-9"><a href="#cb52-9" aria-hidden="true" tabindex="-1"></a><span class="co"># esto es más eficiente hacerlo con callbacks en general:</span></span>
+<span id="cb52-10"><a href="#cb52-10" aria-hidden="true" tabindex="-1"></a>historia <span class="ot">&lt;-</span> modelo_red <span class="sc">|&gt;</span> <span class="fu">fit</span>(</span>
+<span id="cb52-11"><a href="#cb52-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">x =</span> x_grasa, <span class="at">y =</span> y_grasa,</span>
+<span id="cb52-12"><a href="#cb52-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">validation_data =</span> <span class="fu">list</span>(x_grasa_pr, y_grasa_pr),</span>
+<span id="cb52-13"><a href="#cb52-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">batch_size =</span> <span class="dv">30</span>, <span class="at">epochs =</span> <span class="dv">250</span>, <span class="at">verbose =</span> <span class="dv">1</span>)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Vemos que con esta red podemos alcanzar un error de entrenamiento cercano a cero, aún cuando vemos que sobreajusta al evaluar con la muestra de validación.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb53"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(historia, <span class="at">smooth =</span> <span class="cn">FALSE</span>)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="06-redes-neuronales-1_files/figure-html/unnamed-chunk-48-1.png" class="img-fluid" width="480"></p>
+</div>
+</div>
+<p>Notamos que las predicciones no son muy buenas:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb54"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a>preds <span class="ot">&lt;-</span> <span class="fu">predict</span>(modelo_red, x_grasa_pr) </span>
+<span id="cb54-2"><a href="#cb54-2" aria-hidden="true" tabindex="-1"></a>preds <span class="sc">|&gt;</span> <span class="fu">head</span>()</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>          [,1]
+[1,]  9.117623
+[2,] 22.663464
+[3,]  8.569628
+[4,]  8.558584
+[5,]  8.842519
+[6,]  8.559466</code></pre>
+</div>
+</div>
+<p>Y obtenemos el siguiente resultado:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb56"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a>g_1 <span class="ot">&lt;-</span> <span class="fu">tibble</span>(<span class="at">preds =</span> preds[, <span class="dv">1</span>], <span class="at">y =</span> y_grasa_pr) <span class="sc">|&gt;</span> </span>
+<span id="cb56-2"><a href="#cb56-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> preds, <span class="at">y =</span> y)) <span class="sc">+</span> </span>
+<span id="cb56-3"><a href="#cb56-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>() <span class="sc">+</span> </span>
+<span id="cb56-4"><a href="#cb56-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_abline</span>(<span class="at">slope =</span> <span class="dv">1</span>, <span class="at">intercept =</span> <span class="dv">0</span>, <span class="at">color =</span> <span class="st">"red"</span>) <span class="sc">+</span></span>
+<span id="cb56-5"><a href="#cb56-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">coord_obs_pred</span>()</span>
+<span id="cb56-6"><a href="#cb56-6" aria-hidden="true" tabindex="-1"></a>g_1</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="06-redes-neuronales-1_files/figure-html/unnamed-chunk-50-1.png" class="img-fluid" width="480"></p>
+</div>
+</div>
+<p>Podemos ahora experimentar con los parámetros del optimizador, número de unidades, número de capas y regularización L2.</p>
+<ul>
+<li>Cada cambio de número de unidades/capas o regularización requiere ajustes a la tasa de aprendizaje y otros parámetros del optimizador.</li>
+<li>Varias arquitecturas (número de capas y unidades) pueden dar resultados similares. En este caso, usualmente escogemos el modelo más computacionalmente simple, o dependiendo del tipo de errores de cada modelo.</li>
+<li>Recordamos que una consecuencia del sobreajuste es que el error de prueba es mayor que el de entrenamiento (hay un <em>gap</em> de generalización). Para mejorar el desempeño, podemos reducir el error de entrenamiento (reducir sesgo), y/o reducir sobreajuste (<em>gap</em> entre entrenamiento y prueba).</li>
+</ul>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb57"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb57-1"><a href="#cb57-1" aria-hidden="true" tabindex="-1"></a>modelo_red_2 <span class="ot">&lt;-</span> <span class="fu">keras_model_sequential</span>() <span class="sc">|&gt;</span> </span>
+<span id="cb57-2"><a href="#cb57-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">layer_dense</span>(<span class="at">units =</span> <span class="dv">30</span>, <span class="at">activation =</span> <span class="st">"sigmoid"</span>, </span>
+<span id="cb57-3"><a href="#cb57-3" aria-hidden="true" tabindex="-1"></a>              <span class="at">kernel_regularizer =</span> <span class="fu">regularizer_l2</span>(<span class="fl">0.1</span>)) <span class="sc">|&gt;</span> </span>
+<span id="cb57-4"><a href="#cb57-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">layer_dense</span>(<span class="at">units =</span> <span class="dv">30</span>, <span class="at">activation =</span> <span class="st">"sigmoid"</span>,</span>
+<span id="cb57-5"><a href="#cb57-5" aria-hidden="true" tabindex="-1"></a>              <span class="at">kernel_regularizer =</span> <span class="fu">regularizer_l2</span>(<span class="fl">0.1</span>)) <span class="sc">|&gt;</span> </span>
+<span id="cb57-6"><a href="#cb57-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">layer_dense</span>(<span class="at">units =</span> <span class="dv">1</span>, <span class="at">activation =</span> <span class="st">"linear"</span>, </span>
+<span id="cb57-7"><a href="#cb57-7" aria-hidden="true" tabindex="-1"></a>              <span class="at">kernel_regularizer =</span> <span class="fu">regularizer_l2</span>(<span class="fl">0.01</span>))</span>
+<span id="cb57-8"><a href="#cb57-8" aria-hidden="true" tabindex="-1"></a>modelo_red_2 <span class="sc">|&gt;</span> <span class="fu">compile</span>(<span class="at">loss =</span> <span class="st">"mse"</span>,<span class="at">metrics =</span> <span class="fu">c</span>(<span class="st">"mse"</span>),</span>
+<span id="cb57-9"><a href="#cb57-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">optimizer =</span> <span class="fu">optimizer_sgd</span>(<span class="at">learning_rate =</span> <span class="fl">0.0005</span>, <span class="at">momentum =</span> <span class="fl">0.95</span>)</span>
+<span id="cb57-10"><a href="#cb57-10" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb57-11"><a href="#cb57-11" aria-hidden="true" tabindex="-1"></a><span class="co"># esto es más eficiente hacerlo con callbacks en general:</span></span>
+<span id="cb57-12"><a href="#cb57-12" aria-hidden="true" tabindex="-1"></a>historia <span class="ot">&lt;-</span> modelo_red_2 <span class="sc">|&gt;</span> <span class="fu">fit</span>(</span>
+<span id="cb57-13"><a href="#cb57-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">x =</span> x_grasa, <span class="at">y =</span> y_grasa,</span>
+<span id="cb57-14"><a href="#cb57-14" aria-hidden="true" tabindex="-1"></a>  <span class="at">validation_data =</span> <span class="fu">list</span>(x_grasa_pr, y_grasa_pr),</span>
+<span id="cb57-15"><a href="#cb57-15" aria-hidden="true" tabindex="-1"></a>  <span class="at">batch_size =</span> <span class="dv">30</span>, <span class="at">epochs =</span> <span class="dv">500</span>, <span class="at">verbose =</span> <span class="dv">1</span>)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb58"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(historia, <span class="at">smooth =</span> <span class="cn">FALSE</span>)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="06-redes-neuronales-1_files/figure-html/unnamed-chunk-52-1.png" class="img-fluid" width="480"></p>
+</div>
+</div>
+<p>La afinación nos da mejores resultados:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb59"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb59-1"><a href="#cb59-1" aria-hidden="true" tabindex="-1"></a>preds_2 <span class="ot">&lt;-</span> <span class="fu">predict</span>(modelo_red_2, x_grasa_pr) </span>
+<span id="cb59-2"><a href="#cb59-2" aria-hidden="true" tabindex="-1"></a>g_2 <span class="ot">&lt;-</span> <span class="fu">tibble</span>(<span class="at">preds_2 =</span> preds_2[, <span class="dv">1</span>], <span class="at">y =</span> y_grasa_pr) <span class="sc">|&gt;</span> </span>
+<span id="cb59-3"><a href="#cb59-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> preds_2, <span class="at">y =</span> y)) <span class="sc">+</span> </span>
+<span id="cb59-4"><a href="#cb59-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>() <span class="sc">+</span> </span>
+<span id="cb59-5"><a href="#cb59-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_abline</span>(<span class="at">slope =</span> <span class="dv">1</span>, <span class="at">intercept =</span> <span class="dv">0</span>, <span class="at">color =</span> <span class="st">"red"</span>) <span class="sc">+</span></span>
+<span id="cb59-6"><a href="#cb59-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">coord_obs_pred</span>()</span>
+<span id="cb59-7"><a href="#cb59-7" aria-hidden="true" tabindex="-1"></a>g_1 <span class="sc">+</span> g_2</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="06-redes-neuronales-1_files/figure-html/unnamed-chunk-53-1.png" class="img-fluid" width="480"></p>
+</div>
+</div>
+</section>
+<section id="resumen" class="level3 unnumbered">
+<h3 class="unnumbered anchored" data-anchor-id="resumen">Resumen</h3>
+<p><strong>Ejercicio</strong>: En nuestra referencia <em>The Deep Learning Book</em>, puedes revisar la sección 11.4.1 (afinación manual) y 11.4.2 (afinación por búsqueda automática). Explica qué efecto tienen sobre sesgo y sobreajuste los siguientes parámetros:</p>
+<ul>
+<li>Número de capas</li>
+<li>Número de unidades por capa oculta</li>
+<li>Regularización L2 de los pesos</li>
+<li>Tasa de aprendizaje (ojo, este parámetro es especial)</li>
+</ul>
+<p>En la parte 2 de redes neuronales veremos más estrategias de regularización, y cómo agregar estructura a redes adaptada a problemas particulares. Notamos para por el momento que las redes neuronales con solamente capas conexas no han sido particularmente exitosas para ningún problema particular. Típicamente requieren una gran cantidad de datos y entrenarlas es más difícil que otros métodos. Sin embargo, la historia es diferente cuando escogemos adecuadamente la arquitectura de la red para un problema dado, es decir, qué unidades están conectadas y bajo qué patrones. En estos casos, las conexiones pueden ser relativamente pocas comparadas con redes totalmente conexas con el mismo tamaño de unidades, y si la estructura es correcta, no incurrimos en mucho sesgo. Ejemplos son procesamiento de imágenes, audio, o lenguaje natural.</p>
 
 
+</section>
 </section>
 
 </main> <!-- /main -->
