@@ -65,7 +65,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="site_libs/quarto-search/quarto-search.js"></script>
 <meta name="quarto:offset" content="./">
 <link href="./82-apendice-descenso-estocastico.html" rel="next">
-<link href="./06-redes-neuronales-1.html" rel="prev">
+<link href="./07-intervalos-predictivos.html" rel="prev">
 <script src="site_libs/quarto-html/quarto.js"></script>
 <script src="site_libs/quarto-html/popper.min.js"></script>
 <script src="site_libs/quarto-html/tippy.umd.min.js"></script>
@@ -174,6 +174,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <div class="sidebar-item-container"> 
   <a href="./06-redes-neuronales-1.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Redes neuronales (intro)</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./07-intervalos-predictivos.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Incertidumbre en las predicciones</span></span></a>
   </div>
 </li>
         <li class="sidebar-item sidebar-item-section">
@@ -564,12 +570,12 @@ Gradiente para regresión lineal
 <div class="cell-output cell-output-stdout">
 <pre><code>[[1]]
             [,1]
-[1,] 0.007331367
-[2,] 0.016437238
-[3,] 0.004633876
+[1,] 0.007331368
+[2,] 0.016437240
+[3,] 0.004633875
 
 [[2]]
-[1] 0.003028648</code></pre>
+[1] 0.003028649</code></pre>
 </div>
 </div>
 <p>La implementación oficial de R es <em>lm</em>, que en general tiene buen desempeño para datos que caben en memoria:</p>
@@ -763,11 +769,11 @@ Cuando normalizamos antes de ajustar el modelo, las predicciones deben hacerse c
 <pre><code>[[1]]
              [,1]
 [1,] 0.0079817399
-[2,] 0.0019486141
-[3,] 0.0005532746
+[2,] 0.0019486140
+[3,] 0.0005532745
 
 [[2]]
-[1] 0.0003491883</code></pre>
+[1] 0.0003491882</code></pre>
 </div>
 <div class="sourceCode cell-code" id="cb42"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="fu">coef</span>(<span class="fu">lm.fit</span>(<span class="fu">cbind</span>(<span class="dv">1</span>, x_ent), y_ent))</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
@@ -1016,8 +1022,8 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
 </script>
 <nav class="page-navigation">
   <div class="nav-page nav-page-previous">
-      <a href="./06-redes-neuronales-1.html" class="pagination-link">
-        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Redes neuronales (intro)</span></span>
+      <a href="./07-intervalos-predictivos.html" class="pagination-link">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Incertidumbre en las predicciones</span></span>
       </a>          
   </div>
   <div class="nav-page nav-page-next">
