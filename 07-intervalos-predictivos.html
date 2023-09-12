@@ -228,13 +228,20 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
    
   <ul>
   <li><a href="#inferencia-predictiva-conforme" id="toc-inferencia-predictiva-conforme" class="nav-link active" data-scroll-target="#inferencia-predictiva-conforme"><span class="header-section-number">7.1</span> Inferencia predictiva conforme</a></li>
-  <li><a href="#ejemplo-bodyfat" id="toc-ejemplo-bodyfat" class="nav-link" data-scroll-target="#ejemplo-bodyfat"><span class="header-section-number">7.2</span> Ejemplo: bodyfat</a></li>
+  <li><a href="#ejemplo-bodyfat" id="toc-ejemplo-bodyfat" class="nav-link" data-scroll-target="#ejemplo-bodyfat"><span class="header-section-number">7.2</span> Ejemplo: bodyfat</a>
+  <ul class="collapse">
+  <li><a href="#predicción-conforme-con-tidymodels-opcional" id="toc-predicción-conforme-con-tidymodels-opcional" class="nav-link" data-scroll-target="#predicción-conforme-con-tidymodels-opcional">Predicción conforme con tidymodels (opcional)</a></li>
+  </ul></li>
   <li><a href="#cobertura-local-para-intervalos-conformes" id="toc-cobertura-local-para-intervalos-conformes" class="nav-link" data-scroll-target="#cobertura-local-para-intervalos-conformes"><span class="header-section-number">7.3</span> Cobertura local para intervalos conformes</a>
   <ul class="collapse">
   <li><a href="#ejemplo-fallas-en-cobertura-local" id="toc-ejemplo-fallas-en-cobertura-local" class="nav-link" data-scroll-target="#ejemplo-fallas-en-cobertura-local"><span class="header-section-number">7.3.1</span> Ejemplo: fallas en cobertura local</a></li>
   </ul></li>
   <li><a href="#ejemplo-otras-funciones-de-pérdida" id="toc-ejemplo-otras-funciones-de-pérdida" class="nav-link" data-scroll-target="#ejemplo-otras-funciones-de-pérdida"><span class="header-section-number">7.4</span> Ejemplo: otras funciones de pérdida</a></li>
   <li><a href="#resumen" id="toc-resumen" class="nav-link" data-scroll-target="#resumen"><span class="header-section-number">7.5</span> Resumen</a></li>
+  <li><a href="#regresión-cuantílica-conforme" id="toc-regresión-cuantílica-conforme" class="nav-link" data-scroll-target="#regresión-cuantílica-conforme"><span class="header-section-number">7.6</span> Regresión cuantílica conforme</a>
+  <ul class="collapse">
+  <li><a href="#ejemplo-regresión-cuantílica-conformalizada" id="toc-ejemplo-regresión-cuantílica-conformalizada" class="nav-link" data-scroll-target="#ejemplo-regresión-cuantílica-conformalizada"><span class="header-section-number">7.6.1</span> Ejemplo: regresión cuantílica conformalizada</a></li>
+  </ul></li>
   </ul>
 </nav>
     </div>
@@ -275,6 +282,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li>Nuestras predicciones van a usarse <em>downstream</em> para tomar una serie de decisiones que no conocemos de antemano, y en consecuencia la estructura de costos de un error es compleja y sólo parcialmente definida. Ninguna pérdida usual refleja correctamente el costo-beneficio de usar un modelo.</li>
 </ul>
 <p>Ejemplos del primero puede ser el de predicción de precios de casas: errores de 20% en el precio puede convertir una compra deseable en una que produce pérdidas grandes. En el segundo, un ejemplo es la estimación futura de compras de un cliente (asociado al valor presente de los clientes o usuarios): dependiendo de esta estimación puede ser que tomemos una serie de decisiones distintas acerca de productos, promociones, etc. (no definidos de antemano generalmente) para ofrecer que tienen consecuencias considerables. Otro ejemplo es predecir si en una tomografía hay evidencia de cáncer: aún cuando la probabilidad de que sea una imagen “normal” es alta (digamos 75%), una probablidad de 25% de que sea cancerígena debe ser considerada en decisiones posteriores.</p>
+<p>Otro ejemplo común es el de pronósticos de demanda, donde es importante dar más contexto que una sola predicción puntual: un intervalo de incertidumbre puede mostrar que en algunos casos es muy probable que el inventario se agote, pero en otros casos no. En ambos casos, costos y ganancias complementan esta información.</p>
 <div class="callout callout-style-default callout-note callout-titled">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
@@ -292,8 +300,8 @@ Nota
 <p>Una manera básica de cuantificar la incertidumbre es construir intervalos predictivos. En lugar de producir una predicción puntual <span class="math inline">\(\hat{f}(x)\)</span>, producimos dos valores <span class="math inline">\([\hat{q}_1(x), \hat{q}_2(x)]\)</span> donde es probable que caiga el valor observado <span class="math inline">\(y\)</span>. Por ejemplo, si construimos intervalos del 90%, quisiéramos entonces que se cumpla la garantía de cobertura siguiente: <span class="math display">\[P(\mathbf{y}\in [\hat{q}_1(\mathbf{x}), \hat{q}_2(\mathbf{x})]) = 0.90\]</span> donde la probabilidad es tomada sobre toda la población <span class="math inline">\((\mathbf{x}, \mathbf{y})\)</span> de interés. Por ejemplo, para el precio de una casa, en lugar de producir una sola predicción de 120 mil dólares, produciríamos un intervalo de 50 a 180 mil dólares. Eso nos pone en una situación considerablemente distinta que si el intervalo fuera de 110 a 130 mil dólares, por ejemplo para una decisión de una compañía de bienes raíces.</p>
 <section id="inferencia-predictiva-conforme" class="level2" data-number="7.1">
 <h2 data-number="7.1" class="anchored" data-anchor-id="inferencia-predictiva-conforme"><span class="header-section-number">7.1</span> Inferencia predictiva conforme</h2>
-<p>Tradicionalmente, este tipo de intervalos predictivos se construyen bajo argumentos teóricos en modelos relativamente simples con supuestos fuertes que hay que checar. En aprendizaje de máquina, donde utilizamos predictores mucho más complejos que modelos lineales, en dimensión alta y con mecanismos complejos de limpieza y selección de variables, es muy difícil seguir esta ruta tradicional.</p>
-<p>En lugar de eso, utilizaremos la idea fundamental de división de muestras (que en este caso a veces les llamamos entrenamiento-calibración) para producir intervalos con cobertura garantizada independientemente de si se cumplen o no ciertos supuestos teóricos. La idea es la siguiente:</p>
+<p>Tradicionalmente, este tipo de intervalos predictivos se construyen bajo argumentos teóricos en modelos relativamente simples con supuestos fuertes que hay que checar. En aprendizaje de máquina, donde utilizamos predictores mucho más complejos que modelos lineales, en dimensión alta y con mecanismos complejos de limpieza y selección de variables, es difícil seguir esta ruta tradicional.</p>
+<p>En lugar de eso, utilizaremos la idea fundamental de división de muestras (que en este caso a veces les llamamos entrenamiento-calibración, en lugar de entrenamiento-validación) para producir intervalos con cobertura garantizada independientemente de si se cumplen o no ciertos supuestos teóricos. La idea es la siguiente:</p>
 <div class="callout callout-style-default callout-note callout-titled">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
@@ -307,7 +315,7 @@ Nota
 <p><strong>Intervalos predictivos conformes</strong>.</p>
 <p>Suponiendo que los datos se extraen de forma independiente de una misma población,</p>
 <ol type="1">
-<li>Construimos con una muestra de entrenamiento <span class="math inline">\((x_i, y_i)\)</span> nuestro predictor <span class="math inline">\(\hat{f}(x)\)</span>.</li>
+<li>Construimos con una muestra de entrenamiento <span class="math inline">\((x_i, y_i)\)</span> nuestro predictor <span class="math inline">\(\hat{f}(x)\)</span> (usando cualquier método).</li>
 <li>Usamos una muestra de calibración separada para evaluar el error promedio, y adicionalmente, calculamos los residuales <span class="math inline">\(\mathbf{r}_i = |\mathbf{y}_i - \hat{f}(\mathbf{x}_i)|\)</span></li>
 <li>Si queremos intervalos del 90%, calculamos ahora <span class="math inline">\(q\)</span>, que es el cuantil 90% de los valores <span class="math inline">\(\mathbf{r}_i\)</span></li>
 <li>Para un nuevo valor de las entradas <span class="math inline">\(\mathbf{x}\)</span>, nuestro intervalo es <span class="math display">\[[\hat{f}(\mathbf{x}) - d, \hat{f}(\mathbf{x}) + d]\]</span></li>
@@ -344,21 +352,21 @@ Nota
 <span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a><span class="co"># ajuste</span></span>
 <span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>flujo_2 <span class="ot">&lt;-</span> flujo_2 <span class="sc">|&gt;</span> <span class="fu">fit</span>(grasa_ent)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>Ahora, sobre la muestra de prueba (calibración) evaluamos el error y calculamos residuales y su distribución:</p>
+<p>Ahora, sobre la muestra de calibración evaluamos el error y calculamos residuales y su distribución:</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>preds_gc_tbl <span class="ot">&lt;-</span> <span class="fu">predict</span>(flujo_2, grasa_cal) <span class="sc">|&gt;</span> </span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">bind_cols</span>(grasa_cal) <span class="sc">|&gt;</span> </span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">residual =</span> <span class="fu">abs</span>(grasacorp <span class="sc">-</span> .pred))</span>
 <span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="co"># obtener cuantil</span></span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>q_gc <span class="ot">&lt;-</span> <span class="fu">quantile</span>(preds_gc_tbl <span class="sc">|&gt;</span> <span class="fu">pull</span>(residual), </span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>cuantiles_res <span class="ot">&lt;-</span> <span class="fu">quantile</span>(preds_gc_tbl <span class="sc">|&gt;</span> <span class="fu">pull</span>(residual), </span>
 <span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>                 <span class="at">probs =</span> <span class="fu">c</span>(<span class="fl">0.90</span>))</span>
 <span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(preds_gc_tbl, <span class="fu">aes</span>(<span class="at">x =</span> residual)) <span class="sc">+</span></span>
 <span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_histogram</span>(<span class="at">binwidth =</span> <span class="fl">0.75</span>) <span class="sc">+</span> </span>
-<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_vline</span>(<span class="at">xintercept =</span> q_gc, <span class="at">colour =</span> <span class="st">"red"</span>)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_vline</span>(<span class="at">xintercept =</span> cuantiles_res, <span class="at">colour =</span> <span class="st">"red"</span>)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <p><img src="07-intervalos-predictivos_files/figure-html/unnamed-chunk-3-1.png" class="img-fluid" width="384"></p>
 </div>
-<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>q_gc <span class="sc">|&gt;</span> <span class="fu">round</span>(<span class="dv">2</span>)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>cuantiles_res <span class="sc">|&gt;</span> <span class="fu">round</span>(<span class="dv">2</span>)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code> 90% 
 7.26 </code></pre>
@@ -367,7 +375,7 @@ Nota
 <p>Una gráfica útil es la de predicciones en el eje horizontal contra intervalos y valores observados en el eje <span class="math inline">\(y\)</span>:</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>preds_gc_tbl <span class="ot">&lt;-</span> preds_gc_tbl <span class="sc">|&gt;</span> </span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">inf =</span> .pred <span class="sc">-</span>  q_gc, <span class="at">sup =</span> .pred <span class="sc">+</span> q_gc)</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">inf =</span> .pred <span class="sc">-</span>  cuantiles_res, <span class="at">sup =</span> .pred <span class="sc">+</span> cuantiles_res)</span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(preds_gc_tbl, <span class="fu">aes</span>(<span class="at">x =</span> .pred, <span class="at">ymin =</span> inf, <span class="at">ymax =</span> sup, <span class="at">y =</span> grasacorp)) <span class="sc">+</span></span>
 <span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_abline</span>() <span class="sc">+</span></span>
 <span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">colour =</span> <span class="st">"red"</span>) <span class="sc">+</span></span>
@@ -862,8 +870,7 @@ Nota
 </div>
 </div>
 </div>
-<p>Adicionalmente, podemos también ver cobertura con respecto a alguna variable de interés, por ejemplo, la medida de abdomen:</p>
-<p>Y finalmente, podemos hacer distintas verificaciones para ver cómo se comportan los intervalos:</p>
+<p>Adicionalmente, podemos también ver cobertura con respecto a alguna variable de interés, por ejemplo, la edad:</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(preds_gc_tbl, <span class="fu">aes</span>(<span class="at">x =</span> edad, <span class="at">ymin =</span> inf, <span class="at">ymax =</span> sup, <span class="at">y =</span> grasacorp)) <span class="sc">+</span></span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_linerange</span>(<span class="at">position =</span> <span class="fu">position_dodge2</span>(<span class="at">width =</span> <span class="fl">0.5</span>)) <span class="sc">+</span></span>
@@ -872,10 +879,51 @@ Nota
 <p><img src="07-intervalos-predictivos_files/figure-html/unnamed-chunk-6-1.png" class="img-fluid" width="384"></p>
 </div>
 </div>
+<section id="predicción-conforme-con-tidymodels-opcional" class="level3 unnumbered">
+<h3 class="unnumbered anchored" data-anchor-id="predicción-conforme-con-tidymodels-opcional">Predicción conforme con tidymodels (opcional)</h3>
+<p>Lo que acabamos de hacer arriba se puede hacer como siguen en <em>tidymodels</em>:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(probably)</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="co"># modelo ajustado y conjunto de datos de calibraci´{on:</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>conformal_int <span class="ot">&lt;-</span> <span class="fu">int_conformal_split</span>(flujo_2, grasa_cal)</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>conformal_int</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Split Conformal inference
+preprocessor: recipe 
+model: linear_reg (engine = glmnet) 
+calibration set size: 126 
+
+Use `predict(object, new_data, level)` to compute prediction intervals</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>preds_int_tbl <span class="ot">&lt;-</span> </span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">predict</span>(conformal_int, grasa_cal, <span class="at">level =</span> <span class="fl">0.90</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">bind_cols</span>(grasa_cal)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(preds_int_tbl, <span class="fu">aes</span>(<span class="at">x =</span> edad, </span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>    <span class="at">ymin =</span> .pred_lower, <span class="at">ymax =</span> .pred_upper, <span class="at">y =</span> grasacorp)) <span class="sc">+</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_linerange</span>(<span class="at">position =</span> <span class="fu">position_dodge2</span>(<span class="at">width =</span> <span class="fl">0.5</span>)) <span class="sc">+</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">colour =</span> <span class="st">"red"</span>, <span class="at">position =</span> <span class="fu">position_dodge2</span>(<span class="at">width =</span> <span class="fl">0.5</span>)) </span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="07-intervalos-predictivos_files/figure-html/unnamed-chunk-9-1.png" class="img-fluid" width="384"></p>
+</div>
+</div>
+<p>::: # División de datos para split-conformal</p>
+<p>La mejor manera de construir y checar intervalos es dividiendo como sigue:</p>
+<ol type="1">
+<li>Un conjunto de entrenamiento para ajustar el modelo.</li>
+<li>Un conjunto de calibración. con el que se construyen los intervalos para predicciones futuras,</li>
+<li>Un conjunto de prueba para checar cobertura de intervalos.</li>
+</ol>
+<p>:::</p>
+<p>Construir intervalos y checar su cobertura entonces requiere usualmente más datos comparado con el caso donde sólo producimos estimaciones puntuales. Más adelante veremos como podemos ahorrar en 2) utilizando validación cruzada (ver https://www.tidymodels.org/learn/models/conformal-regression/).</p>
+</section>
 </section>
 <section id="cobertura-local-para-intervalos-conformes" class="level2" data-number="7.3">
 <h2 data-number="7.3" class="anchored" data-anchor-id="cobertura-local-para-intervalos-conformes"><span class="header-section-number">7.3</span> Cobertura local para intervalos conformes</h2>
-<p>La cobertura es confiable y robusta, sin embargo, se requieren algunos elementos adicionales para que los intervalos sean más útiles. Quisiéramos también que la cobertura local alrededor de cualquier región del las <span class="math inline">\(x\)</span>’s sea cercana al 90% (cobertura condicional). Esto es más dificíl de alcanzar. Un chequeo básico que podemos hacer es el siguiente:</p>
+<p>La cobertura promeido es confiable y robusta, sin embargo, se requieren algunos elementos adicionales para que los intervalos sean más útiles. Quisiéramos también que la cobertura local alrededor de cualquier región del las <span class="math inline">\(x\)</span>’s sea cercana al 90% (cobertura condicional). Esto es más dificíl de alcanzar. Un chequeo básico que podemos hacer es el siguiente:</p>
 <ul>
 <li>Para cada nivel de predicción <span class="math inline">\(\hat{y} = \hat{f}(x)\)</span>, los intervalos tienen cobertura de 90%. Como esto sólo involucra las predicciones, los valores observados, y los intervalos predictivos, esto puede checarse en la práctica con una tabla o gráfica.</li>
 </ul>
@@ -885,99 +933,99 @@ Nota
 <h3 data-number="7.3.1" class="anchored" data-anchor-id="ejemplo-fallas-en-cobertura-local"><span class="header-section-number">7.3.1</span> Ejemplo: fallas en cobertura local</h3>
 <p>Revisamos nuestro ejemplo de rendimiento de coches:</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidymodels)</span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(gt)</span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>auto <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="st">"../datos/auto.csv"</span>)</span>
-<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>datos <span class="ot">&lt;-</span> auto[, <span class="fu">c</span>(<span class="st">'name'</span>, <span class="st">'weight'</span>,<span class="st">'year'</span>, <span class="st">'mpg'</span>, <span class="st">'displacement'</span>)]</span>
-<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>datos <span class="ot">&lt;-</span> datos <span class="sc">%&gt;%</span> <span class="fu">mutate</span>(</span>
-<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">peso_kg =</span> weight <span class="sc">*</span> <span class="fl">0.45359237</span>,</span>
-<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">rendimiento_kpl =</span> mpg <span class="sc">*</span> (<span class="fl">1.609344</span> <span class="sc">/</span> <span class="fl">3.78541178</span>), </span>
-<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>  año <span class="ot">=</span> year)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidymodels)</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(gt)</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>auto <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="st">"../datos/auto.csv"</span>)</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>datos_auto <span class="ot">&lt;-</span> auto[, <span class="fu">c</span>(<span class="st">'name'</span>, <span class="st">'weight'</span>,<span class="st">'year'</span>, <span class="st">'mpg'</span>, <span class="st">'displacement'</span>)]</span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>datos_auto <span class="ot">&lt;-</span> datos_auto <span class="sc">|&gt;</span> <span class="fu">mutate</span>(</span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">peso_kg =</span> weight <span class="sc">*</span> <span class="fl">0.45359237</span>,</span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">rendimiento_kpl =</span> mpg <span class="sc">*</span> (<span class="fl">1.609344</span> <span class="sc">/</span> <span class="fl">3.78541178</span>), </span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>  año <span class="ot">=</span> year)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Vamos a separa en muestra de entrenamiento y de prueba estos datos. Podemos hacerlo como sigue (75% para entrenamiento aproximadamente en este caso, así obtenemos alrededor de 100 casos para prueba):</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">121</span>)</span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>datos_split <span class="ot">&lt;-</span> <span class="fu">initial_split</span>(datos, <span class="at">prop =</span> <span class="fl">0.3</span>)</span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>datos_entrena <span class="ot">&lt;-</span> <span class="fu">training</span>(datos_split)</span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>datos_prueba <span class="ot">&lt;-</span> <span class="fu">testing</span>(datos_split)</span>
-<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="co"># preprocesamiento y flujo</span></span>
-<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>receta_lineal <span class="ot">&lt;-</span> <span class="fu">recipe</span>(rendimiento_kpl <span class="sc">~</span> peso_kg <span class="sc">+</span> año, datos_entrena) <span class="sc">|&gt;</span> </span>
-<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_ns</span>(peso_kg, <span class="at">deg_free =</span> <span class="dv">3</span>) <span class="sc">|&gt;</span> </span>
-<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_ns</span>(año, <span class="at">deg_free =</span> <span class="dv">2</span>)</span>
-<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>mod_lineal <span class="ot">&lt;-</span> <span class="fu">linear_reg</span>() <span class="sc">|&gt;</span>  </span>
-<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_engine</span>(<span class="st">"lm"</span>)  </span>
-<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>flujo <span class="ot">&lt;-</span> <span class="fu">workflow</span>() <span class="sc">|&gt;</span>  </span>
-<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add_recipe</span>(receta_lineal) <span class="sc">|&gt;</span> </span>
-<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add_model</span>(mod_lineal)</span>
-<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>flujo_ajustado <span class="ot">&lt;-</span> <span class="fu">fit</span>(flujo, datos_entrena)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">121</span>)</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>datos_split <span class="ot">&lt;-</span> <span class="fu">initial_split</span>(datos_auto, <span class="at">prop =</span> <span class="fl">0.3</span>)</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>datos_entrena <span class="ot">&lt;-</span> <span class="fu">training</span>(datos_split)</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>datos_prueba <span class="ot">&lt;-</span> <span class="fu">testing</span>(datos_split)</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a><span class="co"># preprocesamiento y flujo</span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>receta_lineal <span class="ot">&lt;-</span> <span class="fu">recipe</span>(rendimiento_kpl <span class="sc">~</span> peso_kg <span class="sc">+</span> año, datos_entrena) <span class="sc">|&gt;</span></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_ns</span>(peso_kg, <span class="at">deg_free =</span> <span class="dv">3</span>) </span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>mod_lineal <span class="ot">&lt;-</span> <span class="fu">linear_reg</span>() <span class="sc">|&gt;</span>  </span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_engine</span>(<span class="st">"lm"</span>)  </span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>flujo <span class="ot">&lt;-</span> <span class="fu">workflow</span>() <span class="sc">|&gt;</span>  </span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add_recipe</span>(receta_lineal) <span class="sc">|&gt;</span> </span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add_model</span>(mod_lineal)</span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a>flujo_ajustado_auto <span class="ot">&lt;-</span> <span class="fu">fit</span>(flujo, datos_entrena)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Una vez que tenemos el flujo ajustado, podemos ver cómo se comportan los residuales:</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>preds_tbl <span class="ot">&lt;-</span> <span class="fu">predict</span>(flujo_ajustado, datos_prueba) <span class="sc">|&gt;</span> </span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">bind_cols</span>(datos_prueba) <span class="sc">|&gt;</span> </span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">r =</span> <span class="fu">abs</span>(rendimiento_kpl <span class="sc">-</span> .pred))</span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(preds_tbl, <span class="fu">aes</span>(<span class="at">x =</span> r)) <span class="sc">+</span> <span class="fu">geom_histogram</span>()</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>preds_tbl <span class="ot">&lt;-</span> <span class="fu">predict</span>(flujo_ajustado_auto, datos_prueba) <span class="sc">|&gt;</span> </span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">bind_cols</span>(datos_prueba) <span class="sc">|&gt;</span> </span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">r =</span> <span class="fu">abs</span>(rendimiento_kpl <span class="sc">-</span> .pred))</span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(preds_tbl, <span class="fu">aes</span>(<span class="at">x =</span> r)) <span class="sc">+</span> <span class="fu">geom_histogram</span>()</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
 <pre><code>`stat_bin()` using `bins = 30`. Pick better value with `binwidth`.</code></pre>
 </div>
 <div class="cell-output-display">
-<p><img src="07-intervalos-predictivos_files/figure-html/unnamed-chunk-9-1.png" class="img-fluid" width="384"></p>
-</div>
-</div>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>q <span class="ot">&lt;-</span> <span class="fu">quantile</span>(preds_tbl <span class="sc">|&gt;</span> <span class="fu">pull</span>(r), <span class="at">probs =</span> <span class="fu">c</span>(<span class="fl">0.90</span>)) <span class="sc">|&gt;</span> </span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">round</span>(<span class="dv">2</span>)</span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>q</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code> 90% 
-1.77 </code></pre>
-</div>
-</div>
-<p>Podemos ahora construir intervalos de 90% para nuestras predicciones de la siguiente forma:</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>preds_tbl <span class="ot">&lt;-</span> preds_tbl <span class="sc">|&gt;</span> </span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">inf =</span> .pred <span class="sc">-</span> q, </span>
-<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>         <span class="at">sup =</span> .pred <span class="sc">+</span> q)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<p>Por definición, estos intervalos tienen cobertura promedio sobre nuevos datos de aproximadamente el 90%. Sin embargo, la cobertura puede nos ser uniforme en distintas regiones de las entradas. Como sugerimos arriba, podemos checar primero la respuesta en función de la predicción:</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(preds_tbl, <span class="fu">aes</span>(<span class="at">x =</span> .pred, <span class="at">y =</span> rendimiento_kpl, <span class="at">ymin =</span> inf, <span class="at">ymax =</span> sup)) <span class="sc">+</span></span>
-<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_linerange</span>() <span class="sc">+</span></span>
-<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">colour =</span> <span class="st">"red"</span>) <span class="sc">+</span> <span class="fu">coord_obs_pred</span>()</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output-display">
 <p><img src="07-intervalos-predictivos_files/figure-html/unnamed-chunk-12-1.png" class="img-fluid" width="384"></p>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>q <span class="ot">&lt;-</span> <span class="fu">quantile</span>(preds_tbl <span class="sc">|&gt;</span> <span class="fu">pull</span>(r), <span class="at">probs =</span> <span class="fu">c</span>(<span class="fl">0.80</span>)) <span class="sc">|&gt;</span> </span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">round</span>(<span class="dv">2</span>)</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>q</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> 80% 
+1.46 </code></pre>
+</div>
+</div>
+<p>Podemos ahora construir intervalos de 80% para nuestras predicciones de la siguiente forma:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>preds_tbl <span class="ot">&lt;-</span> preds_tbl <span class="sc">|&gt;</span> </span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">inf =</span> .pred <span class="sc">-</span> q, </span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>         <span class="at">sup =</span> .pred <span class="sc">+</span> q)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Por definición, estos intervalos tienen cobertura promedio sobre nuevos datos de aproximadamente el 80%. Sin embargo, la cobertura puede nos ser uniforme en distintas regiones de las entradas. Como sugerimos arriba, podemos checar primero la respuesta en función de la predicción:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(preds_tbl, <span class="fu">aes</span>(<span class="at">x =</span> .pred, <span class="at">y =</span> rendimiento_kpl, <span class="at">ymin =</span> inf, <span class="at">ymax =</span> sup)) <span class="sc">+</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_linerange</span>() <span class="sc">+</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">colour =</span> <span class="st">"red"</span>) <span class="sc">+</span> <span class="fu">coord_obs_pred</span>() <span class="sc">+</span></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">subtitle =</span> <span class="st">"Fallas en cobertura condicional"</span>)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="07-intervalos-predictivos_files/figure-html/unnamed-chunk-15-1.png" class="img-fluid" width="384"></p>
 </div>
 </div>
 <p>También podemos verificar con una tabla que la cobertura no es uniforme:</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>n_grupos <span class="ot">&lt;-</span> <span class="dv">6</span> <span class="co"># podemos usar más grupos si tenemos más datos</span></span>
-<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>preds_tbl <span class="sc">|&gt;</span> </span>
-<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename</span>(<span class="at">y =</span> rendimiento_kpl) <span class="sc">|&gt;</span> </span>
-<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">grupo_pred =</span> <span class="fu">cut_number</span>(.pred, <span class="at">n =</span> n_grupos)) <span class="sc">|&gt;</span> </span>
-<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(grupo_pred) <span class="sc">|&gt;</span> </span>
-<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">n =</span> <span class="fu">n</span>(), <span class="at">cobertura =</span> <span class="fu">mean</span>(y <span class="sc">&gt;=</span> inf <span class="sc">&amp;</span> y <span class="sc">&lt;=</span> sup)) <span class="sc">|&gt;</span></span>
-<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">error_e =</span> <span class="dv">2</span> <span class="sc">*</span> <span class="fu">sqrt</span>(cobertura <span class="sc">*</span> (<span class="dv">1</span><span class="sc">-</span> cobertura) <span class="sc">/</span> n)) <span class="sc">|&gt;</span> </span>
-<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">gt</span>() <span class="sc">|&gt;</span> <span class="fu">fmt_number</span>(<span class="fu">where</span>(is_double), <span class="at">decimals =</span> <span class="dv">2</span>)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>n_grupos <span class="ot">&lt;-</span> <span class="dv">6</span> <span class="co"># podemos usar más grupos si tenemos más datos</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>preds_tbl <span class="sc">|&gt;</span> </span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename</span>(<span class="at">y =</span> rendimiento_kpl) <span class="sc">|&gt;</span> </span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">grupo_pred =</span> <span class="fu">cut_number</span>(.pred, <span class="at">n =</span> n_grupos)) <span class="sc">|&gt;</span> </span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(grupo_pred) <span class="sc">|&gt;</span> </span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">n =</span> <span class="fu">n</span>(), <span class="at">cobertura =</span> <span class="fu">mean</span>(y <span class="sc">&gt;=</span> inf <span class="sc">&amp;</span> y <span class="sc">&lt;=</span> sup)) <span class="sc">|&gt;</span></span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">error_e =</span> <span class="dv">2</span> <span class="sc">*</span> <span class="fu">sqrt</span>(cobertura <span class="sc">*</span> (<span class="dv">1</span><span class="sc">-</span> cobertura) <span class="sc">/</span> n)) <span class="sc">|&gt;</span> </span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">gt</span>() <span class="sc">|&gt;</span> <span class="fu">fmt_number</span>(<span class="fu">where</span>(is_double), <span class="at">decimals =</span> <span class="dv">2</span>)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 
-<div id="pkxltknjqi" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
-<style>#pkxltknjqi table {
+<div id="vfirpkxltk" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<style>#vfirpkxltk table {
   font-family: system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-#pkxltknjqi thead, #pkxltknjqi tbody, #pkxltknjqi tfoot, #pkxltknjqi tr, #pkxltknjqi td, #pkxltknjqi th {
+#vfirpkxltk thead, #vfirpkxltk tbody, #vfirpkxltk tfoot, #vfirpkxltk tr, #vfirpkxltk td, #vfirpkxltk th {
   border-style: none;
 }
 
-#pkxltknjqi p {
+#vfirpkxltk p {
   margin: 0;
   padding: 0;
 }
 
-#pkxltknjqi .gt_table {
+#vfirpkxltk .gt_table {
   display: table;
   border-collapse: collapse;
   line-height: normal;
@@ -1003,12 +1051,12 @@ Nota
   border-left-color: #D3D3D3;
 }
 
-#pkxltknjqi .gt_caption {
+#vfirpkxltk .gt_caption {
   padding-top: 4px;
   padding-bottom: 4px;
 }
 
-#pkxltknjqi .gt_title {
+#vfirpkxltk .gt_title {
   color: #333333;
   font-size: 125%;
   font-weight: initial;
@@ -1020,7 +1068,7 @@ Nota
   border-bottom-width: 0;
 }
 
-#pkxltknjqi .gt_subtitle {
+#vfirpkxltk .gt_subtitle {
   color: #333333;
   font-size: 85%;
   font-weight: initial;
@@ -1032,7 +1080,7 @@ Nota
   border-top-width: 0;
 }
 
-#pkxltknjqi .gt_heading {
+#vfirpkxltk .gt_heading {
   background-color: #FFFFFF;
   text-align: center;
   border-bottom-color: #FFFFFF;
@@ -1044,13 +1092,13 @@ Nota
   border-right-color: #D3D3D3;
 }
 
-#pkxltknjqi .gt_bottom_border {
+#vfirpkxltk .gt_bottom_border {
   border-bottom-style: solid;
   border-bottom-width: 2px;
   border-bottom-color: #D3D3D3;
 }
 
-#pkxltknjqi .gt_col_headings {
+#vfirpkxltk .gt_col_headings {
   border-top-style: solid;
   border-top-width: 2px;
   border-top-color: #D3D3D3;
@@ -1065,7 +1113,7 @@ Nota
   border-right-color: #D3D3D3;
 }
 
-#pkxltknjqi .gt_col_heading {
+#vfirpkxltk .gt_col_heading {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -1085,7 +1133,7 @@ Nota
   overflow-x: hidden;
 }
 
-#pkxltknjqi .gt_column_spanner_outer {
+#vfirpkxltk .gt_column_spanner_outer {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -1097,15 +1145,15 @@ Nota
   padding-right: 4px;
 }
 
-#pkxltknjqi .gt_column_spanner_outer:first-child {
+#vfirpkxltk .gt_column_spanner_outer:first-child {
   padding-left: 0;
 }
 
-#pkxltknjqi .gt_column_spanner_outer:last-child {
+#vfirpkxltk .gt_column_spanner_outer:last-child {
   padding-right: 0;
 }
 
-#pkxltknjqi .gt_column_spanner {
+#vfirpkxltk .gt_column_spanner {
   border-bottom-style: solid;
   border-bottom-width: 2px;
   border-bottom-color: #D3D3D3;
@@ -1117,11 +1165,11 @@ Nota
   width: 100%;
 }
 
-#pkxltknjqi .gt_spanner_row {
+#vfirpkxltk .gt_spanner_row {
   border-bottom-style: hidden;
 }
 
-#pkxltknjqi .gt_group_heading {
+#vfirpkxltk .gt_group_heading {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -1147,7 +1195,7 @@ Nota
   text-align: left;
 }
 
-#pkxltknjqi .gt_empty_group_heading {
+#vfirpkxltk .gt_empty_group_heading {
   padding: 0.5px;
   color: #333333;
   background-color: #FFFFFF;
@@ -1162,15 +1210,15 @@ Nota
   vertical-align: middle;
 }
 
-#pkxltknjqi .gt_from_md > :first-child {
+#vfirpkxltk .gt_from_md > :first-child {
   margin-top: 0;
 }
 
-#pkxltknjqi .gt_from_md > :last-child {
+#vfirpkxltk .gt_from_md > :last-child {
   margin-bottom: 0;
 }
 
-#pkxltknjqi .gt_row {
+#vfirpkxltk .gt_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -1189,7 +1237,7 @@ Nota
   overflow-x: hidden;
 }
 
-#pkxltknjqi .gt_stub {
+#vfirpkxltk .gt_stub {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -1202,7 +1250,7 @@ Nota
   padding-right: 5px;
 }
 
-#pkxltknjqi .gt_stub_row_group {
+#vfirpkxltk .gt_stub_row_group {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -1216,15 +1264,15 @@ Nota
   vertical-align: top;
 }
 
-#pkxltknjqi .gt_row_group_first td {
+#vfirpkxltk .gt_row_group_first td {
   border-top-width: 2px;
 }
 
-#pkxltknjqi .gt_row_group_first th {
+#vfirpkxltk .gt_row_group_first th {
   border-top-width: 2px;
 }
 
-#pkxltknjqi .gt_summary_row {
+#vfirpkxltk .gt_summary_row {
   color: #333333;
   background-color: #FFFFFF;
   text-transform: inherit;
@@ -1234,16 +1282,16 @@ Nota
   padding-right: 5px;
 }
 
-#pkxltknjqi .gt_first_summary_row {
+#vfirpkxltk .gt_first_summary_row {
   border-top-style: solid;
   border-top-color: #D3D3D3;
 }
 
-#pkxltknjqi .gt_first_summary_row.thick {
+#vfirpkxltk .gt_first_summary_row.thick {
   border-top-width: 2px;
 }
 
-#pkxltknjqi .gt_last_summary_row {
+#vfirpkxltk .gt_last_summary_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -1253,7 +1301,7 @@ Nota
   border-bottom-color: #D3D3D3;
 }
 
-#pkxltknjqi .gt_grand_summary_row {
+#vfirpkxltk .gt_grand_summary_row {
   color: #333333;
   background-color: #FFFFFF;
   text-transform: inherit;
@@ -1263,7 +1311,7 @@ Nota
   padding-right: 5px;
 }
 
-#pkxltknjqi .gt_first_grand_summary_row {
+#vfirpkxltk .gt_first_grand_summary_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -1273,7 +1321,7 @@ Nota
   border-top-color: #D3D3D3;
 }
 
-#pkxltknjqi .gt_last_grand_summary_row_top {
+#vfirpkxltk .gt_last_grand_summary_row_top {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -1283,11 +1331,11 @@ Nota
   border-bottom-color: #D3D3D3;
 }
 
-#pkxltknjqi .gt_striped {
+#vfirpkxltk .gt_striped {
   background-color: rgba(128, 128, 128, 0.05);
 }
 
-#pkxltknjqi .gt_table_body {
+#vfirpkxltk .gt_table_body {
   border-top-style: solid;
   border-top-width: 2px;
   border-top-color: #D3D3D3;
@@ -1296,7 +1344,7 @@ Nota
   border-bottom-color: #D3D3D3;
 }
 
-#pkxltknjqi .gt_footnotes {
+#vfirpkxltk .gt_footnotes {
   color: #333333;
   background-color: #FFFFFF;
   border-bottom-style: none;
@@ -1310,7 +1358,7 @@ Nota
   border-right-color: #D3D3D3;
 }
 
-#pkxltknjqi .gt_footnote {
+#vfirpkxltk .gt_footnote {
   margin: 0px;
   font-size: 90%;
   padding-top: 4px;
@@ -1319,7 +1367,7 @@ Nota
   padding-right: 5px;
 }
 
-#pkxltknjqi .gt_sourcenotes {
+#vfirpkxltk .gt_sourcenotes {
   color: #333333;
   background-color: #FFFFFF;
   border-bottom-style: none;
@@ -1333,7 +1381,7 @@ Nota
   border-right-color: #D3D3D3;
 }
 
-#pkxltknjqi .gt_sourcenote {
+#vfirpkxltk .gt_sourcenote {
   font-size: 90%;
   padding-top: 4px;
   padding-bottom: 4px;
@@ -1341,63 +1389,63 @@ Nota
   padding-right: 5px;
 }
 
-#pkxltknjqi .gt_left {
+#vfirpkxltk .gt_left {
   text-align: left;
 }
 
-#pkxltknjqi .gt_center {
+#vfirpkxltk .gt_center {
   text-align: center;
 }
 
-#pkxltknjqi .gt_right {
+#vfirpkxltk .gt_right {
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
 
-#pkxltknjqi .gt_font_normal {
+#vfirpkxltk .gt_font_normal {
   font-weight: normal;
 }
 
-#pkxltknjqi .gt_font_bold {
+#vfirpkxltk .gt_font_bold {
   font-weight: bold;
 }
 
-#pkxltknjqi .gt_font_italic {
+#vfirpkxltk .gt_font_italic {
   font-style: italic;
 }
 
-#pkxltknjqi .gt_super {
+#vfirpkxltk .gt_super {
   font-size: 65%;
 }
 
-#pkxltknjqi .gt_footnote_marks {
+#vfirpkxltk .gt_footnote_marks {
   font-size: 75%;
   vertical-align: 0.4em;
   position: initial;
 }
 
-#pkxltknjqi .gt_asterisk {
+#vfirpkxltk .gt_asterisk {
   font-size: 100%;
   vertical-align: 0;
 }
 
-#pkxltknjqi .gt_indent_1 {
+#vfirpkxltk .gt_indent_1 {
   text-indent: 5px;
 }
 
-#pkxltknjqi .gt_indent_2 {
+#vfirpkxltk .gt_indent_2 {
   text-indent: 10px;
 }
 
-#pkxltknjqi .gt_indent_3 {
+#vfirpkxltk .gt_indent_3 {
   text-indent: 15px;
 }
 
-#pkxltknjqi .gt_indent_4 {
+#vfirpkxltk .gt_indent_4 {
   text-indent: 20px;
 }
 
-#pkxltknjqi .gt_indent_5 {
+#vfirpkxltk .gt_indent_5 {
   text-indent: 25px;
 }
 </style>
@@ -1412,30 +1460,30 @@ Nota
     </tr>
   </thead>
   <tbody class="gt_table_body">
-    <tr><td headers="grupo_pred" class="gt_row gt_center">[5.1,6.46]</td>
+    <tr><td headers="grupo_pred" class="gt_row gt_center">[4.59,6.54]</td>
 <td headers="n" class="gt_row gt_right">46</td>
-<td headers="cobertura" class="gt_row gt_right">1.00</td>
-<td headers="error_e" class="gt_row gt_right">0.00</td></tr>
-    <tr><td headers="grupo_pred" class="gt_row gt_center">(6.46,8.08]</td>
-<td headers="n" class="gt_row gt_right">46</td>
-<td headers="cobertura" class="gt_row gt_right">0.98</td>
-<td headers="error_e" class="gt_row gt_right">0.04</td></tr>
-    <tr><td headers="grupo_pred" class="gt_row gt_center">(8.08,10.1]</td>
-<td headers="n" class="gt_row gt_right">46</td>
-<td headers="cobertura" class="gt_row gt_right">0.93</td>
-<td headers="error_e" class="gt_row gt_right">0.07</td></tr>
-    <tr><td headers="grupo_pred" class="gt_row gt_center">(10.1,11.6]</td>
-<td headers="n" class="gt_row gt_right">45</td>
 <td headers="cobertura" class="gt_row gt_right">0.89</td>
 <td headers="error_e" class="gt_row gt_right">0.09</td></tr>
-    <tr><td headers="grupo_pred" class="gt_row gt_center">(11.6,13.6]</td>
+    <tr><td headers="grupo_pred" class="gt_row gt_center">(6.54,8.18]</td>
+<td headers="n" class="gt_row gt_right">46</td>
+<td headers="cobertura" class="gt_row gt_right">0.89</td>
+<td headers="error_e" class="gt_row gt_right">0.09</td></tr>
+    <tr><td headers="grupo_pred" class="gt_row gt_center">(8.18,10.3]</td>
 <td headers="n" class="gt_row gt_right">46</td>
 <td headers="cobertura" class="gt_row gt_right">0.78</td>
 <td headers="error_e" class="gt_row gt_right">0.12</td></tr>
-    <tr><td headers="grupo_pred" class="gt_row gt_center">(13.6,16.5]</td>
+    <tr><td headers="grupo_pred" class="gt_row gt_center">(10.3,11.6]</td>
+<td headers="n" class="gt_row gt_right">45</td>
+<td headers="cobertura" class="gt_row gt_right">0.78</td>
+<td headers="error_e" class="gt_row gt_right">0.12</td></tr>
+    <tr><td headers="grupo_pred" class="gt_row gt_center">(11.6,13.5]</td>
 <td headers="n" class="gt_row gt_right">46</td>
-<td headers="cobertura" class="gt_row gt_right">0.83</td>
-<td headers="error_e" class="gt_row gt_right">0.11</td></tr>
+<td headers="cobertura" class="gt_row gt_right">0.72</td>
+<td headers="error_e" class="gt_row gt_right">0.13</td></tr>
+    <tr><td headers="grupo_pred" class="gt_row gt_center">(13.5,16.1]</td>
+<td headers="n" class="gt_row gt_right">46</td>
+<td headers="cobertura" class="gt_row gt_right">0.74</td>
+<td headers="error_e" class="gt_row gt_right">0.13</td></tr>
   </tbody>
   
   
@@ -1445,90 +1493,15 @@ Nota
 </div>
 <p>Estos intervalos son poco útiles porque exageran la incertidumbre para valores altos y la subestiman para valores bajos. Adicionalmente, podemos checar variables que consideramos importantes para ver cómo se comportan los intervalos. En este caso, por ejemplo, usamos la variable peso,</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(preds_tbl, <span class="fu">aes</span>(<span class="at">x =</span> peso_kg, <span class="at">y =</span>  rendimiento_kpl, <span class="at">ymin =</span> inf, <span class="at">ymax =</span> sup)) <span class="sc">+</span></span>
-<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_linerange</span>() <span class="sc">+</span></span>
-<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">colour =</span> <span class="st">"red"</span>) </span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(preds_tbl, <span class="fu">aes</span>(<span class="at">x =</span> peso_kg, <span class="at">y =</span>  rendimiento_kpl, <span class="at">ymin =</span> inf, <span class="at">ymax =</span> sup)) <span class="sc">+</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_linerange</span>() <span class="sc">+</span></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">colour =</span> <span class="st">"red"</span>) <span class="sc">+</span></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">subtitle =</span> <span class="st">"Fallas en cobertura condicional"</span>)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
-<p><img src="07-intervalos-predictivos_files/figure-html/unnamed-chunk-14-1.png" class="img-fluid" width="384"></p>
+<p><img src="07-intervalos-predictivos_files/figure-html/unnamed-chunk-17-1.png" class="img-fluid" width="384"></p>
 </div>
 </div>
 <p>Y vemos que aunque nuestros intervalos son del 90%, tienen baja cobertura para pesos bajos y sobrecubren para pesos altos.</p>
-<p>Podemos mejorar los intervalos usando <strong>regresión cuantílica</strong> (ver también <a href="https://proceedings.neurips.cc/paper/2019/file/5103c3584b063c431bd1268e9b5e76fb-Paper.pdf">Conformalized Quantile Regression</a>), donde la respuesta es la variable que queremos predecir y la única entrada es nuestra predicción puntual. Primero necesitamos una muestra adicional de calibración (por ejemplo dividimos la muestra de prueba en una muestra de calibración y otra de evaluación):</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(quantreg)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stderr">
-<pre><code>Loading required package: SparseM</code></pre>
-</div>
-<div class="cell-output cell-output-stderr">
-<pre><code>
-Attaching package: 'SparseM'</code></pre>
-</div>
-<div class="cell-output cell-output-stderr">
-<pre><code>The following object is masked from 'package:base':
-
-    backsolve</code></pre>
-</div>
-<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>lambda <span class="ot">&lt;-</span> <span class="dv">1</span> <span class="co"># suavizamiento splines reg cuantílica</span></span>
-<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>calib_eval_split <span class="ot">&lt;-</span> <span class="fu">initial_split</span>(preds_tbl, <span class="fl">0.5</span>)</span>
-<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>calibracion_tbl <span class="ot">&lt;-</span> <span class="fu">training</span>(calib_eval_split)</span>
-<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>eval_tbl <span class="ot">&lt;-</span> <span class="fu">testing</span>(calib_eval_split)</span>
-<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(calibracion_tbl, <span class="fu">aes</span>(<span class="at">x =</span> .pred, <span class="at">y =</span> rendimiento_kpl)) <span class="sc">+</span>  </span>
-<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>() <span class="sc">+</span></span>
-<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_quantile</span>(<span class="at">method =</span> <span class="st">"rqss"</span>, </span>
-<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">lambda =</span> lambda, <span class="at">quantiles =</span> <span class="fu">c</span>(<span class="fl">0.05</span>, <span class="fl">0.95</span>))</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stderr">
-<pre><code>Smoothing formula not specified. Using: y ~ qss(x, lambda = 1)</code></pre>
-</div>
-<div class="cell-output-display">
-<p><img src="07-intervalos-predictivos_files/figure-html/unnamed-chunk-15-1.png" class="img-fluid" width="384"></p>
-</div>
-<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>sup_qreg <span class="ot">&lt;-</span> quantreg<span class="sc">::</span><span class="fu">rqss</span>(rendimiento_kpl <span class="sc">~</span> .pred, </span>
-<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">lambda =</span> lambda, <span class="at">data =</span> preds_tbl, <span class="at">tau =</span> <span class="fl">0.95</span>)</span>
-<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>inf_qreg <span class="ot">&lt;-</span> quantreg<span class="sc">::</span><span class="fu">rqss</span>(rendimiento_kpl <span class="sc">~</span> .pred, </span>
-<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">lambda =</span> lambda, <span class="at">data =</span> preds_tbl, <span class="at">tau =</span> <span class="fl">0.05</span>)</span>
-<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>calibracion_tbl <span class="ot">&lt;-</span> calibracion_tbl <span class="sc">|&gt;</span> </span>
-<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">sup_q =</span> <span class="fu">predict</span>(sup_qreg, </span>
-<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a>            <span class="at">newdata =</span> calibracion_tbl <span class="sc">|&gt;</span> <span class="fu">select</span>(rendimiento_kpl, .pred)),</span>
-<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a>         <span class="at">inf_q =</span> <span class="fu">predict</span>(inf_qreg, </span>
-<span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a>          <span class="at">newdata =</span> calibracion_tbl <span class="sc">|&gt;</span> <span class="fu">select</span>(rendimiento_kpl, .pred))</span>
-<span id="cb24-10"><a href="#cb24-10" aria-hidden="true" tabindex="-1"></a>         )</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<p>Los nuevos intervalos se ven como sigue, por ejemplo en términos de la variable peso:</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(calibracion_tbl, </span>
-<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">aes</span>(<span class="at">x =</span> peso_kg, <span class="at">y =</span>  rendimiento_kpl, </span>
-<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>      <span class="at">ymin =</span> inf_q, <span class="at">ymax =</span> sup_q)) <span class="sc">+</span></span>
-<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_linerange</span>() <span class="sc">+</span></span>
-<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">colour =</span> <span class="st">"red"</span>) </span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output-display">
-<p><img src="07-intervalos-predictivos_files/figure-html/unnamed-chunk-16-1.png" class="img-fluid" width="384"></p>
-</div>
-</div>
-<p>Finalmente verificamos con la muestra de evaluación (en este punto, podemos ajustar la regresión cuantílica si es necesario):</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>eval_tbl <span class="ot">&lt;-</span> eval_tbl <span class="sc">|&gt;</span> </span>
-<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">sup_q =</span> <span class="fu">predict</span>(sup_qreg, <span class="at">newdata =</span> eval_tbl),</span>
-<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>         <span class="at">inf_q =</span> <span class="fu">predict</span>(inf_qreg, <span class="at">newdata =</span> eval_tbl))</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>n_grupos <span class="ot">&lt;-</span> <span class="dv">5</span> <span class="co"># podemos usar más grupos si tenemos más datos</span></span>
-<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>eval_tbl <span class="sc">|&gt;</span> </span>
-<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename</span>(<span class="at">y =</span> rendimiento_kpl) <span class="sc">|&gt;</span> </span>
-<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">grupo_pred =</span> <span class="fu">cut_number</span>(.pred, <span class="at">n =</span> n_grupos)) <span class="sc">|&gt;</span> </span>
-<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(grupo_pred) <span class="sc">|&gt;</span> </span>
-<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">n =</span> <span class="fu">n</span>(), </span>
-<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a>            <span class="at">cobertura =</span> <span class="fu">mean</span>(y <span class="sc">&gt;=</span> inf_q <span class="sc">&amp;</span> y <span class="sc">&lt;=</span> sup_q), </span>
-<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a>            <span class="at">.pred =</span> <span class="fu">mean</span>(.pred)) <span class="sc">|&gt;</span></span>
-<span id="cb27-9"><a href="#cb27-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">error_cob =</span> <span class="dv">2</span> <span class="sc">*</span> <span class="fu">sqrt</span>(cobertura <span class="sc">*</span> (<span class="dv">1</span><span class="sc">-</span> cobertura) <span class="sc">/</span> n)) <span class="sc">|&gt;</span> </span>
-<span id="cb27-10"><a href="#cb27-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> .pred, <span class="at">y =</span> cobertura, </span>
-<span id="cb27-11"><a href="#cb27-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">ymin =</span> cobertura <span class="sc">-</span> error_cob, <span class="at">ymax =</span> cobertura <span class="sc">+</span> error_cob)) <span class="sc">+</span></span>
-<span id="cb27-12"><a href="#cb27-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_hline</span>(<span class="at">yintercept =</span> <span class="fl">0.9</span>, <span class="at">colour =</span> <span class="st">"red"</span>) <span class="sc">+</span></span>
-<span id="cb27-13"><a href="#cb27-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>() <span class="sc">+</span> <span class="fu">geom_linerange</span>() <span class="sc">+</span></span>
-<span id="cb27-14"><a href="#cb27-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ylim</span>(<span class="fu">c</span>(<span class="dv">0</span>,<span class="fl">1.1</span>))</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output-display">
-<p><img src="07-intervalos-predictivos_files/figure-html/unnamed-chunk-18-1.png" class="img-fluid" width="384"></p>
-</div>
-</div>
 <div class="callout callout-style-default callout-note callout-titled">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
@@ -1542,70 +1515,75 @@ Probando intervalos predictivos
 <ol type="1">
 <li>Checamos la cobertura uniforme de nuestros intervalos predictivos primero viendo el comportamiento de intervalos dependiendo de la predicción.</li>
 <li>Adicionalmente, podemos también checar intervalos en función de variables importantes para ver si en distintas regiones la cobertura es uniforme.</li>
-<li>Cuando detectamos que los intervalos predictivos conformes no tienen niveles de cobertura uniforme sobre el espacio de entradas, podemos usar una muestra de calibración y usar regresión cuantílica tomando como respuesta la variable respuesta y como entrada la predicción puntual de nuestro modelo ajustado.</li>
 </ol>
 </div>
 </div>
+<p>Hay varias maneras de hacer los intervalos conformes <em>adaptativos</em>:</p>
+<ul>
+<li>Cambiando la función de pérdida que usamos para construir los intervalos podemos obtener mejores resultados</li>
+<li>Utilizando regresión cuantílica conformalizada</li>
+</ul>
+<p>Primero vemos el primer enfoque:</p>
 </section>
 </section>
 <section id="ejemplo-otras-funciones-de-pérdida" class="level2" data-number="7.4">
 <h2 data-number="7.4" class="anchored" data-anchor-id="ejemplo-otras-funciones-de-pérdida"><span class="header-section-number">7.4</span> Ejemplo: otras funciones de pérdida</h2>
-<p>El mismo método puede aplicarse para otras funciones de pérdida más apropiadas para cada problema. Supongamos que en el problema de predicción de precios, nos interesa particularmente la pérdida relativa dada por <span class="math display">\[L(y, \hat{f}(x)) = \frac{|y - \hat{f}(x)|}{\hat{f}(x)}\]</span> En este caso, a la pérdida <span class="math inline">\(L(y, \hat{f}(x))\)</span> a veces se le llama <strong>medida de conformidad</strong> de las predicciones. Podemos aplicar entonces el mismo procedimiento: 1. Construimos con una muestra de entrenamiento <span class="math inline">\((x_i, y_i)\)</span> nuestro predictor <span class="math inline">\(\hat{f}(x)\)</span> 2. Usamos una muestra de prueba separada para evaluar el error promedio, y adicionalmente, calculamos los valores <span class="math inline">\(\mathbf{r}_i = L(\mathbf{y}_i , \hat{f}(\mathbf{x}_i))\)</span> 3. Si queremos intervalos del 90%, calculamos ahora <span class="math inline">\(q\)</span>, que es el cuantil 90% de los valores <span class="math inline">\(\mathbf{r}_i\)</span> 3. Para un nuevo valor de las entradas <span class="math inline">\(\mathbf{x}\)</span>, nuestro intervalo ( o más bien región predictiva) es todos los valores de <span class="math inline">\(y\)</span> que cumplen <span class="math display">\[I(\mathbf{x}) = \{y : L(y, \hat{f}(\mathbf{x})) \leq q\} \]</span> Y resulta ser que para una nueva observación, <span class="math display">\[P(\mathbf{y} \in I(\mathbf{x}))\gtrsim 0.90\]</span> Podemos ver esto con el ejemplo de precios de casas:</p>
+<p>El mismo método para producir intervalos conformes que vimos arriba puede aplicarse para otras funciones de pérdida más apropiadas para cada problema. Supongamos que en el problema de predicción de precios, nos interesa particularmente la pérdida relativa dada por <span class="math display">\[L(y, \hat{f}(x)) = \frac{|y - \hat{f}(x)|}{\hat{f}(x)}\]</span> En este caso, a la pérdida <span class="math inline">\(L(y, \hat{f}(x))\)</span> a veces se le llama <strong>medida de conformidad</strong> de las predicciones. Podemos aplicar entonces el mismo procedimiento: 1. Construimos con una muestra de entrenamiento <span class="math inline">\((x_i, y_i)\)</span> nuestro predictor <span class="math inline">\(\hat{f}(x)\)</span> 2. Usamos una muestra de prueba separada para evaluar el error promedio, y adicionalmente, calculamos los valores <span class="math inline">\(\mathbf{r}_i = L(\mathbf{y}_i , \hat{f}(\mathbf{x}_i))\)</span> 3. Si queremos intervalos del 90%, calculamos ahora <span class="math inline">\(q\)</span>, que es el cuantil 90% de los valores <span class="math inline">\(\mathbf{r}_i\)</span> 3. Para un nuevo valor de las entradas <span class="math inline">\(\mathbf{x}\)</span>, nuestro intervalo ( o más bien región predictiva) es todos los valores de <span class="math inline">\(y\)</span> que cumplen <span class="math display">\[I(\mathbf{x}) = \{y : L(y, \hat{f}(\mathbf{x})) \leq q\} \]</span> Y resulta ser que para una nueva observación, <span class="math display">\[P(\mathbf{y} \in I(\mathbf{x}))\gtrsim 0.90\]</span> Podemos ver esto con el ejemplo de precios de casas:</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(<span class="st">"../R/casas_traducir_geo.R"</span>)</span>
-<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">83</span>)</span>
-<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>casas_split <span class="ot">&lt;-</span> <span class="fu">initial_split</span>(casas, <span class="at">prop =</span> <span class="fl">0.75</span>)</span>
-<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a>casas_entrena <span class="ot">&lt;-</span> <span class="fu">training</span>(casas_split)</span>
-<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a>receta_casas <span class="ot">&lt;-</span> <span class="fu">recipe</span>(precio_miles <span class="sc">~</span> </span>
-<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a>           nombre_zona <span class="sc">+</span> </span>
-<span id="cb28-7"><a href="#cb28-7" aria-hidden="true" tabindex="-1"></a>           area_hab_m2 <span class="sc">+</span> area_garage_m2 <span class="sc">+</span> area_sotano_m2 <span class="sc">+</span> </span>
-<span id="cb28-8"><a href="#cb28-8" aria-hidden="true" tabindex="-1"></a>           area_2o_piso_m2 <span class="sc">+</span></span>
-<span id="cb28-9"><a href="#cb28-9" aria-hidden="true" tabindex="-1"></a>           area_lote_m2 <span class="sc">+</span> </span>
-<span id="cb28-10"><a href="#cb28-10" aria-hidden="true" tabindex="-1"></a>           año_construccion <span class="sc">+</span> </span>
-<span id="cb28-11"><a href="#cb28-11" aria-hidden="true" tabindex="-1"></a>           calidad_gral <span class="sc">+</span> calidad_garage <span class="sc">+</span> calidad_sotano <span class="sc">+</span></span>
-<span id="cb28-12"><a href="#cb28-12" aria-hidden="true" tabindex="-1"></a>           condicion_gral <span class="sc">+</span> </span>
-<span id="cb28-13"><a href="#cb28-13" aria-hidden="true" tabindex="-1"></a>           num_coches  <span class="sc">+</span> </span>
-<span id="cb28-14"><a href="#cb28-14" aria-hidden="true" tabindex="-1"></a>           aire_acondicionado <span class="sc">+</span> condicion_venta, </span>
-<span id="cb28-15"><a href="#cb28-15" aria-hidden="true" tabindex="-1"></a>           <span class="at">data =</span> casas_entrena) <span class="sc">|&gt;</span> </span>
-<span id="cb28-16"><a href="#cb28-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_filter</span>(condicion_venta <span class="sc">==</span> <span class="st">"Normal"</span>) <span class="sc">|&gt;</span> </span>
-<span id="cb28-17"><a href="#cb28-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_select</span>(<span class="sc">-</span>condicion_venta, <span class="at">skip =</span> <span class="cn">TRUE</span>) <span class="sc">|&gt;</span> </span>
-<span id="cb28-18"><a href="#cb28-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_mutate</span>(<span class="at">tiene_2o_piso =</span> <span class="fu">ifelse</span>(area_2o_piso_m2 <span class="sc">==</span> <span class="dv">0</span>, <span class="dv">1</span>, <span class="dv">0</span>)) <span class="sc">|&gt;</span> </span>
-<span id="cb28-19"><a href="#cb28-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_mutate</span>(</span>
-<span id="cb28-20"><a href="#cb28-20" aria-hidden="true" tabindex="-1"></a>    <span class="at">area_sotano_m2 =</span> <span class="fu">ifelse</span>(<span class="fu">is.na</span>(area_sotano_m2), <span class="dv">0</span>, area_sotano_m2)) <span class="sc">|&gt;</span> </span>
-<span id="cb28-21"><a href="#cb28-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_mutate</span>(<span class="at">area_garage_m2 =</span> </span>
-<span id="cb28-22"><a href="#cb28-22" aria-hidden="true" tabindex="-1"></a>    <span class="fu">ifelse</span>(<span class="fu">is.na</span>(area_garage_m2), <span class="dv">0</span>, area_garage_m2)) <span class="sc">|&gt;</span> </span>
-<span id="cb28-23"><a href="#cb28-23" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_novel</span>(nombre_zona, calidad_sotano, calidad_garage) <span class="sc">|&gt;</span> </span>
-<span id="cb28-24"><a href="#cb28-24" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_ns</span>(calidad_gral, <span class="at">deg_free =</span> <span class="dv">2</span>) <span class="sc">|&gt;</span> </span>
-<span id="cb28-25"><a href="#cb28-25" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_ns</span>(condicion_gral, <span class="at">deg_free =</span> <span class="dv">2</span>) <span class="sc">|&gt;</span> </span>
-<span id="cb28-26"><a href="#cb28-26" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_ns</span>(<span class="fu">starts_with</span>(<span class="st">"area_lote"</span>), <span class="at">deg_free =</span> <span class="dv">3</span>) <span class="sc">|&gt;</span> </span>
-<span id="cb28-27"><a href="#cb28-27" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_ns</span>(<span class="fu">starts_with</span>(<span class="st">"año_construccion"</span>), <span class="at">deg_free =</span> <span class="dv">3</span>) <span class="sc">|&gt;</span> </span>
-<span id="cb28-28"><a href="#cb28-28" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_unknown</span>(calidad_sotano, calidad_garage) <span class="sc">|&gt;</span> </span>
-<span id="cb28-29"><a href="#cb28-29" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_other</span>(nombre_zona, <span class="at">threshold =</span> <span class="fl">0.01</span>, <span class="at">other =</span> <span class="st">"otras"</span>) <span class="sc">|&gt;</span> </span>
-<span id="cb28-30"><a href="#cb28-30" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_dummy</span>(nombre_zona, calidad_garage, </span>
-<span id="cb28-31"><a href="#cb28-31" aria-hidden="true" tabindex="-1"></a>             calidad_sotano, aire_acondicionado) <span class="sc">|&gt;</span> </span>
-<span id="cb28-32"><a href="#cb28-32" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_interact</span>(</span>
-<span id="cb28-33"><a href="#cb28-33" aria-hidden="true" tabindex="-1"></a>    <span class="at">terms =</span> <span class="sc">~</span> <span class="fu">starts_with</span>(<span class="st">"area_garage_m2"</span>)<span class="sc">:</span><span class="fu">starts_with</span>(<span class="st">"calidad_garage"</span>)) <span class="sc">|&gt;</span> </span>
-<span id="cb28-34"><a href="#cb28-34" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_interact</span>(</span>
-<span id="cb28-35"><a href="#cb28-35" aria-hidden="true" tabindex="-1"></a>    <span class="at">terms =</span> <span class="sc">~</span> <span class="fu">starts_with</span>(<span class="st">"area_sotano_m2"</span>)<span class="sc">:</span> <span class="fu">starts_with</span>(<span class="st">"calidad_sotano"</span>)) <span class="sc">|&gt;</span> </span>
-<span id="cb28-36"><a href="#cb28-36" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_nzv</span>(<span class="fu">all_predictors</span>(), <span class="at">freq_cut =</span> <span class="dv">500</span> <span class="sc">/</span> <span class="dv">1</span>, <span class="at">unique_cut =</span> <span class="dv">1</span>)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(<span class="st">"../R/casas_traducir_geo.R"</span>)</span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">83</span>)</span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>casas_split <span class="ot">&lt;-</span> <span class="fu">initial_split</span>(casas, <span class="at">prop =</span> <span class="fl">0.75</span>)</span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>casas_entrena <span class="ot">&lt;-</span> <span class="fu">training</span>(casas_split)</span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>receta_casas <span class="ot">&lt;-</span> <span class="fu">recipe</span>(precio_miles <span class="sc">~</span> </span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>           nombre_zona <span class="sc">+</span> </span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>           area_hab_m2 <span class="sc">+</span> area_garage_m2 <span class="sc">+</span> area_sotano_m2 <span class="sc">+</span> </span>
+<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a>           area_2o_piso_m2 <span class="sc">+</span></span>
+<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a>           area_lote_m2 <span class="sc">+</span> </span>
+<span id="cb22-10"><a href="#cb22-10" aria-hidden="true" tabindex="-1"></a>           año_construccion <span class="sc">+</span> </span>
+<span id="cb22-11"><a href="#cb22-11" aria-hidden="true" tabindex="-1"></a>           calidad_gral <span class="sc">+</span> calidad_garage <span class="sc">+</span> calidad_sotano <span class="sc">+</span></span>
+<span id="cb22-12"><a href="#cb22-12" aria-hidden="true" tabindex="-1"></a>           condicion_gral <span class="sc">+</span> </span>
+<span id="cb22-13"><a href="#cb22-13" aria-hidden="true" tabindex="-1"></a>           num_coches  <span class="sc">+</span> </span>
+<span id="cb22-14"><a href="#cb22-14" aria-hidden="true" tabindex="-1"></a>           aire_acondicionado <span class="sc">+</span> condicion_venta, </span>
+<span id="cb22-15"><a href="#cb22-15" aria-hidden="true" tabindex="-1"></a>           <span class="at">data =</span> casas_entrena) <span class="sc">|&gt;</span> </span>
+<span id="cb22-16"><a href="#cb22-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_filter</span>(condicion_venta <span class="sc">==</span> <span class="st">"Normal"</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb22-17"><a href="#cb22-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_select</span>(<span class="sc">-</span>condicion_venta, <span class="at">skip =</span> <span class="cn">TRUE</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb22-18"><a href="#cb22-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_mutate</span>(<span class="at">tiene_2o_piso =</span> <span class="fu">ifelse</span>(area_2o_piso_m2 <span class="sc">==</span> <span class="dv">0</span>, <span class="dv">1</span>, <span class="dv">0</span>)) <span class="sc">|&gt;</span> </span>
+<span id="cb22-19"><a href="#cb22-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_mutate</span>(</span>
+<span id="cb22-20"><a href="#cb22-20" aria-hidden="true" tabindex="-1"></a>    <span class="at">area_sotano_m2 =</span> <span class="fu">ifelse</span>(<span class="fu">is.na</span>(area_sotano_m2), <span class="dv">0</span>, area_sotano_m2)) <span class="sc">|&gt;</span> </span>
+<span id="cb22-21"><a href="#cb22-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_mutate</span>(<span class="at">area_garage_m2 =</span> </span>
+<span id="cb22-22"><a href="#cb22-22" aria-hidden="true" tabindex="-1"></a>    <span class="fu">ifelse</span>(<span class="fu">is.na</span>(area_garage_m2), <span class="dv">0</span>, area_garage_m2)) <span class="sc">|&gt;</span> </span>
+<span id="cb22-23"><a href="#cb22-23" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_novel</span>(nombre_zona, calidad_sotano, calidad_garage) <span class="sc">|&gt;</span> </span>
+<span id="cb22-24"><a href="#cb22-24" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_ns</span>(calidad_gral, <span class="at">deg_free =</span> <span class="dv">2</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb22-25"><a href="#cb22-25" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_ns</span>(condicion_gral, <span class="at">deg_free =</span> <span class="dv">2</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb22-26"><a href="#cb22-26" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_ns</span>(<span class="fu">starts_with</span>(<span class="st">"area_lote"</span>), <span class="at">deg_free =</span> <span class="dv">3</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb22-27"><a href="#cb22-27" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_ns</span>(<span class="fu">starts_with</span>(<span class="st">"año_construccion"</span>), <span class="at">deg_free =</span> <span class="dv">3</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb22-28"><a href="#cb22-28" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_unknown</span>(calidad_sotano, calidad_garage) <span class="sc">|&gt;</span> </span>
+<span id="cb22-29"><a href="#cb22-29" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_other</span>(nombre_zona, <span class="at">threshold =</span> <span class="fl">0.01</span>, <span class="at">other =</span> <span class="st">"otras"</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb22-30"><a href="#cb22-30" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_dummy</span>(nombre_zona, calidad_garage, </span>
+<span id="cb22-31"><a href="#cb22-31" aria-hidden="true" tabindex="-1"></a>             calidad_sotano, aire_acondicionado) <span class="sc">|&gt;</span> </span>
+<span id="cb22-32"><a href="#cb22-32" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_interact</span>(</span>
+<span id="cb22-33"><a href="#cb22-33" aria-hidden="true" tabindex="-1"></a>    <span class="at">terms =</span> <span class="sc">~</span> <span class="fu">starts_with</span>(<span class="st">"area_garage_m2"</span>)<span class="sc">:</span><span class="fu">starts_with</span>(<span class="st">"calidad_garage"</span>)) <span class="sc">|&gt;</span> </span>
+<span id="cb22-34"><a href="#cb22-34" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_interact</span>(</span>
+<span id="cb22-35"><a href="#cb22-35" aria-hidden="true" tabindex="-1"></a>    <span class="at">terms =</span> <span class="sc">~</span> <span class="fu">starts_with</span>(<span class="st">"area_sotano_m2"</span>)<span class="sc">:</span> <span class="fu">starts_with</span>(<span class="st">"calidad_sotano"</span>)) <span class="sc">|&gt;</span> </span>
+<span id="cb22-36"><a href="#cb22-36" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_nzv</span>(<span class="fu">all_predictors</span>(), <span class="at">freq_cut =</span> <span class="dv">500</span> <span class="sc">/</span> <span class="dv">1</span>, <span class="at">unique_cut =</span> <span class="dv">1</span>)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Usaremos regresión ridge:</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>flujo_casas <span class="ot">&lt;-</span> <span class="fu">workflow</span>() <span class="sc">|&gt;</span> </span>
-<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add_recipe</span>(receta_casas) <span class="sc">|&gt;</span> </span>
-<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add_model</span>(<span class="fu">linear_reg</span>(<span class="at">mixture =</span> <span class="dv">0</span>, <span class="at">penalty =</span> <span class="fl">0.01</span>) <span class="sc">|&gt;</span> </span>
-<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a>            <span class="fu">set_engine</span>(<span class="st">"glmnet"</span>, <span class="at">lambda.min.ratio =</span> <span class="fl">1e-20</span>))  </span>
-<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a>ajuste <span class="ot">&lt;-</span> <span class="fu">fit</span>(flujo_casas, casas_entrena)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>flujo_casas <span class="ot">&lt;-</span> <span class="fu">workflow</span>() <span class="sc">|&gt;</span> </span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add_recipe</span>(receta_casas) <span class="sc">|&gt;</span> </span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add_model</span>(<span class="fu">linear_reg</span>(<span class="at">mixture =</span> <span class="dv">0</span>, <span class="at">penalty =</span> <span class="fl">0.01</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>            <span class="fu">set_engine</span>(<span class="st">"glmnet"</span>, <span class="at">lambda.min.ratio =</span> <span class="fl">1e-20</span>))  </span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>ajuste <span class="ot">&lt;-</span> <span class="fu">fit</span>(flujo_casas, casas_entrena)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Para medir el desempeño convertimos a la variable de precio multiplicando la predicción por el área habitable:</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>metricas <span class="ot">&lt;-</span> <span class="fu">metric_set</span>(mape, mae, rmse, rsq)</span>
-<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>casas_prueba_normal <span class="ot">&lt;-</span> <span class="fu">testing</span>(casas_split) <span class="sc">|&gt;</span> </span>
-<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(condicion_venta <span class="sc">==</span> <span class="st">"Normal"</span>)</span>
-<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a><span class="fu">metricas</span>(casas_prueba_normal <span class="sc">|&gt;</span> </span>
-<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">bind_cols</span>(<span class="fu">predict</span>(ajuste, casas_prueba_normal)), </span>
-<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a>     <span class="at">truth =</span> precio_miles, <span class="at">estimate =</span> .pred  ) <span class="sc">|&gt;</span> </span>
-<span id="cb30-7"><a href="#cb30-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">gt</span>() <span class="sc">|&gt;</span> <span class="fu">fmt_number</span>(.estimate, <span class="at">decimals =</span> <span class="dv">2</span>)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>metricas <span class="ot">&lt;-</span> <span class="fu">metric_set</span>(mape, mae, rmse, rsq)</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>casas_prueba_normal <span class="ot">&lt;-</span> <span class="fu">testing</span>(casas_split) <span class="sc">|&gt;</span> </span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(condicion_venta <span class="sc">==</span> <span class="st">"Normal"</span>)</span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a><span class="fu">metricas</span>(casas_prueba_normal <span class="sc">|&gt;</span> </span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">bind_cols</span>(<span class="fu">predict</span>(ajuste, casas_prueba_normal)), </span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>     <span class="at">truth =</span> precio_miles, <span class="at">estimate =</span> .pred  ) <span class="sc">|&gt;</span> </span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">gt</span>() <span class="sc">|&gt;</span> <span class="fu">fmt_number</span>(.estimate, <span class="at">decimals =</span> <span class="dv">2</span>)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 
 <div id="mkwjpynotf" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
@@ -2079,50 +2057,50 @@ Probando intervalos predictivos
 </div>
 <p>La distribución de los residuales (que en este caso se llaman maś bien valores de conformidad) se ve como sigue:</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>preds_tbl <span class="ot">&lt;-</span> casas_prueba_normal <span class="sc">|&gt;</span> </span>
-<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">bind_cols</span>(<span class="fu">predict</span>(ajuste, casas_prueba_normal)) <span class="sc">|&gt;</span> </span>
-<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">residual =</span> <span class="fu">abs</span>(precio_miles <span class="sc">-</span> .pred)<span class="sc">/</span>.pred)</span>
-<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a>preds_tbl <span class="sc">|&gt;</span> <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> residual)) <span class="sc">+</span> <span class="fu">geom_histogram</span>()</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>preds_tbl <span class="ot">&lt;-</span> casas_prueba_normal <span class="sc">|&gt;</span> </span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">bind_cols</span>(<span class="fu">predict</span>(ajuste, casas_prueba_normal)) <span class="sc">|&gt;</span> </span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">residual =</span> <span class="fu">abs</span>(precio_miles <span class="sc">-</span> .pred)<span class="sc">/</span>.pred)</span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>preds_tbl <span class="sc">|&gt;</span> <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> residual)) <span class="sc">+</span> <span class="fu">geom_histogram</span>()</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
 <pre><code>`stat_bin()` using `bins = 30`. Pick better value with `binwidth`.</code></pre>
 </div>
 <div class="cell-output-display">
-<p><img src="07-intervalos-predictivos_files/figure-html/unnamed-chunk-22-1.png" class="img-fluid" width="384"></p>
+<p><img src="07-intervalos-predictivos_files/figure-html/unnamed-chunk-21-1.png" class="img-fluid" width="384"></p>
 </div>
-<div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>q <span class="ot">&lt;-</span> <span class="fu">quantile</span>(preds_tbl<span class="sc">$</span>residual, <span class="fl">0.90</span>)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>q <span class="ot">&lt;-</span> <span class="fu">quantile</span>(preds_tbl<span class="sc">$</span>residual, <span class="fl">0.90</span>)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb34"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">832</span>)</span>
-<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>preds_tbl <span class="ot">&lt;-</span> preds_tbl <span class="sc">|&gt;</span> </span>
-<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">inf =</span> .pred <span class="sc">*</span>(<span class="dv">1</span> <span class="sc">-</span> q), <span class="at">sup =</span> .pred  <span class="sc">*</span>(<span class="dv">1</span> <span class="sc">+</span> q)) <span class="sc">|&gt;</span> </span>
-<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">pred_precio =</span> .pred ) <span class="sc">|&gt;</span> </span>
-<span id="cb34-5"><a href="#cb34-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">inf_precio =</span> inf, <span class="at">sup_precio =</span>  sup)</span>
-<span id="cb34-6"><a href="#cb34-6" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(preds_tbl, <span class="fu">aes</span>(<span class="at">x =</span> pred_precio, <span class="at">y =</span> precio_miles, <span class="at">ymin =</span> inf_precio, </span>
-<span id="cb34-7"><a href="#cb34-7" aria-hidden="true" tabindex="-1"></a>                      <span class="at">ymax =</span> sup_precio)) <span class="sc">+</span></span>
-<span id="cb34-8"><a href="#cb34-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_abline</span>() <span class="sc">+</span> </span>
-<span id="cb34-9"><a href="#cb34-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_linerange</span>() <span class="sc">+</span></span>
-<span id="cb34-10"><a href="#cb34-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">colour =</span> <span class="st">"red"</span>) <span class="sc">+</span> <span class="fu">coord_obs_pred</span>()</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">832</span>)</span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>preds_tbl <span class="ot">&lt;-</span> preds_tbl <span class="sc">|&gt;</span> </span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">inf =</span> .pred <span class="sc">*</span>(<span class="dv">1</span> <span class="sc">-</span> q), <span class="at">sup =</span> .pred  <span class="sc">*</span>(<span class="dv">1</span> <span class="sc">+</span> q)) <span class="sc">|&gt;</span> </span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">pred_precio =</span> .pred ) <span class="sc">|&gt;</span> </span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">inf_precio =</span> inf, <span class="at">sup_precio =</span>  sup)</span>
+<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(preds_tbl, <span class="fu">aes</span>(<span class="at">x =</span> pred_precio, <span class="at">y =</span> precio_miles, <span class="at">ymin =</span> inf_precio, </span>
+<span id="cb28-7"><a href="#cb28-7" aria-hidden="true" tabindex="-1"></a>                      <span class="at">ymax =</span> sup_precio)) <span class="sc">+</span></span>
+<span id="cb28-8"><a href="#cb28-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_abline</span>() <span class="sc">+</span> </span>
+<span id="cb28-9"><a href="#cb28-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_linerange</span>() <span class="sc">+</span></span>
+<span id="cb28-10"><a href="#cb28-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">colour =</span> <span class="st">"red"</span>) <span class="sc">+</span> <span class="fu">coord_obs_pred</span>()</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
-<p><img src="07-intervalos-predictivos_files/figure-html/unnamed-chunk-23-1.png" class="img-fluid" width="384"></p>
+<p><img src="07-intervalos-predictivos_files/figure-html/unnamed-chunk-22-1.png" class="img-fluid" width="384"></p>
 </div>
 </div>
 <p>Checamos finalmente que la calibración es razonable con una tabla:</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a>n_grupos <span class="ot">&lt;-</span> <span class="dv">10</span> <span class="co"># podemos usar más grupos si tenemos más datos</span></span>
-<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>preds_tbl <span class="sc">|&gt;</span> </span>
-<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename</span>(<span class="at">y =</span> precio_miles) <span class="sc">|&gt;</span> </span>
-<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">grupo_pred =</span> <span class="fu">cut_number</span>(pred_precio, <span class="at">n =</span> n_grupos)) <span class="sc">|&gt;</span> </span>
-<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(grupo_pred) <span class="sc">|&gt;</span> </span>
-<span id="cb35-6"><a href="#cb35-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">n =</span> <span class="fu">n</span>(), </span>
-<span id="cb35-7"><a href="#cb35-7" aria-hidden="true" tabindex="-1"></a>            <span class="at">cobertura =</span> <span class="fu">mean</span>(y <span class="sc">&gt;=</span> inf_precio <span class="sc">&amp;</span> y <span class="sc">&lt;=</span> sup_precio), </span>
-<span id="cb35-8"><a href="#cb35-8" aria-hidden="true" tabindex="-1"></a>            <span class="at">pred_precio =</span> <span class="fu">mean</span>(pred_precio)) <span class="sc">|&gt;</span></span>
-<span id="cb35-9"><a href="#cb35-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">error_cob =</span> <span class="dv">2</span> <span class="sc">*</span> <span class="fu">sqrt</span>(cobertura <span class="sc">*</span> (<span class="dv">1</span><span class="sc">-</span> cobertura) <span class="sc">/</span> n)) <span class="sc">|&gt;</span> </span>
-<span id="cb35-10"><a href="#cb35-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> pred_precio, <span class="at">y =</span> cobertura, </span>
-<span id="cb35-11"><a href="#cb35-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">ymin =</span> cobertura <span class="sc">-</span> error_cob, <span class="at">ymax =</span> cobertura <span class="sc">+</span> error_cob)) <span class="sc">+</span></span>
-<span id="cb35-12"><a href="#cb35-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_hline</span>(<span class="at">yintercept =</span> <span class="fl">0.9</span>, <span class="at">colour =</span> <span class="st">"red"</span>) <span class="sc">+</span></span>
-<span id="cb35-13"><a href="#cb35-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>() <span class="sc">+</span> <span class="fu">geom_linerange</span>() <span class="sc">+</span> <span class="fu">ylim</span>(<span class="fu">c</span>(<span class="fl">0.5</span>, <span class="fl">1.1</span>))</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>n_grupos <span class="ot">&lt;-</span> <span class="dv">10</span> <span class="co"># podemos usar más grupos si tenemos más datos</span></span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>preds_tbl <span class="sc">|&gt;</span> </span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename</span>(<span class="at">y =</span> precio_miles) <span class="sc">|&gt;</span> </span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">grupo_pred =</span> <span class="fu">cut_number</span>(pred_precio, <span class="at">n =</span> n_grupos)) <span class="sc">|&gt;</span> </span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(grupo_pred) <span class="sc">|&gt;</span> </span>
+<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">n =</span> <span class="fu">n</span>(), </span>
+<span id="cb29-7"><a href="#cb29-7" aria-hidden="true" tabindex="-1"></a>            <span class="at">cobertura =</span> <span class="fu">mean</span>(y <span class="sc">&gt;=</span> inf_precio <span class="sc">&amp;</span> y <span class="sc">&lt;=</span> sup_precio), </span>
+<span id="cb29-8"><a href="#cb29-8" aria-hidden="true" tabindex="-1"></a>            <span class="at">pred_precio =</span> <span class="fu">mean</span>(pred_precio)) <span class="sc">|&gt;</span></span>
+<span id="cb29-9"><a href="#cb29-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">error_cob =</span> <span class="dv">2</span> <span class="sc">*</span> <span class="fu">sqrt</span>(cobertura <span class="sc">*</span> (<span class="dv">1</span><span class="sc">-</span> cobertura) <span class="sc">/</span> n)) <span class="sc">|&gt;</span> </span>
+<span id="cb29-10"><a href="#cb29-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> pred_precio, <span class="at">y =</span> cobertura, </span>
+<span id="cb29-11"><a href="#cb29-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">ymin =</span> cobertura <span class="sc">-</span> error_cob, <span class="at">ymax =</span> cobertura <span class="sc">+</span> error_cob)) <span class="sc">+</span></span>
+<span id="cb29-12"><a href="#cb29-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_hline</span>(<span class="at">yintercept =</span> <span class="fl">0.9</span>, <span class="at">colour =</span> <span class="st">"red"</span>) <span class="sc">+</span></span>
+<span id="cb29-13"><a href="#cb29-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>() <span class="sc">+</span> <span class="fu">geom_linerange</span>() <span class="sc">+</span> <span class="fu">ylim</span>(<span class="fu">c</span>(<span class="fl">0.5</span>, <span class="fl">1.1</span>))</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
-<p><img src="07-intervalos-predictivos_files/figure-html/unnamed-chunk-24-1.png" class="img-fluid" width="384"></p>
+<p><img src="07-intervalos-predictivos_files/figure-html/unnamed-chunk-23-1.png" class="img-fluid" width="384"></p>
 </div>
 </div>
 </section>
@@ -2132,13 +2110,79 @@ Probando intervalos predictivos
 <li>Los intervalos conformes producidos aquí tienen garantías de cobertura promedio, pero no necesariamente condicional a valores de <span class="math inline">\(x\)</span> particulares.</li>
 <li>El chequeo básico consiste en ver cómo se comporta la cobertura para distintos valores de la predicción.</li>
 <li>Cuando un atributo <span class="math inline">\(x\)</span> es importante (por ejemplo por razones de discriminación, o razones de negocio), podemos checar la cobertura condicional a <span class="math inline">\(x\)</span> (como en el ejemplo de grasa corporal de arriba).</li>
-<li>Cuando la cobertura condicional no se cumple, podemos usar una muestra adicional para calibrar los intervalos. Esto se puede hacer ad-hoc o usando regresión cuantílica.</li>
-<li>Una alternativa adicional que se puede utilizar es intentar estimar directamente los cuantiles de la respuesta (por ejemplo 5 y 95% para un intervalo del 90%). Existe una función de pérdida diseñada para este propósito (veremos más adelante) que se puede aplicar a regresión lineal, redes neuronales, métodos basados en árboles y otros. Igualmente, es necesario checar y calibrar si es necesario los intervalos resultantes.</li>
+<li>Una alternativa que se puede utilizar es intentar estimar directamente los cuantiles de la respuesta (por ejemplo 5 y 95% para un intervalo del 90%). Existe una función de pérdida diseñada para este propósito (veremos más adelante) que se puede aplicar a regresión lineal, redes neuronales, métodos basados en árboles y otros. Igualmente, es necesario checar y calibrar si es necesario los intervalos resultantes.</li>
 <li>La selección de medida de conformidad (o función de pérdida) para cada modelo no es trivial, y de esa medida depende el comportamiento de los intervalos. En problemas de regresión, pérdida absoluta y MAPE (error porcentual absoluto promedio) son usuales, y una puede desempeñarse mejor que otra.</li>
 </ul>
 <p>Finalmente, es posible hacer predicción conforme con tidymodels (o paquetes de Python), consultar por ejemplo <a href="https://www.tidymodels.org/learn/models/conformal-regression/">Conformal inference for regression models</a> o para Python, <a href="https://christophmolnar.com/books/conformal-prediction/">Introduction To Conformal Prediction With Python</a>.</p>
+</section>
+<section id="regresión-cuantílica-conforme" class="level2" data-number="7.6">
+<h2 data-number="7.6" class="anchored" data-anchor-id="regresión-cuantílica-conforme"><span class="header-section-number">7.6</span> Regresión cuantílica conforme</h2>
+<p>En el siguiente método (ver <a href="https://proceedings.neurips.cc/paper/2019/file/5103c3584b063c431bd1268e9b5e76fb-Paper.pdf">Conformalized Quantile Regression</a>), producimos dos modelos en lugar de uno, pero el resto del procedimiento es el mismo:</p>
+<ul>
+<li>Construimos un modelos para un cuantil superior <span class="math inline">\(\hat{f}_{sup}\)</span> de la cantidad a predecir y otro para un cuantil inferior <span class="math inline">\(\hat{f}_{inf}\)</span>.</li>
+<li>Calculamos las medidas de conformidad (qué tanto queda la <span class="math inline">\(y\)</span> por encima de nuestro modelo del límite superior o qué tanto queda por debajo del límite inferior) <span class="math display">\[q_i = \max \{\hat{f}_{inf}(x_i) - y_i, y_i - \hat{f}_{sup} (x_i)\}\]</span><br>
+</li>
+<li>Calculamos <span class="math inline">\(q\)</span>, el cuantil 90% de las <span class="math inline">\(q_i\)</span></li>
+<li>Al predecir, devolvemos el intervalo <span class="math display">\[ C = [\hat{f}_{inf}(x_i) - \hat{q}, \hat{f}_{sup} (x_i) + \hat{q}]\]</span> Lo cobertura promedio o marginal, como en todos los casos de arriba, está garantizada. Aunque la condicional no está garantizada, estos intervalos muchas veces resuelven los problemas más graves en fallas de cobertura condicional.</li>
+</ul>
+<p>Es posible adaptar varios métodos para producir dos modelos que intentan estimar cuantiles, sustituyendo la pérdida apropiadamente. Una opción es utlizar regresión cuantílica flexible, por ejemplo:</p>
+<section id="ejemplo-regresión-cuantílica-conformalizada" class="level3" data-number="7.6.1">
+<h3 data-number="7.6.1" class="anchored" data-anchor-id="ejemplo-regresión-cuantílica-conformalizada"><span class="header-section-number">7.6.1</span> Ejemplo: regresión cuantílica conformalizada</h3>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">121</span>)</span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>datos_split <span class="ot">&lt;-</span> <span class="fu">initial_split</span>(datos_auto, <span class="at">prop =</span> <span class="fl">0.3</span>)</span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a>datos_entrena <span class="ot">&lt;-</span> <span class="fu">training</span>(datos_split)</span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a>datos_calib <span class="ot">&lt;-</span> <span class="fu">testing</span>(datos_split)</span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a><span class="co"># preprocesamiento y flujo</span></span>
+<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a>receta_lineal <span class="ot">&lt;-</span> <span class="fu">recipe</span>(rendimiento_kpl <span class="sc">~</span> peso_kg <span class="sc">+</span> año, datos_entrena) <span class="sc">|&gt;</span></span>
+<span id="cb30-7"><a href="#cb30-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_ns</span>(peso_kg, <span class="at">deg_free =</span> <span class="dv">3</span>) </span>
+<span id="cb30-8"><a href="#cb30-8" aria-hidden="true" tabindex="-1"></a>mod_lineal <span class="ot">&lt;-</span> <span class="fu">linear_reg</span>() <span class="sc">|&gt;</span>  </span>
+<span id="cb30-9"><a href="#cb30-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_engine</span>(<span class="st">"lm"</span>)  </span>
+<span id="cb30-10"><a href="#cb30-10" aria-hidden="true" tabindex="-1"></a>flujo <span class="ot">&lt;-</span> <span class="fu">workflow</span>() <span class="sc">|&gt;</span>  </span>
+<span id="cb30-11"><a href="#cb30-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add_recipe</span>(receta_lineal) <span class="sc">|&gt;</span> </span>
+<span id="cb30-12"><a href="#cb30-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add_model</span>(mod_lineal)</span>
+<span id="cb30-13"><a href="#cb30-13" aria-hidden="true" tabindex="-1"></a>flujo_ajustado_auto <span class="ot">&lt;-</span> <span class="fu">fit</span>(flujo, datos_entrena)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>quant_int <span class="ot">&lt;-</span></span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">int_conformal_quantile</span>(</span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>    flujo_ajustado_auto, </span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">train_data =</span> datos_entrena,</span>
+<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">cal_data =</span> datos_calib, </span>
+<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">level =</span> <span class="fl">0.80</span>,</span>
+<span id="cb31-7"><a href="#cb31-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">ntree =</span> <span class="dv">1000</span>)</span>
+<span id="cb31-8"><a href="#cb31-8" aria-hidden="true" tabindex="-1"></a>quant_int</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Split Conformal inference via Quantile Regression
+preprocessor: recipe 
+model: linear_reg (engine = lm) 
+calibration set size: 275 
+confidence level: 0.8 
+
+Use `predict(object, new_data)` to compute prediction intervals</code></pre>
+</div>
+</div>
+<p>Podemos checar cómo se ven los resultados con el conjunto de calibración:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="fu">predict</span>(quant_int, <span class="at">new_data =</span> datos_calib) <span class="sc">|&gt;</span> </span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">bind_cols</span>(datos_calib) <span class="sc">|&gt;</span> </span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> peso_kg, <span class="at">y =</span>  rendimiento_kpl, </span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a>           <span class="at">ymin =</span> .pred_lower, <span class="at">ymax =</span> .pred_upper)) <span class="sc">+</span></span>
+<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_linerange</span>() <span class="sc">+</span></span>
+<span id="cb33-6"><a href="#cb33-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">colour =</span> <span class="st">"red"</span>) </span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="07-intervalos-predictivos_files/figure-html/unnamed-chunk-26-1.png" class="img-fluid" width="384"></p>
+</div>
+</div>
+<p>Y vemos que el comportamiento de estos intervalos es mejor que usando el método de predicción conforme de arriba.</p>
+<p>Más comunmente, usamos métodos más flexibles para estimar los cuantiles, como bosques o boosting (que veremos más adelante). Usando tidymodels, el método default es bosques. Puedes ver más aquí:</p>
+<ul>
+<li><a href="https://www.tidymodels.org/learn/models/conformal-regression/">Conformal inference for regression models</a></li>
+<li><a href="https://christophmolnar.com/books/conformal-prediction/">Introduction To Conformal Prediction With Python</a></li>
+</ul>
 
 
+</section>
 </section>
 
 </main> <!-- /main -->
