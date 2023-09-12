@@ -11,6 +11,10 @@ jobs:
     runs-on: ubuntu-latest
     container: felipexgonzalez/am-2023-amd64:latest
     steps:
+      - name: Install probably
+        run: |
+          remotes::install_github("https://github.com/tidymodels/probably/", upgrade = "always", force = TRUE)  
+        shell: Rscript {0}
       - uses: actions/checkout@v2
       - name: Render book 
         # Add any command line argument needed
