@@ -17,13 +17,15 @@ con el error de predicción, que es un promedio de la pérdida seleccionada.
 
 Este enfoque es razonable en algunos casos y otros no. Es razonable cuando:
 
-- El error de predicción es relativamente chico (tenemos predicciones muy precisas). Entonces
- cualquier pérdida usual que utilicemos funciona apropiadamente. 
-- Los errores en predicciones individuales son poco costosos, especialmente si comparamos con la mejoría en la automatización y desempeño del proceso.
+- El error de predicción es relativamente chico (tenemos predicciones muy precisas), y/o los
+costos de predicciones individuales son bajos, especialmente si
+comparamos con la mejoría en la automatización y desempeño del proceso. 
+- Hacemos un gran número de predicciones, ninguna de ellas con costos relativos gigantescos,
+de forma que el costo promedio representa adecuadamente el desempeño general. 
 
 Un ejemplo del primer caso es el de la lectura de medidores: en este caso,
 nuestro modelo es bastante preciso y las predicciones puntuales son suficientes.
-Un ejemplo del segundo caso es hacer recomendaciones de películas o productos: la automatización
+Igualmente, al hacer recomendaciones de películas o productos: la automatización
 en el proceso presenta buenas ganancias, y recomendar una película incorrecta no
 es grave mientras que en promedio tengamos buenos aciertos.
 
@@ -75,7 +77,7 @@ raíces.
 
 Tradicionalmente, este tipo de intervalos predictivos se construyen bajo argumentos
 teóricos en modelos relativamente simples con supuestos fuertes que hay que checar.
-En aprendizaje de máquina, donde utilizamos predictores mucho más complejos que modelos
+En aprendizaje automático, donde utilizamos predictores mucho más complejos que modelos
 lineales, en dimensión alta y con mecanismos complejos de limpieza y selección de variables,
 es difícil seguir esta ruta tradicional.
 
@@ -89,6 +91,8 @@ cumplen o no ciertos supuestos teóricos. La idea es la siguiente:
 **Intervalos predictivos conformes**.
 
 Suponiendo que los datos se extraen de forma independiente de una misma población,
+dividimos los datos al azar en dos conjuntos: una muestra de entrenamiento y 
+una de calibración.
 
 1. Construimos con una muestra de entrenamiento $(x_i, y_i)$ nuestro predictor $\hat{f}(x)$
 (usando cualquier método).
@@ -115,7 +119,8 @@ o al calidad del ajuste (ver [Distribution-Free Predictive Inference for Regress
 ## Ejemplo: bodyfat
 
 En el ejemplo de grasa corporal utilizamos lasso para seleccionar un modelo. Podemos
-construir intervalos predictivos (*split-conformal*) como sigue:
+construir intervalos predictivos (*split-conformal*) como sigue. En este ejemplo
+haremos todo manualmente:
 
 
 ```{r}
@@ -148,18 +153,19 @@ y su distribución:
 ```{r}
 #| fig-width: 4
 #| fig-height: 3
+# Hacer predicciones y obtener residuales (muestra de calibración)
 preds_gc_tbl <- predict(flujo_2, grasa_cal) |> 
   bind_cols(grasa_cal) |> 
   mutate(residual = abs(grasacorp - .pred))
 # obtener cuantil
 cuantiles_res <- quantile(preds_gc_tbl |> pull(residual), 
                  probs = c(0.90))
+# graficar
 ggplot(preds_gc_tbl, aes(x = residual)) +
   geom_histogram(binwidth = 0.75) + 
   geom_vline(xintercept = cuantiles_res, colour = "red")
 cuantiles_res |> round(2)
 ```
-
 
 Una gráfica útil es la de predicciones en el eje horizontal 
 contra intervalos y valores observados en el eje $y$:
@@ -223,29 +229,13 @@ ggplot(preds_int_tbl, aes(x = edad,
   geom_point(colour = "red", position = position_dodge2(width = 0.5)) 
 ```
 
-:::
-# División de datos para split-conformal
-
-La mejor manera de construir y checar intervalos es dividiendo como sigue:
-
-1. Un conjunto de entrenamiento para ajustar el modelo.
-2. Un conjunto de calibración.
-con el que se construyen los intervalos para predicciones futuras,
-3. Un conjunto de prueba para checar cobertura de intervalos. 
-
-:::
-
-Construir intervalos y checar su cobertura entonces requiere usualmente
-más datos comparado con el caso donde sólo producimos estimaciones puntuales.
-Más adelante veremos como podemos ahorrar en 2) utilizando validación cruzada
-(ver https://www.tidymodels.org/learn/models/conformal-regression/).
 
 
 
 
 ## Cobertura local para intervalos conformes
 
-La cobertura promeido es confiable y robusta, sin embargo, se requieren algunos elementos adicionales
+La cobertura promedio es confiable y robusta, sin embargo, se requieren algunos elementos adicionales
 para que los intervalos sean más útiles. Quisiéramos también que la cobertura
 local alrededor de cualquier región del las $x$'s sea cercana al 90% (cobertura
 condicional). Esto es más
@@ -386,8 +376,9 @@ particularmente la pérdida relativa dada por
 $$L(y, \hat{f}(x)) = \frac{|y - \hat{f}(x)|}{\hat{f}(x)}$$
 En este caso, a la pérdida $L(y, \hat{f}(x))$ a veces se le llama
 **medida de conformidad** de las predicciones. Podemos aplicar entonces el mismo procedimiento:
+
 1. Construimos con una muestra de entrenamiento $(x_i, y_i)$ nuestro predictor $\hat{f}(x)$
-2. Usamos una muestra de prueba separada para evaluar el error promedio, y adicionalmente,
+2. Usamos una muestra de calibración separada para evaluar el error promedio, y adicionalmente,
 calculamos los valores $\mathbf{r}_i = L(\mathbf{y}_i , \hat{f}(\mathbf{x}_i))$
 3. Si queremos intervalos del 90%, calculamos ahora  $q$, que es el cuantil 
 90% de los valores $\mathbf{r}_i$
@@ -513,9 +504,10 @@ Python, [Introduction To Conformal Prediction With Python](https://christophmoln
 En el siguiente método (ver  [Conformalized Quantile Regression](https://proceedings.neurips.cc/paper/2019/file/5103c3584b063c431bd1268e9b5e76fb-Paper.pdf)), producimos dos modelos en lugar de uno, pero el
 resto del procedimiento es el mismo:
 
-- Construimos un modelos para
+- Construimos con datos de entrenamiento modelos para
 un cuantil superior $\hat{f}_{sup}$ de la cantidad a predecir y otro para un cuantil inferior $\hat{f}_{inf}$. 
-- Calculamos las medidas de conformidad (qué tanto queda la $y$ por encima
+- Sobre una muestra de calibración, 
+calculamos las medidas de conformidad (qué tanto queda la $y$ por encima
 de nuestro modelo del límite superior o qué tanto queda por debajo del límite inferior)
 $$q_i = \max \{\hat{f}_{inf}(x_i) - y_i, y_i - \hat{f}_{sup} (x_i)\}$$  
 - Calculamos $q$, el cuantil 90\% de las $q_i$ 
@@ -526,9 +518,8 @@ Aunque la condicional no está garantizada, estos intervalos muchas veces resuel
 los problemas más graves en fallas de cobertura condicional.
 
 Es posible adaptar varios métodos para producir dos modelos que intentan estimar
-cuantiles, sustituyendo la pérdida apropiadamente. Una opción es utlizar regresión cuantílica flexible, por ejemplo:
+cuantiles, sustituyendo la pérdida apropiadamente. Una opción es utilizar regresión cuantílica basada en bosques, por ejemplo:
 
-### Ejemplo: regresión cuantílica conformalizada
 
 ```{r, message = FALSE}
 set.seed(121)
@@ -570,7 +561,7 @@ Y vemos que el comportamiento de estos intervalos es mejor que usando el método
 de predicción conforme de arriba.
 
 
-Más comunmente, usamos métodos más flexibles para estimar los
+Usamos métodos flexibles para estimar los
 cuantiles, como bosques o boosting (que veremos más adelante).
 Usando tidymodels, el método default es bosques. Puedes ver más 
 aquí:
