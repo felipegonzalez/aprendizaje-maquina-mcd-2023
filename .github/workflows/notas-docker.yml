@@ -1,5 +1,7 @@
 name: Docker Image CI
 
+env:
+  GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
 on:
   push:
     branches: [ "main" ]
