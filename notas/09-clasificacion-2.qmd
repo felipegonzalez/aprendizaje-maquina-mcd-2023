@@ -430,10 +430,10 @@ la espcificidad es p también. De modo que este clasificador al azar está en la
 En lugar de examinar cada punto de corte por separado, podemos hacer el análisis de todos los posibles puntos de corte mediante la curva ROC (receiver operating characteristic, de ingeniería).
 
 
-```{block2, type='comentario'}
+::: callout-tip
  Para un problema de clasificación binaria, dadas estimaciones $\hat{p}_1(x)$, 
  la curva ROC grafica todos los pares de (1-especificidad, sensibilidad) para cada posible punto de corte $\hat{p}_1(x) > \alpha$.
-```
+::: 
 
  
 
@@ -443,7 +443,7 @@ En lugar de examinar cada punto de corte por separado, podemos hacer el análisi
 
 ```{r}
 roc_tbl <- roc_curve(preds_prueba, 
-  truth = type, estimate = .pred_Yes)
+  truth = type, .pred_Yes)
 roc_tbl
 ggplot(roc_tbl, 
   aes(x = 1 - specificity, y = sensitivity)) +
@@ -463,10 +463,10 @@ tipo de error).
 También podemos definir una medida resumen del desempeño de un clasificador según
 esta curva:
 
-```{block2, type='comentario'}
+::: callout-tip
 La medida AUC (area under the curve) para un clasificador es el área 
 bajo la curva generada por los pares sensibilidad-especificidad de la curva ROC.
-```
+:::
 
 ```{r}
 roc_auc(preds_prueba, type, .pred_Yes)
