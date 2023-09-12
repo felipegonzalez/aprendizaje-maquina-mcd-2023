@@ -1,0 +1,127 @@
+---
+title: "Tarea 5"
+format: html
+---
+
+En esta tarea revisaremos dos temas en los que creo que 
+quedaron dudas en la clase pasada: inicialización/simetría de redes y
+básicos de afinación de redes.
+
+```{r, message = FALSE}
+library(keras)
+library(tidyverse)
+```
+
+## Simetría e inicialización 
+
+En este ejemplos discutiremos por qué es importante
+romper la simetría de la red para redes totalmente conexas.
+Usamos los siguientes datos simulados:
+
+
+```{r}
+set.seed(8)
+n <- 100
+datos <- tibble(x_1 = rnorm(n, 0, 1), x_2 = rnorm(n, 0, 1)) |> 
+  mutate(y = 0.5 * x_1 + 1 * x_2 + rnorm(n, 0, 0.01))
+x <- datos |> select(x_1, x_2) |> as.matrix()
+y <- datos |> pull(y)
+```
+
+Nótese que inicializamos todos los pesos en 0:
+
+```{r}
+modelo <- keras_model_sequential() |> 
+  layer_dense(units = 3, 
+              kernel_initializer = initializer_constant(0),
+              activation = "sigmoid") |> 
+    layer_dense(units = 2, 
+              kernel_initializer = initializer_constant(0),
+              activation = "sigmoid") |> 
+  layer_dense(units = 1, 
+              kernel_initializer = initializer_constant(0),
+              activation = "linear") # salida
+modelo |> compile(loss = "mse", 
+  optimizer = optimizer_sgd(learning_rate = 0.1))
+fit(modelo, x = x, y = y, epochs = 10)
+
+```
+
+
+**Pregunta 1**: Explica cómo funciona la red
+(puedes utilizar la función *get_weights* para ver los
+pesos y sesgos y explicar qué está pasando). ¿Qué particularidad
+tiene? ¿Cambia esto si mueves el número de unidades o simulas con otros datos, o haces más iteraciones? 
+
+
+
+```{r}
+get_weights(modelo)
+```
+
+Ahora rompemos la simetría por ejemplo simulando al
+azar los pesos con normales con media 0 y desviación estándar
+1 :
+
+```{r}
+modelo_2 <- keras_model_sequential() |> 
+  layer_dense(units = 3, 
+    activation = "sigmoid",
+    kernel_initializer = initializer_random_normal(0, 1)) |> 
+  layer_dense(units = 2, 
+    activation = "sigmoid",
+    kernel_initializer = initializer_random_normal(0, 1)) |> 
+  layer_dense(units = 1, 
+    activation = "linear",
+    kernel_initializer = initializer_random_normal(0, 1))         
+modelo_2 |> compile(loss = "mse", 
+  optimizer = optimizer_sgd(learning_rate = 0.1))
+fit(modelo_2, x = x, y = y, epochs = 50)
+```
+
+
+**Pregunta 2**: ¿Pasa lo mismo que en el segundo paso en cuanto
+a la simetría? Explica por qué la pérdida de entrenamiento
+es mucho más baja en este ejemplo. 
+
+**Pregunta 3**: En este ejemplo pusimos la desviación estándar
+de la inicialización en 1. Explica por qué no tiene mucho sentido
+poner un valor muy chico como 0.00001. Prueba que pasa si pones
+valores grande como 10 o 100. Examina los coeficientes para este último caso y diagnostica por qué el desempeño no es muy bueno (recuerda la forma de la función sigmoide): en algunos casos
+decimos que hay unidades "saturadas".
+
+**Pregunta 4**: La inicialización en redes neuronales es 
+importante. En distintos problemas se usan distintos
+tipos, y en algunos casos es necesario experimentar también
+con los parámetros de la inicialización. El default de keras que generalmente funciona bien es el método Glorot Uniform, y también
+existe el Glorot Normal. Investiga en qué consisten estos
+inicializadores, y por qué es buena idea que la inicialización
+dependa del número de entradas y número de salidas de cada
+unidad.
+
+
+## Más de entrenamiento de redes y su desempeño
+
+Revisa en https://www.deeplearningbook.org/contents/guidelines.html
+las secciones 11.4.1 y 11.4.2. Opcionalmente revisa 11.4.3-11.4.5
+
+Notas: 
+
+1) Cuando se refiere a "weight decay" se trata de regularización L2 que vimos en clase. 
+
+2) Cuando se refiere a "hiperparámetros", esta expresión es en contraste a los parámetros de la red: los parámetros
+de la red son los pesos que vimos en clase, y se obtienen ajustando el modelo. Los hiperparámetros son el resto de valores
+como número de capas, número de unidades en cada capa,
+regularización, optimizador y tasa de aprendizaje, etc. Estos hiperparámetros no se optimizan directamente con el conjunto de entrenamiento.
+
+3) La "capacidad" del modelo que se menciona en el texto 
+puedes pensarlo como inverso del "sesgo de especificación" que hemos discutido en clase
+
+**Pregunta 5**. Según la lectura ¿qué hiperparámetro de las redes neuronales puede seleccionarse sin checar el error de prueba? 
+
+**Pregunta 6**. Según la lectura, ¿Por qué en los otros hiperparámetros es necesario checar error de entrenamiento y
+error de prueba/validación? ¿Qué diagnósticos se utilizan para tomar decisiones acerca de hiperparámetros?
+
+
+
+
