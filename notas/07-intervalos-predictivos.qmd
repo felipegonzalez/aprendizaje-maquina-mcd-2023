@@ -44,6 +44,11 @@ generalmente) para ofrecer que tienen consecuencias
 considerables. Otro ejemplo es predecir si en una tomografía hay evidencia de cáncer:
 aún cuando la probabilidad de que sea una imagen "normal" es alta (digamos 75%), una probablidad de 25% de que sea cancerígena debe ser considerada en decisiones posteriores.
 
+Otro ejemplo común es el de pronósticos de demanda, donde es importante dar
+más contexto que una sola predicción puntual: un intervalo de incertidumbre
+puede mostrar que en algunos casos es muy probable que el inventario se agote,
+pero en otros casos no. En ambos casos, costos y ganancias complementan esta información.
+
 ::: callout-note
 #Incertidumbre en predicciones
 
@@ -72,10 +77,12 @@ Tradicionalmente, este tipo de intervalos predictivos se construyen bajo argumen
 teóricos en modelos relativamente simples con supuestos fuertes que hay que checar.
 En aprendizaje de máquina, donde utilizamos predictores mucho más complejos que modelos
 lineales, en dimensión alta y con mecanismos complejos de limpieza y selección de variables,
-es muy difícil seguir esta ruta tradicional.
+es difícil seguir esta ruta tradicional.
 
 En lugar de eso, utilizaremos la idea fundamental de división de muestras (que en este
-caso a veces les llamamos entrenamiento-calibración) para producir intervalos con cobertura garantizada independientemente de si se
+caso a veces les llamamos entrenamiento-calibración, en lugar de entrenamiento-validación) 
+para producir intervalos 
+con cobertura garantizada independientemente de si se
 cumplen o no ciertos supuestos teóricos. La idea es la siguiente:
 
 ::: callout-note
@@ -83,7 +90,8 @@ cumplen o no ciertos supuestos teóricos. La idea es la siguiente:
 
 Suponiendo que los datos se extraen de forma independiente de una misma población,
 
-1. Construimos con una muestra de entrenamiento $(x_i, y_i)$ nuestro predictor $\hat{f}(x)$.
+1. Construimos con una muestra de entrenamiento $(x_i, y_i)$ nuestro predictor $\hat{f}(x)$
+(usando cualquier método).
 2. Usamos una muestra de calibración separada para evaluar el error promedio, y adicionalmente,
 calculamos los residuales  $\mathbf{r}_i = |\mathbf{y}_i - \hat{f}(\mathbf{x}_i)|$
 3. Si queremos intervalos del 90%, calculamos ahora  $q$, que es el cuantil 
@@ -134,20 +142,22 @@ flujo_2 <- workflow() |>
 flujo_2 <- flujo_2 |> fit(grasa_ent)
 ```
 
-Ahora, sobre la muestra de prueba (calibración) evaluamos el error y calculamos residuales
+Ahora, sobre la muestra de calibración evaluamos el error y calculamos residuales
 y su distribución:
 
 ```{r}
+#| fig-width: 4
+#| fig-height: 3
 preds_gc_tbl <- predict(flujo_2, grasa_cal) |> 
   bind_cols(grasa_cal) |> 
   mutate(residual = abs(grasacorp - .pred))
 # obtener cuantil
-q_gc <- quantile(preds_gc_tbl |> pull(residual), 
+cuantiles_res <- quantile(preds_gc_tbl |> pull(residual), 
                  probs = c(0.90))
 ggplot(preds_gc_tbl, aes(x = residual)) +
   geom_histogram(binwidth = 0.75) + 
-  geom_vline(xintercept = q_gc, colour = "red")
-q_gc |> round(2)
+  geom_vline(xintercept = cuantiles_res, colour = "red")
+cuantiles_res |> round(2)
 ```
 
 
@@ -156,7 +166,7 @@ contra intervalos y valores observados en el eje $y$:
 
 ```{r}
 preds_gc_tbl <- preds_gc_tbl |> 
-  mutate(inf = .pred -  q_gc, sup = .pred + q_gc)
+  mutate(inf = .pred -  cuantiles_res, sup = .pred + cuantiles_res)
 ggplot(preds_gc_tbl, aes(x = .pred, ymin = inf, ymax = sup, y = grasacorp)) +
   geom_abline() +
   geom_point(colour = "red") +
@@ -179,27 +189,70 @@ preds_gc_tbl |>
 ```
 
 Adicionalmente, podemos también ver cobertura con respecto a alguna variable 
-de interés, por ejemplo, la medida de abdomen:
-
-Y finalmente, podemos hacer distintas verificaciones para ver cómo se comportan los 
-intervalos:
+de interés, por ejemplo, la edad:
 
 ```{r}
 ggplot(preds_gc_tbl, aes(x = edad, ymin = inf, ymax = sup, y = grasacorp)) +
   geom_linerange(position = position_dodge2(width = 0.5)) +
   geom_point(colour = "red", position = position_dodge2(width = 0.5)) 
 ```
+
+### Predicción conforme con tidymodels (opcional) {-}
+
+Lo que acabamos de hacer arriba se puede hacer como siguen en *tidymodels*:
+
+```{r}
+#| warning: false
+library(probably)
+# modelo ajustado y conjunto de datos de calibraci´{on:
+conformal_int <- int_conformal_split(flujo_2, grasa_cal)
+conformal_int
+```
+
+```{r}
+preds_int_tbl <- 
+  predict(conformal_int, grasa_cal, level = 0.90) |> 
+  bind_cols(grasa_cal)
+```
+
+
+```{r}
+ggplot(preds_int_tbl, aes(x = edad, 
+    ymin = .pred_lower, ymax = .pred_upper, y = grasacorp)) +
+  geom_linerange(position = position_dodge2(width = 0.5)) +
+  geom_point(colour = "red", position = position_dodge2(width = 0.5)) 
+```
+
+:::
+# División de datos para split-conformal
+
+La mejor manera de construir y checar intervalos es dividiendo como sigue:
+
+1. Un conjunto de entrenamiento para ajustar el modelo.
+2. Un conjunto de calibración.
+con el que se construyen los intervalos para predicciones futuras,
+3. Un conjunto de prueba para checar cobertura de intervalos. 
+
+:::
+
+Construir intervalos y checar su cobertura entonces requiere usualmente
+más datos comparado con el caso donde sólo producimos estimaciones puntuales.
+Más adelante veremos como podemos ahorrar en 2) utilizando validación cruzada
+(ver https://www.tidymodels.org/learn/models/conformal-regression/).
+
+
+
+
 ## Cobertura local para intervalos conformes
 
-La cobertura es confiable y robusta, sin embargo, se requieren algunos elementos adicionales
+La cobertura promeido es confiable y robusta, sin embargo, se requieren algunos elementos adicionales
 para que los intervalos sean más útiles. Quisiéramos también que la cobertura
 local alrededor de cualquier región del las $x$'s sea cercana al 90% (cobertura
 condicional). Esto es más
 dificíl de alcanzar.
 Un chequeo básico que podemos hacer es el siguiente:
 
-- Para cada nivel de predicción $\hat{y} = \hat{f}(x)$, los intervalos tienen cobertura de 90%.
-Como esto sólo involucra las predicciones, los valores observados, y los intervalos predictivos, esto puede checarse en la práctica con una tabla o gráfica.
+- Para cada nivel de predicción $\hat{y} = \hat{f}(x)$, los intervalos tienen cobertura de 90%. Como esto sólo involucra las predicciones, los valores observados, y los intervalos predictivos, esto puede checarse en la práctica con una tabla o gráfica.
 
 En problemas de dimensión alta, sin embargo, es difícil checar que la
 cobertura local se cumple en toda $x$. Podemos, sin embargo, hacer 
@@ -222,8 +275,8 @@ library(tidyverse)
 library(tidymodels)
 library(gt)
 auto <- read_csv("../datos/auto.csv")
-datos <- auto[, c('name', 'weight','year', 'mpg', 'displacement')]
-datos <- datos %>% mutate(
+datos_auto <- auto[, c('name', 'weight','year', 'mpg', 'displacement')]
+datos_auto <- datos_auto |> mutate(
   peso_kg = weight * 0.45359237,
   rendimiento_kpl = mpg * (1.609344 / 3.78541178), 
   año = year)
@@ -233,33 +286,32 @@ hacerlo como sigue (75% para entrenamiento aproximadamente en este caso, así
 obtenemos alrededor de 100 casos para prueba):
 ```{r, message = FALSE}
 set.seed(121)
-datos_split <- initial_split(datos, prop = 0.3)
+datos_split <- initial_split(datos_auto, prop = 0.3)
 datos_entrena <- training(datos_split)
 datos_prueba <- testing(datos_split)
 # preprocesamiento y flujo
-receta_lineal <- recipe(rendimiento_kpl ~ peso_kg + año, datos_entrena) |> 
-  step_ns(peso_kg, deg_free = 3) |> 
-  step_ns(año, deg_free = 2)
+receta_lineal <- recipe(rendimiento_kpl ~ peso_kg + año, datos_entrena) |>
+  step_ns(peso_kg, deg_free = 3) 
 mod_lineal <- linear_reg() |>  
   set_engine("lm")  
 flujo <- workflow() |>  
   add_recipe(receta_lineal) |> 
   add_model(mod_lineal)
-flujo_ajustado <- fit(flujo, datos_entrena)
+flujo_ajustado_auto <- fit(flujo, datos_entrena)
 ```
 Una vez que tenemos el flujo ajustado, podemos ver cómo se comportan los residuales:
 ```{r}
-preds_tbl <- predict(flujo_ajustado, datos_prueba) |> 
+preds_tbl <- predict(flujo_ajustado_auto, datos_prueba) |> 
   bind_cols(datos_prueba) |> 
   mutate(r = abs(rendimiento_kpl - .pred))
 ggplot(preds_tbl, aes(x = r)) + geom_histogram()
 ```
 ```{r}
-q <- quantile(preds_tbl |> pull(r), probs = c(0.90)) |> 
+q <- quantile(preds_tbl |> pull(r), probs = c(0.80)) |> 
   round(2)
 q
 ```
-Podemos ahora construir intervalos de 90% para nuestras predicciones de la siguiente
+Podemos ahora construir intervalos de 80% para nuestras predicciones de la siguiente
 forma:
 ```{r}
 preds_tbl <- preds_tbl |> 
@@ -267,7 +319,7 @@ preds_tbl <- preds_tbl |>
          sup = .pred + q)
 ```
 Por definición, estos intervalos tienen cobertura promedio sobre nuevos
-datos de aproximadamente el 90%. 
+datos de aproximadamente el 80%. 
 Sin embargo, la cobertura puede nos ser uniforme en distintas regiones de las
 entradas. Como sugerimos arriba, podemos checar primero la respuesta en función
 de la predicción:
@@ -275,7 +327,8 @@ de la predicción:
 ```{r}
 ggplot(preds_tbl, aes(x = .pred, y = rendimiento_kpl, ymin = inf, ymax = sup)) +
   geom_linerange() +
-  geom_point(colour = "red") + coord_obs_pred()
+  geom_point(colour = "red") + coord_obs_pred() +
+  labs(subtitle = "Fallas en cobertura condicional")
 ```
 También podemos verificar con una tabla que la cobertura no es uniforme:
 
@@ -289,80 +342,22 @@ preds_tbl |>
   mutate(error_e = 2 * sqrt(cobertura * (1- cobertura) / n)) |> 
   gt() |> fmt_number(where(is_double), decimals = 2)
 ```
+
 Estos intervalos son poco útiles
 porque exageran la incertidumbre para valores altos y 
 la subestiman para valores bajos. 
 Adicionalmente, podemos checar variables que consideramos importantes para
 ver cómo se comportan los intervalos. En este caso, por ejemplo, usamos
 la variable peso,
+
 ```{r}
 ggplot(preds_tbl, aes(x = peso_kg, y =  rendimiento_kpl, ymin = inf, ymax = sup)) +
   geom_linerange() +
-  geom_point(colour = "red") 
+  geom_point(colour = "red") +
+  labs(subtitle = "Fallas en cobertura condicional")
 ```
 Y vemos que aunque nuestros intervalos son del 90%, tienen baja cobertura para
 pesos bajos y sobrecubren para pesos altos.
-
-Podemos mejorar los intervalos usando **regresión cuantílica** 
-(ver también [Conformalized Quantile Regression](https://proceedings.neurips.cc/paper/2019/file/5103c3584b063c431bd1268e9b5e76fb-Paper.pdf)), donde la
-respuesta es la variable que queremos predecir y la única entrada es nuestra
-predicción puntual. Primero necesitamos
-una muestra adicional de calibración (por ejemplo dividimos la
-muestra de prueba en una muestra de calibración y otra de evaluación):
-
-```{r, warning = FALSE}
-library(quantreg)
-lambda <- 1 # suavizamiento splines reg cuantílica
-calib_eval_split <- initial_split(preds_tbl, 0.5)
-calibracion_tbl <- training(calib_eval_split)
-eval_tbl <- testing(calib_eval_split)
-ggplot(calibracion_tbl, aes(x = .pred, y = rendimiento_kpl)) +  
-  geom_point() +
-  geom_quantile(method = "rqss", 
-    lambda = lambda, quantiles = c(0.05, 0.95))
-sup_qreg <- quantreg::rqss(rendimiento_kpl ~ .pred, 
-  lambda = lambda, data = preds_tbl, tau = 0.95)
-inf_qreg <- quantreg::rqss(rendimiento_kpl ~ .pred, 
-  lambda = lambda, data = preds_tbl, tau = 0.05)
-calibracion_tbl <- calibracion_tbl |> 
-  mutate(sup_q = predict(sup_qreg, 
-            newdata = calibracion_tbl |> select(rendimiento_kpl, .pred)),
-         inf_q = predict(inf_qreg, 
-          newdata = calibracion_tbl |> select(rendimiento_kpl, .pred))
-         )
-```
-Los nuevos intervalos se ven como sigue, por ejemplo en términos de la variable peso:
-```{r}
-ggplot(calibracion_tbl, 
-  aes(x = peso_kg, y =  rendimiento_kpl, 
-      ymin = inf_q, ymax = sup_q)) +
-  geom_linerange() +
-  geom_point(colour = "red") 
-```
-Finalmente verificamos con la muestra de evaluación (en este punto, podemos ajustar la regresión
-cuantílica si es necesario):
-```{r, warning = FALSE}
-eval_tbl <- eval_tbl |> 
-  mutate(sup_q = predict(sup_qreg, newdata = eval_tbl),
-         inf_q = predict(inf_qreg, newdata = eval_tbl))
-```
-
-```{r}
-n_grupos <- 5 # podemos usar más grupos si tenemos más datos
-eval_tbl |> 
-  rename(y = rendimiento_kpl) |> 
-  mutate(grupo_pred = cut_number(.pred, n = n_grupos)) |> 
-  group_by(grupo_pred) |> 
-  summarise(n = n(), 
-            cobertura = mean(y >= inf_q & y <= sup_q), 
-            .pred = mean(.pred)) |>
-  mutate(error_cob = 2 * sqrt(cobertura * (1- cobertura) / n)) |> 
-  ggplot(aes(x = .pred, y = cobertura, 
-    ymin = cobertura - error_cob, ymax = cobertura + error_cob)) +
-  geom_hline(yintercept = 0.9, colour = "red") +
-  geom_point() + geom_linerange() +
-  ylim(c(0,1.1))
-```
 
 ::: callout-note
 # Probando intervalos predictivos
@@ -371,15 +366,21 @@ eval_tbl |>
 viendo el comportamiento de intervalos dependiendo de la predicción.
 2. Adicionalmente, podemos también checar intervalos en función de variables importantes
 para ver si en distintas regiones la cobertura es uniforme.
-3. Cuando detectamos que los intervalos predictivos conformes no tienen niveles
-de cobertura uniforme sobre el espacio de entradas, podemos usar una muestra
-de calibración y usar regresión cuantílica tomando como respuesta la variable
-respuesta y como entrada la predicción puntual de nuestro modelo ajustado.
 :::
+
+
+Hay varias maneras de hacer los intervalos conformes *adaptativos*:
+
+- Cambiando la función de pérdida que usamos para construir los intervalos podemos
+obtener mejores resultados
+- Utilizando regresión cuantílica conformalizada
+
+Primero vemos el primer enfoque:
 
 ## Ejemplo: otras funciones de pérdida
 
-El mismo método puede aplicarse para otras funciones de pérdida más apropiadas 
+El mismo método para producir intervalos conformes que vimos arriba
+puede aplicarse para otras funciones de pérdida más apropiadas 
 para cada problema. Supongamos que en el problema de predicción de precios, nos interesa
 particularmente la pérdida relativa dada por
 $$L(y, \hat{f}(x)) = \frac{|y - \hat{f}(x)|}{\hat{f}(x)}$$
@@ -497,8 +498,7 @@ preds_tbl |>
 - El chequeo básico consiste en ver cómo se comporta la cobertura para distintos valores de la predicción.
 - Cuando un atributo $x$ es importante (por ejemplo por razones de discriminación, o razones de negocio), podemos checar la 
 cobertura condicional a $x$ (como en el ejemplo de grasa corporal de arriba).
-- Cuando la cobertura condicional no se cumple, podemos usar una muestra adicional para calibrar los intervalos. Esto se puede hacer ad-hoc o usando regresión cuantílica.
-- Una alternativa adicional que se puede utilizar es intentar estimar directamente los cuantiles de la respuesta (por ejemplo 5 y 95% para un intervalo del 90%). Existe una función de pérdida diseñada para este propósito (veremos más adelante) que se puede aplicar a regresión lineal, redes neuronales, métodos basados en árboles y otros. Igualmente, es necesario checar y calibrar si es necesario los intervalos resultantes.
+- Una alternativa  que se puede utilizar es intentar estimar directamente los cuantiles de la respuesta (por ejemplo 5 y 95% para un intervalo del 90%). Existe una función de pérdida diseñada para este propósito (veremos más adelante) que se puede aplicar a regresión lineal, redes neuronales, métodos basados en árboles y otros. Igualmente, es necesario checar y calibrar si es necesario los intervalos resultantes.
 - La selección de medida de conformidad (o función de pérdida) para cada modelo no es
 trivial, y de esa medida depende el comportamiento de los intervalos. En problemas de
 regresión, pérdida absoluta y MAPE (error porcentual absoluto promedio) son usuales, y una
@@ -507,4 +507,74 @@ puede desempeñarse mejor que otra.
 Finalmente, es posible hacer predicción conforme con tidymodels (o paquetes de Python),
 consultar por ejemplo [Conformal inference for regression models](https://www.tidymodels.org/learn/models/conformal-regression/) o para
 Python, [Introduction To Conformal Prediction With Python](https://christophmolnar.com/books/conformal-prediction/).
+
+## Regresión cuantílica conforme
+
+En el siguiente método (ver  [Conformalized Quantile Regression](https://proceedings.neurips.cc/paper/2019/file/5103c3584b063c431bd1268e9b5e76fb-Paper.pdf)), producimos dos modelos en lugar de uno, pero el
+resto del procedimiento es el mismo:
+
+- Construimos un modelos para
+un cuantil superior $\hat{f}_{sup}$ de la cantidad a predecir y otro para un cuantil inferior $\hat{f}_{inf}$. 
+- Calculamos las medidas de conformidad (qué tanto queda la $y$ por encima
+de nuestro modelo del límite superior o qué tanto queda por debajo del límite inferior)
+$$q_i = \max \{\hat{f}_{inf}(x_i) - y_i, y_i - \hat{f}_{sup} (x_i)\}$$  
+- Calculamos $q$, el cuantil 90\% de las $q_i$ 
+- Al predecir, devolvemos el intervalo
+$$ C = [\hat{f}_{inf}(x_i) - \hat{q}, \hat{f}_{sup} (x_i) + \hat{q}]$$
+Lo cobertura promedio o marginal, como en todos los casos de arriba, está garantizada.
+Aunque la condicional no está garantizada, estos intervalos muchas veces resuelven
+los problemas más graves en fallas de cobertura condicional.
+
+Es posible adaptar varios métodos para producir dos modelos que intentan estimar
+cuantiles, sustituyendo la pérdida apropiadamente. Una opción es utlizar regresión cuantílica flexible, por ejemplo:
+
+### Ejemplo: regresión cuantílica conformalizada
+
+```{r, message = FALSE}
+set.seed(121)
+datos_split <- initial_split(datos_auto, prop = 0.3)
+datos_entrena <- training(datos_split)
+datos_calib <- testing(datos_split)
+# preprocesamiento y flujo
+receta_lineal <- recipe(rendimiento_kpl ~ peso_kg + año, datos_entrena) |>
+  step_ns(peso_kg, deg_free = 3) 
+mod_lineal <- linear_reg() |>  
+  set_engine("lm")  
+flujo <- workflow() |>  
+  add_recipe(receta_lineal) |> 
+  add_model(mod_lineal)
+flujo_ajustado_auto <- fit(flujo, datos_entrena)
+```
+
+```{r}
+quant_int <-
+  int_conformal_quantile(
+    flujo_ajustado_auto, 
+    train_data = datos_entrena,
+    cal_data = datos_calib, 
+    level = 0.80,
+    ntree = 1000)
+quant_int
+```
+Podemos checar cómo se ven los resultados con el conjunto de calibración:
+
+```{r}
+predict(quant_int, new_data = datos_calib) |> 
+  bind_cols(datos_calib) |> 
+ggplot(aes(x = peso_kg, y =  rendimiento_kpl, 
+           ymin = .pred_lower, ymax = .pred_upper)) +
+  geom_linerange() +
+  geom_point(colour = "red") 
+```
+Y vemos que el comportamiento de estos intervalos es mejor que usando el método
+de predicción conforme de arriba.
+
+
+Más comunmente, usamos métodos más flexibles para estimar los
+cuantiles, como bosques o boosting (que veremos más adelante).
+Usando tidymodels, el método default es bosques. Puedes ver más 
+aquí:
+
+- [Conformal inference for regression models](https://www.tidymodels.org/learn/models/conformal-regression/)
+- [Introduction To Conformal Prediction With Python](https://christophmolnar.com/books/conformal-prediction/)
 
