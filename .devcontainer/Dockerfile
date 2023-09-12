@@ -54,5 +54,5 @@ RUN install2.r --error \
 RUN install2.r reticulate tensorflow keras \
     abind RcppRoll
 RUN install2.r gifski languageserver
-
+RUN install2.r probably quantregForest
 
