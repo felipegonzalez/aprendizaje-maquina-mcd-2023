@@ -1,0 +1,314 @@
+---
+title: "Tarea 6: clasificación y regresión logística"
+format: html
+---
+
+## Regresión logística y regularización
+
+Veremos un ejemplo simple de regresión logística para una sola variable de entrada. Recordamos que la entrada $x$ es numérica, $y$ toma los
+valores 0 o 1 (que codifican dos clases). Revisa las notas
+para repasar la explicación de que nuestro objetivo es estimar la
+probabilidad
+
+$$p(x) = P(Y = 1|X = x)$$
+
+para cada $x$ posible. Si tenemos una estimación $p(x)=p_1(x)$ de esta probabilidad, entonces la estimación de $P(Y=0|X=x)$ está dada por
+$p_0(x) = 1 - p(x)$.
+
+En clase vimos como estimar estas probabilidades usando por ejemplo
+$k$ vecinos más cercanos. En regresión logística usamos un modelo
+lineal con una transformación adicional:
+
+$$p(x) = h(a + bx)$$
+donde 
+
+- $h$ es la función logística (para obtener valores entre 0 y 1),
+- $a$ y $b$ son parámetros que queremos ajustar con una muestra de entrenamiento.
+
+También podemos escribir:
+
+$$p(x) = \frac{\exp(a + bx)}{1 + \exp(a+bx)}$$
+
+
+Considera los siguientes datos de entrenamiento donde queremos predecir la 
+categoria y en función de x usando regresión logística:
+
+```{r}
+#| message: false
+library(tidyverse)
+library(ggrepel)
+datos_ent_tbl <- tibble(
+  x = c(-2, -2.5, -1, 1.5, 1.6, 2.7, 3, 3.5), 
+  y = c(0, 0, 0, 1, 0, 1, 1, 1)) |>
+  mutate(x = x - mean(x)) # centrar x
+ggplot(datos_ent_tbl, aes(x = x, y = y, colour = factor(y) )) +
+  geom_point()
+```
+
+Usaremos estas funciones auxiliares (recuerda las definiciones de clase
+de pérdida logarítmica)
+
+```{r}
+h <- function(x){
+  1/(1 + exp(-x))
+  # o exp(x) / (1 + exp(x)), que es lo mismo
+}
+perdida_logaritmica <- function(p, y){
+  perdida_i <- ifelse(y == 1 , -log(p), -log(1 - p))
+  perdida <- mean(perdida_i)
+  # o equivalentemente y más eficiente:
+  # perdida <- - mean(y * log(p) + (1-y)*log(1-p))
+  perdida
+}
+```
+
+Las siguientes dos funciones auxiliares nos permiten calcular fácilmente
+probabilidades dadas los parámetros $a$ y $b$ y la entrada $x$,
+y calcular una función que dado el conjunto de entrenamiento,
+calcula la pérdida cuando recibe como entrada los parámetros (ver ejemplos abajo):
+
+```{r}
+evaluar_h <- function(x, params){
+  a = params[1]
+  b = params[2]
+  prob <- h(a + b * x)
+  tibble(x = x, p = prob)
+}
+calc_perdida_log <- function(datos){
+  # devuelve una función que sólo depende de parámetros
+  perdida_fun <- function(params){
+    resultado <- perdida_logaritmica(
+      p = evaluar_h(x = datos$x, params) |> pull(p),
+      y = datos$y)
+    resultado
+  }
+  perdida_fun
+}
+```
+
+En el siguiente código, podemos proponer coeficientes a y b de regresión logística
+y ver cómo ajusta el modelo
+
+```{r}
+a <- 1.0
+b <- 0.5
+# función de pérdida para los datos
+perdida_log_ent <- calc_perdida_log(datos_ent_tbl)
+# ahora podemos calcular la pérdida directamente
+perdida_log_ent(c(a, b))
+```
+
+Graficamos también el modelo $p(x) = h(a + bx)$, junto
+con la pérdida logarítmica que aporta cada dato de entrenamiento,
+y la pérdida promedio:
+
+```{r}
+valores_prob <- evaluar_h(x = seq(-5, 5, 0.01), params = c(a, b))
+datos_ent_tbl <- datos_ent_tbl |> 
+  mutate(evaluar_h(x, c(a,b))) |> 
+  mutate(perdida_log = ifelse(y == 1, - log(p), -log(1-p))) |> 
+  mutate(perdida_log = round(perdida_log, 3))
+ggplot(datos_ent_tbl, aes(x = x)) +
+  geom_point(aes(y = y, colour = factor(y))) +
+  geom_line(data = valores_prob, aes(y = p), linewidth = 1.2) +
+  geom_text_repel(aes(y = y, label = perdida_log), size = 3) +
+  labs(subtitle = sprintf("Pérdida logarítmica: %.3f", perdida_log_ent(c(a,b)))) +
+  xlim(-5, 5)
+```
+
+**Pregunta 1**: Experimenta cambiando los valores de a y b.
+Prueba valores negativos de a y b también, valores muy grandes de uno
+y de otro, etc. ¿Qué tipo
+de formas (curvas) puedes obtener con este modelo? ¿Puedes obtener por ejemplo un modelo que tenga su máximo de probabilidad en 0?
+
+**Pregunta 2**: En tus modelos, ¿cuándo las aportaciones de los datos
+individuales a la pérdida son grandes? ¿Cuándo son chicas?
+
+**Pregunta 3**: Cambiando los valores de a y b busca minimizar la pérdida logarítmica promedio. ¿Tu solución da probabilidades muy cercanas a 0 y 1 para todos los valores de $x$? 
+
+Sugerencia: Puedes por ejemplo movimiento alternadamente a y b por una
+cantidad *no muy grande*, de manera que en cada movimiento la 
+pérdida logarítmica decrezca.
+
+
+**Pregunta 4**: usando el siguiente código o algo similar, encuentra los valores óptimos. ¿Qué tan cercanos
+son a los valores que encontraste "manualmente" en la pregunta anterior?
+Puedes consultar la documentación para saber qué optimizador usa en este
+caso esta función:
+
+
+```{r}
+glm(y ~ x, datos_ent_tbl, family = "binomial")
+```
+
+Verifica que un optimizador genérico, para este problema, da la misma solución
+que la que vimos arriba, minimizando la pérdida logarítmica:
+
+```{r}
+optim(par = c(0, 0), fn = perdida_log_ent) |> 
+  keep_at(c("par", "value"))
+```
+
+## Regresión logística con varias entradas
+
+En general, para $p$ entradas, podemos definir nuestro modelo como:
+
+$$p(x) = h(a_0 + a_1 x_1 + a_2 x_2 + \cdots + a_px_p)$$
+**Pregunta 5** Para el caso $p=2$, muestra que este modelo es lineal en el sentido de que todas las posibles entradas que satisfacen por ejemplo
+$p(x_1, x_2) = 0.8$ está en una línea recta. Intenta hacer un dibujo (a mano) de cómo se verían las curvas de nivel de $p(x_1, x_2)$.
+
+En el caso general, los datos que toman una cierta probabilidad fija
+están en un hiperplano.
+
+
+## Regresión logística multinomial (intro)
+
+
+Consideramos un problema de regresión logística multinomial con tres clases, y una
+sola variable de entrada. Por ejemplo:
+
+```{r}
+datos_tbl <- tibble(
+  id = 1:10, 
+  x = c(-2, -2, -1, 0, 1, 1,5, 2, 3, 3.5),
+  clase = c("a", "a", "b", "a", "b", "b", "c", "b", "c", "c"))
+datos_tbl
+```
+
+
+Construiremos paso por paso un modelo logístico multinomial. En este caso,
+escogeremos los parámetros de manera manual, pero más adelante veremos cómo
+ajustarlos con los datos.
+
+Ponemos para cada clase un predictor lineal:
+
+$$f_a(x) = -0.5  - 0.1 x, \\ f_b(x) =  0.3  x, \\f_c(x) = 0.6  x$$
+
+Que calculamos como sigue:
+
+```{r}
+probas <- datos_tbl |> 
+  tibble(a = -0.5 - 0.1 * x, b =  0.3 * x, c = 0.6 * x)
+probas
+```
+
+Pero en a, b y c no tenemos probabilidades (por ejemplo hay valores negativos). 
+Según el modelo multinomial, tenemos que obtener el *softmax* de estas cantidades.
+Primero tomamos exponencial de cada valor:
+
+```{r}
+probas <- probas |>
+  mutate(across(c("a", "b", "c"), ~ exp(.x)))
+probas
+```
+
+Y ahora normalizamos para que a, b y c sumen 1:
+
+```{r}
+probas <- probas |>
+  mutate(suma = a + b + c) |> 
+  mutate(across(c("a", "b", "c"), ~ .x / suma))
+probas
+```
+Y vemos que en cada renglón a, b, y c suman 1. Estas son las probabilidades
+de nuestro modelo logístico multinomial. Podemos graficarlas:
+
+
+```{r}
+probas |> select(x, a, b, c) |> pivot_longer(c("a", "b", "c"), names_to = "clase", values_to = "prob") |> 
+  ggplot(aes(x = x, y = prob, colour = clase)) +
+  geom_point() + geom_line()
+```
+
+**Pregunta 6**: ¿Las probabilidades de cada clase en un modelo logístico multinomial
+tienen que ser siempre crecientes o decrecientes? Explica por qué no pasa esto, aún cuando 
+las funciones $f_a, f_b, f_c$ son lineales.
+
+
+**Pregunta 7**: escribe un modelo que de las mismas probabilidades, pero que
+tenga 
+
+$$f_c(x) = 0$$ 
+
+para toda $x$ ¿Eso quiere decir que la probabilidad de $c$ no cambia para 
+ninguna $x$?
+
+Sugerencia: empieza calculando:
+
+```{r}
+probas <- datos_tbl |> 
+  tibble(a = -0.5 - 0.1 * x - 0.6 * x, b =  0.3 * x - 0.6*x, c = 0)
+probas
+```
+
+y luego calcula con el código de arriba los probabilidades. Verifica que son iguales.
+
+**Pregunta 8**: Según esto, explica por qué en un modelo de regresión logística multinomial
+podemos escoger una clase de referencia para la que hacemos su función $f$ correspodiente
+igual a 0 (coeficientes igual a 0), y esto no implica ninguna restricción adicional. Aunque como casi siempre usamos regularización, generalmente no es necesario hacer este paso de normalización 
+
+Ajustamos un modelo de regresión logística regularizada a estos datos.
+La activación de la última capa debe ser "softmax", que hacer el proceso
+explicado arriba:
+
+```{r}
+library(keras)
+modelo_mult <- keras_model_sequential()
+# modelo para tres clases, logístico multinomial
+modelo_mult |> 
+  layer_dense(units = 3,
+              activity_regularizer = regularizer_l2(l = 0.0001), 
+              activation = "softmax")
+```
+
+Y ajustamos:
+
+```{r}
+# pérdida logarítmica multinomial = entropía cruzada categórica
+modelo_mult |>  compile(
+  loss = "categorical_crossentropy",
+  optimizer = optimizer_sgd(learning_rate = 0.2)
+)
+x_entrena <- matrix(datos_tbl$x, ncol = 1)
+# para keras, numerar las clases
+y_num <- matrix(as.numeric(factor(datos_tbl$clase)) - 1, ncol = 1)
+y_entrena <- to_categorical(y_num, num_classes = 3)
+# ajustar
+modelo_mult |> fit(
+  x_entrena, y_entrena,
+  batch_size = 10,
+  epochs = 50, verbose = 1
+  )
+```
+
+
+Primero obtenemos las probabilidades de salida en el conjunto
+de entrenamiento:
+
+```{r}
+probas_mod <- predict(modelo_mult, x = x_entrena)
+probas_mod
+```
+Y ahora graficamos
+
+```{r}
+colnames(probas_mod) <- c("a", "b", "c")
+probas_mod_tbl <- probas_mod |> as_tibble() |> 
+  mutate(x = datos_tbl$x) |> 
+  pivot_longer(c("a", "b", "c"), names_to = "clase", values_to = "prob")
+probas_mod_tbl |> 
+  ggplot(aes(x = x, y = prob, colour = clase)) +
+  geom_point() + geom_line() + ylim(c(0,1))
+```
+
+**Pregunta 9**: ¿qué pasa con estas probabildades si pones un valor de regularización
+considerablemente más alto? ¿Por qué este modelo que considera tres predictores lineales
+separados puede ser que no funcione bien sin regularización?
+
+Checa los coeficientes de los predictores lineales aquí:
+
+```{r}
+get_weights(modelo_mult)
+```
+
+
