@@ -197,7 +197,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./10-clasificacion-calibracion.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Incertidumbre en clasificación</span></span></a>
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Calibración de probabilidades</span></span></a>
   </div>
 </li>
         <li class="sidebar-item sidebar-item-section">
@@ -2589,14 +2589,14 @@ Residual Deviance: 178.4    AIC: 194.4</code></pre>
             [,1]
 [1,]  0.34734306
 [2,]  1.01705003
-[3,] -0.05472933
-[4,] -0.02247144
+[3,] -0.05472932
+[4,] -0.02247145
 [5,]  0.51263183
 [6,]  0.55927497
-[7,]  0.45200703
+[7,]  0.45200700
 
 [[2]]
-[1] -0.9558302</code></pre>
+[1] -0.9558301</code></pre>
 </div>
 </div>
 <p>que coinciden con los valores que obtuvimos usando regresión logística de <em>glm</em>. La única diferencia es que el algoritmo de optimización que se usa en cada caso es diferente: con <em>keras</em> utilizamos descenso en gradiente, mientras que <em>glm</em> usa Newton-Raphson.</p>
