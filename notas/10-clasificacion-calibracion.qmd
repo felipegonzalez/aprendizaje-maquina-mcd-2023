@@ -1,4 +1,4 @@
-# Incertidumbre en clasificación
+# Calibración de probabilidades
 
 En los problemas de clasificación generalmente no conseguimos clasificación perfecta,
 y buscamos que nuestras probabilidades estimadas expresen qué grado de confianza tenemos
