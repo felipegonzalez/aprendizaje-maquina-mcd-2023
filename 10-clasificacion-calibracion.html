@@ -1,0 +1,2476 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="es" xml:lang="es"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.3.353">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Aprendizaje Máquina - 10&nbsp; Incertidumbre en clasificación</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./81-apendice-descenso.html" rel="next">
+<link href="./09-clasificacion-2.html" rel="prev">
+<script src="site_libs/quarto-html/quarto.js"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 20,
+  "language": {
+    "search-no-results-text": "Sin resultados",
+    "search-matching-documents-text": "documentos encontrados",
+    "search-copy-link-title": "Copiar el enlace en la búsqueda",
+    "search-hide-matches-text": "Ocultar resultados adicionales",
+    "search-more-match-text": "resultado adicional en este documento",
+    "search-more-matches-text": "resultados adicionales en este documento",
+    "search-clear-button-title": "Borrar",
+    "search-detached-cancel-button-title": "Cancelar",
+    "search-submit-button-title": "Enviar"
+  }
+}</script>
+
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+</head>
+
+<body class="nav-sidebar floating">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Alternar barra lateral" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+      <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./10-clasificacion-calibracion.html"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Incertidumbre en clasificación</span></a></li></ol></nav>
+      <a class="flex-grow-1" role="button" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Alternar barra lateral" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+      </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Buscar" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./">Aprendizaje Máquina</a> 
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Buscar"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Temario y referencias</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./01-introduccion.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Introducción</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./02-principios-supervisado.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Principios de aprendizaje supervisado</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./03-metodos-locales.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Métodos locales no estructurados</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./04-lineales-ingenieria.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Métodos lineales e ingenería de entradas</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./05-regularizacion-1.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Regularización y variabilidad</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./06-redes-neuronales-1.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Redes neuronales (intro)</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./07-intervalos-predictivos.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Incertidumbre en las predicciones</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./08-clasificacion-1.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Clasificación y probabilidad</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./09-clasificacion-2.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Decisiones de clasificación</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./10-clasificacion-calibracion.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Incertidumbre en clasificación</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-expanded="true">
+ <span class="menu-text">Appendices</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-expanded="true" aria-label="Alternar sección">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./81-apendice-descenso.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">A</span>&nbsp; <span class="chapter-title">Apéndice 1: descenso en gradiente</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./82-apendice-descenso-estocastico.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">B</span>&nbsp; <span class="chapter-title">Apéndice 2: Descenso estocástico</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./99-referencias.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Referencias</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Tabla de contenidos</h2>
+   
+  <ul>
+  <li><a href="#calibración-de-probabilidades" id="toc-calibración-de-probabilidades" class="nav-link active" data-scroll-target="#calibración-de-probabilidades"><span class="header-section-number">10.1</span> Calibración de probabilidades</a></li>
+  <li><a href="#gráficas-de-calibración-binaria" id="toc-gráficas-de-calibración-binaria" class="nav-link" data-scroll-target="#gráficas-de-calibración-binaria"><span class="header-section-number">10.2</span> Gráficas de calibración binaria</a>
+  <ul class="collapse">
+  <li><a href="#ejemplo-diabetes-1" id="toc-ejemplo-diabetes-1" class="nav-link" data-scroll-target="#ejemplo-diabetes-1">Ejemplo: diabetes</a></li>
+  </ul></li>
+  <li><a href="#ejemplo-artículos-de-ropa" id="toc-ejemplo-artículos-de-ropa" class="nav-link" data-scroll-target="#ejemplo-artículos-de-ropa"><span class="header-section-number">10.3</span> Ejemplo: artículos de ropa</a></li>
+  <li><a href="#regiones-conformes-para-clasificación" id="toc-regiones-conformes-para-clasificación" class="nav-link" data-scroll-target="#regiones-conformes-para-clasificación"><span class="header-section-number">10.4</span> Regiones conformes para clasificación</a></li>
+  <li><a href="#calibración-de-probabilidades-1" id="toc-calibración-de-probabilidades-1" class="nav-link" data-scroll-target="#calibración-de-probabilidades-1"><span class="header-section-number">10.5</span> Calibración de probabilidades</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Incertidumbre en clasificación</span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+</header>
+
+<p>En los problemas de clasificación generalmente no conseguimos clasificación perfecta, y buscamos que nuestras probabilidades estimadas expresen qué grado de confianza tenemos en que ocurra cada categorías. Para lograr esto, necesitamos checar que las probabilidades que producimos expresan esta incertidumbre correctamente, y no son simplemente <em>scores</em> de creencia de que una clase u otra va a ocurrir.</p>
+<p>En esta sección trataremos de cómo checar estas probabilidades, y qué técnicas podemos usar para expresar confiablemente (y con supuestos mínimos) incertidumbre al hacer predicciones de clase.</p>
+<section id="calibración-de-probabilidades" class="level2" data-number="10.1">
+<h2 data-number="10.1" class="anchored" data-anchor-id="calibración-de-probabilidades"><span class="header-section-number">10.1</span> Calibración de probabilidades</h2>
+<p>En un principio podemos considerar las probabilidades estimadas en nuestros predictores como <em>scores</em> que califican qué tan creíble es que una observación particular sea de una categoría o clase dada. Sin embargo, quisiéramos interpretarlas también de manera frecuentista, como frecuencia relativa de ocurrencia de eventos a largo plazo. Esto nos permite utilizarlas en procesos <em>downstream</em> y en la toma de decisiones de manera más efectiva.</p>
+<p>Por ejemplo, en pronósticos meteorológicos, todos los días expresan una probabilidad de lluvia. Resulta ser que entre aquellos días donde los metereológos dicen que hay 10% de lluvia, en 1 de cada 10 llueve en realidad. Entre aquellos días donde dicen que hay 90% de probabilidad de lluvia, aproximadamente 9 de cada 10 días llueve. Esto quiere decir que estos pronósticos probabilísticos de la meteorología están bien calibrados, independientemente de nuestra interpretación de esas probabilidades como grados de creencia.</p>
+<p>Igual que buscábamos que nuestros intervalos predictivos estuvieran bien calibrados en los problemas de regresión, también buscamos que nuestras predictores en clasificación estén <strong>probabilísticamente bien calibrados</strong>. Es decir: lo que decimos que puede ocurrir con 10% de probabilidad ocurre efectivamente 1 de cada 10 veces, si decimos 20% entonces ocurre 2 de 20, etc.</p>
+<p>Podemos hacer esto realizando pruebas de la <em>calibración</em> de las probabilidades que arroja el modelo. Esto quiere decir que si el modelo nos dice que la probabilidad de que la clase 1 es 0.8, entonces si tenemos un número grande de estos casos (con probabilidad 0.8), alrededor de 80% de éstos tienen que ser positivos.</p>
+<section id="ejemplo-diabetes" class="level4 unnumbered">
+<h4 class="unnumbered anchored" data-anchor-id="ejemplo-diabetes">Ejemplo: diabetes</h4>
+<p>Podemos checar la calibración de nuestro modelo para el ejemplo de diabetes de la sección anterior</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidymodels)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(gt)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>diabetes_pr <span class="ot">&lt;-</span> <span class="fu">as_tibble</span>(MASS<span class="sc">::</span>Pima.te)</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>diabetes_pr<span class="sc">$</span>id <span class="ot">&lt;-</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">nrow</span>(diabetes_pr)</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>flujo_diabetes <span class="ot">&lt;-</span> <span class="fu">read_rds</span>(<span class="st">"cache/flujo_ajustado_diabetes.rds"</span>)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Aquí están las probabilidades estimadas de tener diabetes sobre la muestra de prueba:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>proba_mod <span class="ot">&lt;-</span> <span class="fu">predict</span>(flujo_diabetes, diabetes_pr, <span class="at">type =</span> <span class="st">"prob"</span>)</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>dat_calibracion <span class="ot">&lt;-</span> <span class="fu">tibble</span>(<span class="at">obs =</span> diabetes_pr <span class="sc">|&gt;</span> <span class="fu">pull</span>(type), </span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>                          <span class="at">probabilidad =</span> proba_mod<span class="sc">$</span>.pred_Yes) <span class="sc">|&gt;</span> </span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">y =</span> <span class="fu">ifelse</span>(obs <span class="sc">==</span> <span class="st">"Yes"</span>, <span class="dv">1</span>, <span class="dv">0</span>))</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>dat_calibracion <span class="sc">|&gt;</span> <span class="fu">head</span>() <span class="sc">|&gt;</span> <span class="fu">gt</span>()</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+
+<div id="pkxscqinfg" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<style>#pkxscqinfg table {
+  font-family: system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#pkxscqinfg thead, #pkxscqinfg tbody, #pkxscqinfg tfoot, #pkxscqinfg tr, #pkxscqinfg td, #pkxscqinfg th {
+  border-style: none;
+}
+
+#pkxscqinfg p {
+  margin: 0;
+  padding: 0;
+}
+
+#pkxscqinfg .gt_table {
+  display: table;
+  border-collapse: collapse;
+  line-height: normal;
+  margin-left: auto;
+  margin-right: auto;
+  color: #333333;
+  font-size: 16px;
+  font-weight: normal;
+  font-style: normal;
+  background-color: #FFFFFF;
+  width: auto;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #A8A8A8;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #A8A8A8;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+}
+
+#pkxscqinfg .gt_caption {
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+
+#pkxscqinfg .gt_title {
+  color: #333333;
+  font-size: 125%;
+  font-weight: initial;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-color: #FFFFFF;
+  border-bottom-width: 0;
+}
+
+#pkxscqinfg .gt_subtitle {
+  color: #333333;
+  font-size: 85%;
+  font-weight: initial;
+  padding-top: 3px;
+  padding-bottom: 5px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-color: #FFFFFF;
+  border-top-width: 0;
+}
+
+#pkxscqinfg .gt_heading {
+  background-color: #FFFFFF;
+  text-align: center;
+  border-bottom-color: #FFFFFF;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#pkxscqinfg .gt_bottom_border {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#pkxscqinfg .gt_col_headings {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#pkxscqinfg .gt_col_heading {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 6px;
+  padding-left: 5px;
+  padding-right: 5px;
+  overflow-x: hidden;
+}
+
+#pkxscqinfg .gt_column_spanner_outer {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  padding-top: 0;
+  padding-bottom: 0;
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
+#pkxscqinfg .gt_column_spanner_outer:first-child {
+  padding-left: 0;
+}
+
+#pkxscqinfg .gt_column_spanner_outer:last-child {
+  padding-right: 0;
+}
+
+#pkxscqinfg .gt_column_spanner {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  overflow-x: hidden;
+  display: inline-block;
+  width: 100%;
+}
+
+#pkxscqinfg .gt_spanner_row {
+  border-bottom-style: hidden;
+}
+
+#pkxscqinfg .gt_group_heading {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  text-align: left;
+}
+
+#pkxscqinfg .gt_empty_group_heading {
+  padding: 0.5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: middle;
+}
+
+#pkxscqinfg .gt_from_md > :first-child {
+  margin-top: 0;
+}
+
+#pkxscqinfg .gt_from_md > :last-child {
+  margin-bottom: 0;
+}
+
+#pkxscqinfg .gt_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  margin: 10px;
+  border-top-style: solid;
+  border-top-width: 1px;
+  border-top-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  overflow-x: hidden;
+}
+
+#pkxscqinfg .gt_stub {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#pkxscqinfg .gt_stub_row_group {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+  vertical-align: top;
+}
+
+#pkxscqinfg .gt_row_group_first td {
+  border-top-width: 2px;
+}
+
+#pkxscqinfg .gt_row_group_first th {
+  border-top-width: 2px;
+}
+
+#pkxscqinfg .gt_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#pkxscqinfg .gt_first_summary_row {
+  border-top-style: solid;
+  border-top-color: #D3D3D3;
+}
+
+#pkxscqinfg .gt_first_summary_row.thick {
+  border-top-width: 2px;
+}
+
+#pkxscqinfg .gt_last_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#pkxscqinfg .gt_grand_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#pkxscqinfg .gt_first_grand_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-style: double;
+  border-top-width: 6px;
+  border-top-color: #D3D3D3;
+}
+
+#pkxscqinfg .gt_last_grand_summary_row_top {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-style: double;
+  border-bottom-width: 6px;
+  border-bottom-color: #D3D3D3;
+}
+
+#pkxscqinfg .gt_striped {
+  background-color: rgba(128, 128, 128, 0.05);
+}
+
+#pkxscqinfg .gt_table_body {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#pkxscqinfg .gt_footnotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#pkxscqinfg .gt_footnote {
+  margin: 0px;
+  font-size: 90%;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#pkxscqinfg .gt_sourcenotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#pkxscqinfg .gt_sourcenote {
+  font-size: 90%;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#pkxscqinfg .gt_left {
+  text-align: left;
+}
+
+#pkxscqinfg .gt_center {
+  text-align: center;
+}
+
+#pkxscqinfg .gt_right {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+#pkxscqinfg .gt_font_normal {
+  font-weight: normal;
+}
+
+#pkxscqinfg .gt_font_bold {
+  font-weight: bold;
+}
+
+#pkxscqinfg .gt_font_italic {
+  font-style: italic;
+}
+
+#pkxscqinfg .gt_super {
+  font-size: 65%;
+}
+
+#pkxscqinfg .gt_footnote_marks {
+  font-size: 75%;
+  vertical-align: 0.4em;
+  position: initial;
+}
+
+#pkxscqinfg .gt_asterisk {
+  font-size: 100%;
+  vertical-align: 0;
+}
+
+#pkxscqinfg .gt_indent_1 {
+  text-indent: 5px;
+}
+
+#pkxscqinfg .gt_indent_2 {
+  text-indent: 10px;
+}
+
+#pkxscqinfg .gt_indent_3 {
+  text-indent: 15px;
+}
+
+#pkxscqinfg .gt_indent_4 {
+  text-indent: 20px;
+}
+
+#pkxscqinfg .gt_indent_5 {
+  text-indent: 25px;
+}
+</style>
+<table class="gt_table" data-quarto-disable-processing="false" data-quarto-bootstrap="false">
+  <thead>
+    
+    <tr class="gt_col_headings">
+      <th class="gt_col_heading gt_columns_bottom_border gt_center" rowspan="1" colspan="1" scope="col" id="obs">obs</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="probabilidad">probabilidad</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="y">y</th>
+    </tr>
+  </thead>
+  <tbody class="gt_table_body">
+    <tr><td headers="obs" class="gt_row gt_center">Yes</td>
+<td headers="probabilidad" class="gt_row gt_right">0.76840395</td>
+<td headers="y" class="gt_row gt_right">1</td></tr>
+    <tr><td headers="obs" class="gt_row gt_center">No</td>
+<td headers="probabilidad" class="gt_row gt_right">0.04030505</td>
+<td headers="y" class="gt_row gt_right">0</td></tr>
+    <tr><td headers="obs" class="gt_row gt_center">No</td>
+<td headers="probabilidad" class="gt_row gt_right">0.02529504</td>
+<td headers="y" class="gt_row gt_right">0</td></tr>
+    <tr><td headers="obs" class="gt_row gt_center">Yes</td>
+<td headers="probabilidad" class="gt_row gt_right">0.04134683</td>
+<td headers="y" class="gt_row gt_right">1</td></tr>
+    <tr><td headers="obs" class="gt_row gt_center">Yes</td>
+<td headers="probabilidad" class="gt_row gt_right">0.79595860</td>
+<td headers="y" class="gt_row gt_right">1</td></tr>
+    <tr><td headers="obs" class="gt_row gt_center">Yes</td>
+<td headers="probabilidad" class="gt_row gt_right">0.73516870</td>
+<td headers="y" class="gt_row gt_right">1</td></tr>
+  </tbody>
+  
+  
+</table>
+</div>
+</div>
+</div>
+<p>Para ver si estas probabilidades son realistas, podemos por ejemplo hacer una gráfica como la que sigue:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(dat_calibracion, <span class="fu">aes</span>(<span class="at">x =</span> probabilidad, <span class="at">y =</span> y)) <span class="sc">+</span> </span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_jitter</span>(<span class="at">width =</span> <span class="dv">0</span>, <span class="at">height =</span> <span class="fl">0.02</span>, <span class="at">alpha =</span> <span class="fl">0.2</span>) <span class="sc">+</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_smooth</span>(<span class="at">method =</span> <span class="st">"loess"</span>, <span class="at">span =</span> <span class="fl">0.7</span>, <span class="at">colour =</span> <span class="st">"red"</span>, <span class="at">se =</span> <span class="cn">FALSE</span>) <span class="sc">+</span> </span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_abline</span>() <span class="sc">+</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">coord_equal</span>()</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>`geom_smooth()` using formula = 'y ~ x'</code></pre>
+</div>
+<div class="cell-output-display">
+<p><img src="10-clasificacion-calibracion_files/figure-html/unnamed-chunk-4-1.png" class="img-fluid" width="384"></p>
+</div>
+</div>
+<p>Y en esta gráfica verificamos que los promedios locales de proporciones de 0-1’s son consistentes con las probabilidades que estimamos.</p>
+</section>
+</section>
+<section id="gráficas-de-calibración-binaria" class="level2" data-number="10.2">
+<h2 data-number="10.2" class="anchored" data-anchor-id="gráficas-de-calibración-binaria"><span class="header-section-number">10.2</span> Gráficas de calibración binaria</h2>
+<p>Otra manera de hacer esta gráfica es cortando las probabilidades en cubetas y calculando intervalos de credibilidad para cada estimación: con esto checamos si el observado es consistente con las probabilidades de clase.</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Pruebas de calibración
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Sobre una muestra de prueba y para un problema de clasificación binaria, donde <span class="math inline">\(\hat{p} (x)\)</span> es la probabilidad estimada de la clase 1:</p>
+<ol type="1">
+<li>Producimos las probabilidades de clase <span class="math inline">\(\hat{p}(\mathbf{x}^{(i)}).\)</span></li>
+<li>Ordenamos estas probabilidades de clase de la más grande a la más chica, y las agrupamos en cubetas <span class="math inline">\(C_1, C_2, \ldots, C_r\)</span>.</li>
+<li>Calculamos en cada cubeta la probabilidad de clase promedio y el porcentaje de casos de clase 1.</li>
+</ol>
+<p>Si en cada cubeta la probabilidad de clase promedio y el porcentaje de casos de clase 1 son consistentes (similares módulo variación muestral), entonces decimos que nuestras probabilidades pasan esta prueba de calibración.</p>
+</div>
+</div>
+<section id="ejemplo-diabetes-1" class="level3 unnumbered">
+<h3 class="unnumbered anchored" data-anchor-id="ejemplo-diabetes-1">Ejemplo: diabetes</h3>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># usamos intervalos suavizados (bayesiano beta-binomial) en lugar de los basados</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="co"># en los errores estándar sqrt(p*(1-p) / n)</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>calibracion_gpos <span class="ot">&lt;-</span> dat_calibracion <span class="sc">|&gt;</span> </span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">proba_grupo =</span> <span class="fu">cut</span>(probabilidad, </span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>      <span class="fu">quantile</span>(probabilidad, <span class="fu">seq</span>(<span class="dv">0</span>, <span class="dv">1</span>, <span class="fl">0.1</span>)), <span class="at">include.lowest =</span> <span class="cn">TRUE</span>)) <span class="sc">|&gt;</span> </span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">group_by</span>(proba_grupo) <span class="sc">|&gt;</span> </span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">summarise</span>(<span class="at">prob_media =</span> <span class="fu">mean</span>(probabilidad), </span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>              <span class="at">n =</span> <span class="fu">n</span>(),</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>              <span class="at">obs =</span> <span class="fu">sum</span>(y), <span class="at">.groups =</span> <span class="st">"drop"</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">obs_prop =</span> (obs <span class="sc">+</span> <span class="dv">1</span>) <span class="sc">/</span> (n <span class="sc">+</span> <span class="dv">2</span>), </span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>           <span class="at">inferior =</span> <span class="fu">qbeta</span>(<span class="fl">0.05</span>, obs <span class="sc">+</span> <span class="dv">1</span>,  n <span class="sc">-</span> obs <span class="sc">+</span> <span class="dv">2</span>),</span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>           <span class="at">superior =</span> <span class="fu">qbeta</span>(<span class="fl">0.95</span>, obs <span class="sc">+</span> <span class="dv">1</span>,  n <span class="sc">-</span> obs <span class="sc">+</span> <span class="dv">2</span>))</span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>calibracion_gpos <span class="sc">|&gt;</span> <span class="fu">gt</span>() <span class="sc">|&gt;</span> <span class="fu">fmt_number</span>(<span class="fu">where</span>(is_double), <span class="at">decimals =</span> <span class="dv">3</span>)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+
+<div id="zeeutrijuj" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<style>#zeeutrijuj table {
+  font-family: system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#zeeutrijuj thead, #zeeutrijuj tbody, #zeeutrijuj tfoot, #zeeutrijuj tr, #zeeutrijuj td, #zeeutrijuj th {
+  border-style: none;
+}
+
+#zeeutrijuj p {
+  margin: 0;
+  padding: 0;
+}
+
+#zeeutrijuj .gt_table {
+  display: table;
+  border-collapse: collapse;
+  line-height: normal;
+  margin-left: auto;
+  margin-right: auto;
+  color: #333333;
+  font-size: 16px;
+  font-weight: normal;
+  font-style: normal;
+  background-color: #FFFFFF;
+  width: auto;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #A8A8A8;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #A8A8A8;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+}
+
+#zeeutrijuj .gt_caption {
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+
+#zeeutrijuj .gt_title {
+  color: #333333;
+  font-size: 125%;
+  font-weight: initial;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-color: #FFFFFF;
+  border-bottom-width: 0;
+}
+
+#zeeutrijuj .gt_subtitle {
+  color: #333333;
+  font-size: 85%;
+  font-weight: initial;
+  padding-top: 3px;
+  padding-bottom: 5px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-color: #FFFFFF;
+  border-top-width: 0;
+}
+
+#zeeutrijuj .gt_heading {
+  background-color: #FFFFFF;
+  text-align: center;
+  border-bottom-color: #FFFFFF;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#zeeutrijuj .gt_bottom_border {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#zeeutrijuj .gt_col_headings {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#zeeutrijuj .gt_col_heading {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 6px;
+  padding-left: 5px;
+  padding-right: 5px;
+  overflow-x: hidden;
+}
+
+#zeeutrijuj .gt_column_spanner_outer {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  padding-top: 0;
+  padding-bottom: 0;
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
+#zeeutrijuj .gt_column_spanner_outer:first-child {
+  padding-left: 0;
+}
+
+#zeeutrijuj .gt_column_spanner_outer:last-child {
+  padding-right: 0;
+}
+
+#zeeutrijuj .gt_column_spanner {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  overflow-x: hidden;
+  display: inline-block;
+  width: 100%;
+}
+
+#zeeutrijuj .gt_spanner_row {
+  border-bottom-style: hidden;
+}
+
+#zeeutrijuj .gt_group_heading {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  text-align: left;
+}
+
+#zeeutrijuj .gt_empty_group_heading {
+  padding: 0.5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: middle;
+}
+
+#zeeutrijuj .gt_from_md > :first-child {
+  margin-top: 0;
+}
+
+#zeeutrijuj .gt_from_md > :last-child {
+  margin-bottom: 0;
+}
+
+#zeeutrijuj .gt_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  margin: 10px;
+  border-top-style: solid;
+  border-top-width: 1px;
+  border-top-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  overflow-x: hidden;
+}
+
+#zeeutrijuj .gt_stub {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#zeeutrijuj .gt_stub_row_group {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+  vertical-align: top;
+}
+
+#zeeutrijuj .gt_row_group_first td {
+  border-top-width: 2px;
+}
+
+#zeeutrijuj .gt_row_group_first th {
+  border-top-width: 2px;
+}
+
+#zeeutrijuj .gt_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#zeeutrijuj .gt_first_summary_row {
+  border-top-style: solid;
+  border-top-color: #D3D3D3;
+}
+
+#zeeutrijuj .gt_first_summary_row.thick {
+  border-top-width: 2px;
+}
+
+#zeeutrijuj .gt_last_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#zeeutrijuj .gt_grand_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#zeeutrijuj .gt_first_grand_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-style: double;
+  border-top-width: 6px;
+  border-top-color: #D3D3D3;
+}
+
+#zeeutrijuj .gt_last_grand_summary_row_top {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-style: double;
+  border-bottom-width: 6px;
+  border-bottom-color: #D3D3D3;
+}
+
+#zeeutrijuj .gt_striped {
+  background-color: rgba(128, 128, 128, 0.05);
+}
+
+#zeeutrijuj .gt_table_body {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#zeeutrijuj .gt_footnotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#zeeutrijuj .gt_footnote {
+  margin: 0px;
+  font-size: 90%;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#zeeutrijuj .gt_sourcenotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#zeeutrijuj .gt_sourcenote {
+  font-size: 90%;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#zeeutrijuj .gt_left {
+  text-align: left;
+}
+
+#zeeutrijuj .gt_center {
+  text-align: center;
+}
+
+#zeeutrijuj .gt_right {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+#zeeutrijuj .gt_font_normal {
+  font-weight: normal;
+}
+
+#zeeutrijuj .gt_font_bold {
+  font-weight: bold;
+}
+
+#zeeutrijuj .gt_font_italic {
+  font-style: italic;
+}
+
+#zeeutrijuj .gt_super {
+  font-size: 65%;
+}
+
+#zeeutrijuj .gt_footnote_marks {
+  font-size: 75%;
+  vertical-align: 0.4em;
+  position: initial;
+}
+
+#zeeutrijuj .gt_asterisk {
+  font-size: 100%;
+  vertical-align: 0;
+}
+
+#zeeutrijuj .gt_indent_1 {
+  text-indent: 5px;
+}
+
+#zeeutrijuj .gt_indent_2 {
+  text-indent: 10px;
+}
+
+#zeeutrijuj .gt_indent_3 {
+  text-indent: 15px;
+}
+
+#zeeutrijuj .gt_indent_4 {
+  text-indent: 20px;
+}
+
+#zeeutrijuj .gt_indent_5 {
+  text-indent: 25px;
+}
+</style>
+<table class="gt_table" data-quarto-disable-processing="false" data-quarto-bootstrap="false">
+  <thead>
+    
+    <tr class="gt_col_headings">
+      <th class="gt_col_heading gt_columns_bottom_border gt_center" rowspan="1" colspan="1" scope="col" id="proba_grupo">proba_grupo</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="prob_media">prob_media</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="n">n</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="obs">obs</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="obs_prop">obs_prop</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="inferior">inferior</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="superior">superior</th>
+    </tr>
+  </thead>
+  <tbody class="gt_table_body">
+    <tr><td headers="proba_grupo" class="gt_row gt_center">[0.00988,0.0412]</td>
+<td headers="prob_media" class="gt_row gt_right">0.029</td>
+<td headers="n" class="gt_row gt_right">34</td>
+<td headers="obs" class="gt_row gt_right">0.000</td>
+<td headers="obs_prop" class="gt_row gt_right">0.028</td>
+<td headers="inferior" class="gt_row gt_right">0.001</td>
+<td headers="superior" class="gt_row gt_right">0.080</td></tr>
+    <tr><td headers="proba_grupo" class="gt_row gt_center">(0.0412,0.0714]</td>
+<td headers="prob_media" class="gt_row gt_right">0.057</td>
+<td headers="n" class="gt_row gt_right">33</td>
+<td headers="obs" class="gt_row gt_right">1.000</td>
+<td headers="obs_prop" class="gt_row gt_right">0.057</td>
+<td headers="inferior" class="gt_row gt_right">0.010</td>
+<td headers="superior" class="gt_row gt_right">0.129</td></tr>
+    <tr><td headers="proba_grupo" class="gt_row gt_center">(0.0714,0.114]</td>
+<td headers="prob_media" class="gt_row gt_right">0.094</td>
+<td headers="n" class="gt_row gt_right">33</td>
+<td headers="obs" class="gt_row gt_right">1.000</td>
+<td headers="obs_prop" class="gt_row gt_right">0.057</td>
+<td headers="inferior" class="gt_row gt_right">0.010</td>
+<td headers="superior" class="gt_row gt_right">0.129</td></tr>
+    <tr><td headers="proba_grupo" class="gt_row gt_center">(0.114,0.158]</td>
+<td headers="prob_media" class="gt_row gt_right">0.136</td>
+<td headers="n" class="gt_row gt_right">33</td>
+<td headers="obs" class="gt_row gt_right">6.000</td>
+<td headers="obs_prop" class="gt_row gt_right">0.200</td>
+<td headers="inferior" class="gt_row gt_right">0.098</td>
+<td headers="superior" class="gt_row gt_right">0.311</td></tr>
+    <tr><td headers="proba_grupo" class="gt_row gt_center">(0.158,0.224]</td>
+<td headers="prob_media" class="gt_row gt_right">0.191</td>
+<td headers="n" class="gt_row gt_right">33</td>
+<td headers="obs" class="gt_row gt_right">4.000</td>
+<td headers="obs_prop" class="gt_row gt_right">0.143</td>
+<td headers="inferior" class="gt_row gt_right">0.058</td>
+<td headers="superior" class="gt_row gt_right">0.243</td></tr>
+    <tr><td headers="proba_grupo" class="gt_row gt_center">(0.224,0.334]</td>
+<td headers="prob_media" class="gt_row gt_right">0.276</td>
+<td headers="n" class="gt_row gt_right">33</td>
+<td headers="obs" class="gt_row gt_right">12.000</td>
+<td headers="obs_prop" class="gt_row gt_right">0.371</td>
+<td headers="inferior" class="gt_row gt_right">0.236</td>
+<td headers="superior" class="gt_row gt_right">0.496</td></tr>
+    <tr><td headers="proba_grupo" class="gt_row gt_center">(0.334,0.454]</td>
+<td headers="prob_media" class="gt_row gt_right">0.399</td>
+<td headers="n" class="gt_row gt_right">33</td>
+<td headers="obs" class="gt_row gt_right">14.000</td>
+<td headers="obs_prop" class="gt_row gt_right">0.429</td>
+<td headers="inferior" class="gt_row gt_right">0.286</td>
+<td headers="superior" class="gt_row gt_right">0.553</td></tr>
+    <tr><td headers="proba_grupo" class="gt_row gt_center">(0.454,0.65]</td>
+<td headers="prob_media" class="gt_row gt_right">0.548</td>
+<td headers="n" class="gt_row gt_right">33</td>
+<td headers="obs" class="gt_row gt_right">17.000</td>
+<td headers="obs_prop" class="gt_row gt_right">0.514</td>
+<td headers="inferior" class="gt_row gt_right">0.365</td>
+<td headers="superior" class="gt_row gt_right">0.635</td></tr>
+    <tr><td headers="proba_grupo" class="gt_row gt_center">(0.65,0.805]</td>
+<td headers="prob_media" class="gt_row gt_right">0.733</td>
+<td headers="n" class="gt_row gt_right">33</td>
+<td headers="obs" class="gt_row gt_right">24.000</td>
+<td headers="obs_prop" class="gt_row gt_right">0.714</td>
+<td headers="inferior" class="gt_row gt_right">0.564</td>
+<td headers="superior" class="gt_row gt_right">0.813</td></tr>
+    <tr><td headers="proba_grupo" class="gt_row gt_center">(0.805,0.997]</td>
+<td headers="prob_media" class="gt_row gt_right">0.901</td>
+<td headers="n" class="gt_row gt_right">34</td>
+<td headers="obs" class="gt_row gt_right">30.000</td>
+<td headers="obs_prop" class="gt_row gt_right">0.861</td>
+<td headers="inferior" class="gt_row gt_right">0.730</td>
+<td headers="superior" class="gt_row gt_right">0.925</td></tr>
+  </tbody>
+  
+  
+</table>
+</div>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(calibracion_gpos, </span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">aes</span>(<span class="at">x =</span> prob_media, <span class="at">y =</span> obs_prop, <span class="at">ymin =</span> inferior, <span class="at">ymax =</span> superior)) <span class="sc">+</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_abline</span>() <span class="sc">+</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_linerange</span>() <span class="sc">+</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_point</span>(<span class="at">colour =</span> <span class="st">"red"</span>) <span class="sc">+</span> <span class="fu">coord_equal</span>() <span class="sc">+</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">xlab</span>(<span class="st">"Probabilidad de clase"</span>) <span class="sc">+</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ylab</span>(<span class="st">"Proporción observada"</span>) <span class="sc">+</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">subtitle =</span> <span class="st">"Intervalos de 90% para prop observada"</span>)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="10-clasificacion-calibracion_files/figure-html/unnamed-chunk-6-1.png" class="img-fluid" width="384"></p>
+</div>
+</div>
+<p>Y con esto verificamos que calibración del modelo es razonable, y que es razonable usar estas probabilidades para tomar decisiones o incluir en ejercicios de simulación.</p>
+<p><strong>Observación</strong>: 1. Si las probabilidades no están calibradas, y las queremos utilizar como tales (no simplemente como <em>scores</em>), entonces puede ser necesario hacer un paso adicional de calibración, con una muestra separada de calibración (ver por ejemplo <span class="citation" data-cites="kuhn">Kuhn y Johnson (<a href="99-referencias.html#ref-kuhn" role="doc-biblioref">2013</a>)</span>, sección 11.1). 2. En este ejemplo construimos intervalos para las proporciones observadas usando intervalos bayesianos. Es posible usar intervalos normales o t (usando el error estándar), pero estos intervalos tienen cobertura mala para proporciones muy chicas o muy grandes <a href="https://en.wikipedia.org/wiki/Binomial_proportion_confidence_interval">Binomial proportion wikipedia</a>. Nuestro ejemplo es similar a los intervalos de Agresti-Coull.</p>
+</section>
+</section>
+<section id="ejemplo-artículos-de-ropa" class="level2" data-number="10.3">
+<h2 data-number="10.3" class="anchored" data-anchor-id="ejemplo-artículos-de-ropa"><span class="header-section-number">10.3</span> Ejemplo: artículos de ropa</h2>
+<p>Regresamos a nuestro modelo para clasificar imágenes de artículos de ropa:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(keras)</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>ropa_datos <span class="ot">&lt;-</span> <span class="fu">dataset_fashion_mnist</span>()</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>ropa_prueba <span class="ot">&lt;-</span> ropa_datos<span class="sc">$</span>test</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="co"># estas son las categorias:</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>articulos <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"playera/top"</span>, <span class="st">"pantalón"</span>, <span class="st">"suéter"</span>, <span class="st">"vestido"</span>, <span class="st">"abrigo"</span>, <span class="st">"sandalia"</span>, </span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>                 <span class="st">"camisa"</span>, <span class="st">"tenis"</span>, <span class="st">"bolsa"</span>, <span class="st">"bota"</span>)</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>etiquetas_tbl <span class="ot">&lt;-</span> <span class="fu">tibble</span>(<span class="at">codigo =</span> <span class="dv">0</span><span class="sc">:</span><span class="dv">9</span>, <span class="at">articulo =</span> articulos)</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>x_prueba <span class="ot">&lt;-</span> ropa_prueba<span class="sc">$</span>x <span class="sc">/</span> <span class="dv">255</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>y_prueba <span class="ot">&lt;-</span> <span class="fu">to_categorical</span>(ropa_prueba<span class="sc">$</span>y, <span class="dv">10</span>)</span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>modelo <span class="ot">&lt;-</span> <span class="fu">load_model_tf</span>(<span class="st">"cache/red_ropa_1"</span>)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>preds_mat <span class="ot">&lt;-</span> <span class="fu">predict</span>(modelo, x_prueba)</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="fu">colnames</span>(preds_mat) <span class="ot">&lt;-</span> articulos</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>preds_tbl <span class="ot">&lt;-</span> <span class="fu">as_tibble</span>(preds_mat) <span class="sc">|&gt;</span> </span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">id =</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">nrow</span>(preds_mat), <span class="at">.before =</span> <span class="dv">1</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">codigo =</span> ropa_prueba<span class="sc">$</span>y) <span class="sc">|&gt;</span> </span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(etiquetas_tbl)</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>preds_tbl <span class="sc">|&gt;</span> <span class="fu">head</span>() <span class="sc">|&gt;</span> <span class="fu">gt</span>() <span class="sc">|&gt;</span> <span class="fu">fmt_number</span>(<span class="fu">where</span>(is_double), <span class="at">decimals =</span> <span class="dv">3</span>)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+
+<div id="wtkmhqytao" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<style>#wtkmhqytao table {
+  font-family: system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#wtkmhqytao thead, #wtkmhqytao tbody, #wtkmhqytao tfoot, #wtkmhqytao tr, #wtkmhqytao td, #wtkmhqytao th {
+  border-style: none;
+}
+
+#wtkmhqytao p {
+  margin: 0;
+  padding: 0;
+}
+
+#wtkmhqytao .gt_table {
+  display: table;
+  border-collapse: collapse;
+  line-height: normal;
+  margin-left: auto;
+  margin-right: auto;
+  color: #333333;
+  font-size: 16px;
+  font-weight: normal;
+  font-style: normal;
+  background-color: #FFFFFF;
+  width: auto;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #A8A8A8;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #A8A8A8;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+}
+
+#wtkmhqytao .gt_caption {
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+
+#wtkmhqytao .gt_title {
+  color: #333333;
+  font-size: 125%;
+  font-weight: initial;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-color: #FFFFFF;
+  border-bottom-width: 0;
+}
+
+#wtkmhqytao .gt_subtitle {
+  color: #333333;
+  font-size: 85%;
+  font-weight: initial;
+  padding-top: 3px;
+  padding-bottom: 5px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-color: #FFFFFF;
+  border-top-width: 0;
+}
+
+#wtkmhqytao .gt_heading {
+  background-color: #FFFFFF;
+  text-align: center;
+  border-bottom-color: #FFFFFF;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#wtkmhqytao .gt_bottom_border {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#wtkmhqytao .gt_col_headings {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#wtkmhqytao .gt_col_heading {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 6px;
+  padding-left: 5px;
+  padding-right: 5px;
+  overflow-x: hidden;
+}
+
+#wtkmhqytao .gt_column_spanner_outer {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  padding-top: 0;
+  padding-bottom: 0;
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
+#wtkmhqytao .gt_column_spanner_outer:first-child {
+  padding-left: 0;
+}
+
+#wtkmhqytao .gt_column_spanner_outer:last-child {
+  padding-right: 0;
+}
+
+#wtkmhqytao .gt_column_spanner {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  overflow-x: hidden;
+  display: inline-block;
+  width: 100%;
+}
+
+#wtkmhqytao .gt_spanner_row {
+  border-bottom-style: hidden;
+}
+
+#wtkmhqytao .gt_group_heading {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  text-align: left;
+}
+
+#wtkmhqytao .gt_empty_group_heading {
+  padding: 0.5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: middle;
+}
+
+#wtkmhqytao .gt_from_md > :first-child {
+  margin-top: 0;
+}
+
+#wtkmhqytao .gt_from_md > :last-child {
+  margin-bottom: 0;
+}
+
+#wtkmhqytao .gt_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  margin: 10px;
+  border-top-style: solid;
+  border-top-width: 1px;
+  border-top-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  overflow-x: hidden;
+}
+
+#wtkmhqytao .gt_stub {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#wtkmhqytao .gt_stub_row_group {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+  vertical-align: top;
+}
+
+#wtkmhqytao .gt_row_group_first td {
+  border-top-width: 2px;
+}
+
+#wtkmhqytao .gt_row_group_first th {
+  border-top-width: 2px;
+}
+
+#wtkmhqytao .gt_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#wtkmhqytao .gt_first_summary_row {
+  border-top-style: solid;
+  border-top-color: #D3D3D3;
+}
+
+#wtkmhqytao .gt_first_summary_row.thick {
+  border-top-width: 2px;
+}
+
+#wtkmhqytao .gt_last_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#wtkmhqytao .gt_grand_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#wtkmhqytao .gt_first_grand_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-style: double;
+  border-top-width: 6px;
+  border-top-color: #D3D3D3;
+}
+
+#wtkmhqytao .gt_last_grand_summary_row_top {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-style: double;
+  border-bottom-width: 6px;
+  border-bottom-color: #D3D3D3;
+}
+
+#wtkmhqytao .gt_striped {
+  background-color: rgba(128, 128, 128, 0.05);
+}
+
+#wtkmhqytao .gt_table_body {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#wtkmhqytao .gt_footnotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#wtkmhqytao .gt_footnote {
+  margin: 0px;
+  font-size: 90%;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#wtkmhqytao .gt_sourcenotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#wtkmhqytao .gt_sourcenote {
+  font-size: 90%;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#wtkmhqytao .gt_left {
+  text-align: left;
+}
+
+#wtkmhqytao .gt_center {
+  text-align: center;
+}
+
+#wtkmhqytao .gt_right {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+#wtkmhqytao .gt_font_normal {
+  font-weight: normal;
+}
+
+#wtkmhqytao .gt_font_bold {
+  font-weight: bold;
+}
+
+#wtkmhqytao .gt_font_italic {
+  font-style: italic;
+}
+
+#wtkmhqytao .gt_super {
+  font-size: 65%;
+}
+
+#wtkmhqytao .gt_footnote_marks {
+  font-size: 75%;
+  vertical-align: 0.4em;
+  position: initial;
+}
+
+#wtkmhqytao .gt_asterisk {
+  font-size: 100%;
+  vertical-align: 0;
+}
+
+#wtkmhqytao .gt_indent_1 {
+  text-indent: 5px;
+}
+
+#wtkmhqytao .gt_indent_2 {
+  text-indent: 10px;
+}
+
+#wtkmhqytao .gt_indent_3 {
+  text-indent: 15px;
+}
+
+#wtkmhqytao .gt_indent_4 {
+  text-indent: 20px;
+}
+
+#wtkmhqytao .gt_indent_5 {
+  text-indent: 25px;
+}
+</style>
+<table class="gt_table" data-quarto-disable-processing="false" data-quarto-bootstrap="false">
+  <thead>
+    
+    <tr class="gt_col_headings">
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="id">id</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="playera/top">playera/top</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="pantalón">pantalón</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="suéter">suéter</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="vestido">vestido</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="abrigo">abrigo</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="sandalia">sandalia</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="camisa">camisa</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="tenis">tenis</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="bolsa">bolsa</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1" scope="col" id="bota">bota</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_center" rowspan="1" colspan="1" scope="col" id="codigo">codigo</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="1" colspan="1" scope="col" id="articulo">articulo</th>
+    </tr>
+  </thead>
+  <tbody class="gt_table_body">
+    <tr><td headers="id" class="gt_row gt_right">1</td>
+<td headers="playera/top" class="gt_row gt_right">0.000</td>
+<td headers="pantalón" class="gt_row gt_right">0.000</td>
+<td headers="suéter" class="gt_row gt_right">0.000</td>
+<td headers="vestido" class="gt_row gt_right">0.000</td>
+<td headers="abrigo" class="gt_row gt_right">0.000</td>
+<td headers="sandalia" class="gt_row gt_right">0.117</td>
+<td headers="camisa" class="gt_row gt_right">0.000</td>
+<td headers="tenis" class="gt_row gt_right">0.051</td>
+<td headers="bolsa" class="gt_row gt_right">0.005</td>
+<td headers="bota" class="gt_row gt_right">0.827</td>
+<td headers="codigo" class="gt_row gt_center">9</td>
+<td headers="articulo" class="gt_row gt_left">bota</td></tr>
+    <tr><td headers="id" class="gt_row gt_right">2</td>
+<td headers="playera/top" class="gt_row gt_right">0.000</td>
+<td headers="pantalón" class="gt_row gt_right">0.000</td>
+<td headers="suéter" class="gt_row gt_right">0.913</td>
+<td headers="vestido" class="gt_row gt_right">0.000</td>
+<td headers="abrigo" class="gt_row gt_right">0.026</td>
+<td headers="sandalia" class="gt_row gt_right">0.000</td>
+<td headers="camisa" class="gt_row gt_right">0.061</td>
+<td headers="tenis" class="gt_row gt_right">0.000</td>
+<td headers="bolsa" class="gt_row gt_right">0.000</td>
+<td headers="bota" class="gt_row gt_right">0.000</td>
+<td headers="codigo" class="gt_row gt_center">2</td>
+<td headers="articulo" class="gt_row gt_left">suéter</td></tr>
+    <tr><td headers="id" class="gt_row gt_right">3</td>
+<td headers="playera/top" class="gt_row gt_right">0.000</td>
+<td headers="pantalón" class="gt_row gt_right">1.000</td>
+<td headers="suéter" class="gt_row gt_right">0.000</td>
+<td headers="vestido" class="gt_row gt_right">0.000</td>
+<td headers="abrigo" class="gt_row gt_right">0.000</td>
+<td headers="sandalia" class="gt_row gt_right">0.000</td>
+<td headers="camisa" class="gt_row gt_right">0.000</td>
+<td headers="tenis" class="gt_row gt_right">0.000</td>
+<td headers="bolsa" class="gt_row gt_right">0.000</td>
+<td headers="bota" class="gt_row gt_right">0.000</td>
+<td headers="codigo" class="gt_row gt_center">1</td>
+<td headers="articulo" class="gt_row gt_left">pantalón</td></tr>
+    <tr><td headers="id" class="gt_row gt_right">4</td>
+<td headers="playera/top" class="gt_row gt_right">0.000</td>
+<td headers="pantalón" class="gt_row gt_right">1.000</td>
+<td headers="suéter" class="gt_row gt_right">0.000</td>
+<td headers="vestido" class="gt_row gt_right">0.000</td>
+<td headers="abrigo" class="gt_row gt_right">0.000</td>
+<td headers="sandalia" class="gt_row gt_right">0.000</td>
+<td headers="camisa" class="gt_row gt_right">0.000</td>
+<td headers="tenis" class="gt_row gt_right">0.000</td>
+<td headers="bolsa" class="gt_row gt_right">0.000</td>
+<td headers="bota" class="gt_row gt_right">0.000</td>
+<td headers="codigo" class="gt_row gt_center">1</td>
+<td headers="articulo" class="gt_row gt_left">pantalón</td></tr>
+    <tr><td headers="id" class="gt_row gt_right">5</td>
+<td headers="playera/top" class="gt_row gt_right">0.274</td>
+<td headers="pantalón" class="gt_row gt_right">0.000</td>
+<td headers="suéter" class="gt_row gt_right">0.075</td>
+<td headers="vestido" class="gt_row gt_right">0.011</td>
+<td headers="abrigo" class="gt_row gt_right">0.073</td>
+<td headers="sandalia" class="gt_row gt_right">0.000</td>
+<td headers="camisa" class="gt_row gt_right">0.565</td>
+<td headers="tenis" class="gt_row gt_right">0.000</td>
+<td headers="bolsa" class="gt_row gt_right">0.002</td>
+<td headers="bota" class="gt_row gt_right">0.000</td>
+<td headers="codigo" class="gt_row gt_center">6</td>
+<td headers="articulo" class="gt_row gt_left">camisa</td></tr>
+    <tr><td headers="id" class="gt_row gt_right">6</td>
+<td headers="playera/top" class="gt_row gt_right">0.001</td>
+<td headers="pantalón" class="gt_row gt_right">0.998</td>
+<td headers="suéter" class="gt_row gt_right">0.000</td>
+<td headers="vestido" class="gt_row gt_right">0.000</td>
+<td headers="abrigo" class="gt_row gt_right">0.001</td>
+<td headers="sandalia" class="gt_row gt_right">0.000</td>
+<td headers="camisa" class="gt_row gt_right">0.000</td>
+<td headers="tenis" class="gt_row gt_right">0.000</td>
+<td headers="bolsa" class="gt_row gt_right">0.000</td>
+<td headers="bota" class="gt_row gt_right">0.000</td>
+<td headers="codigo" class="gt_row gt_center">1</td>
+<td headers="articulo" class="gt_row gt_left">pantalón</td></tr>
+  </tbody>
+  
+  
+</table>
+</div>
+</div>
+</div>
+<p>Nuestra gráfica de calibración para la categoría <em>camisa</em> es:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>preds_tbl <span class="sc">|&gt;</span>  <span class="fu">select</span>(camisa, articulo) <span class="sc">|&gt;</span> </span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">obs_camisa =</span> articulo <span class="sc">==</span> <span class="st">"camisa"</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">grupo_prob =</span> <span class="fu">cut_number</span>(camisa, <span class="dv">40</span>)) <span class="sc">|&gt;</span> </span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(grupo_prob) <span class="sc">|&gt;</span> </span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">n =</span> <span class="fu">n</span>(),</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>      <span class="at">pred_camisa =</span> <span class="fu">mean</span>(camisa), </span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>      <span class="at">prop_camisa =</span> <span class="fu">mean</span>(obs_camisa)) <span class="sc">|&gt;</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">ee =</span> <span class="fu">sqrt</span>(prop_camisa <span class="sc">*</span> (<span class="dv">1</span> <span class="sc">-</span> prop_camisa) <span class="sc">/</span> n)) <span class="sc">|&gt;</span> </span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> pred_camisa, <span class="at">y =</span> prop_camisa, <span class="at">ymin =</span> prop_camisa <span class="sc">-</span> <span class="dv">2</span><span class="sc">*</span>ee,</span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>           <span class="at">ymax =</span> prop_camisa <span class="sc">+</span> <span class="dv">2</span><span class="sc">*</span> ee)) <span class="sc">+</span></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_abline</span>() <span class="sc">+</span></span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_linerange</span>() <span class="sc">+</span> </span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">colour =</span> <span class="st">"red"</span>) <span class="sc">+</span> <span class="fu">xlim</span>(<span class="dv">0</span>,<span class="dv">1</span>) <span class="sc">+</span> <span class="fu">ylim</span>(<span class="dv">0</span>,<span class="dv">1</span>)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: Removed 4 rows containing missing values (`geom_segment()`).</code></pre>
+</div>
+<div class="cell-output-display">
+<p><img src="10-clasificacion-calibracion_files/figure-html/unnamed-chunk-9-1.png" class="img-fluid" width="384"></p>
+</div>
+</div>
+<p>Vemos que la calibración no es muy mala, al menos para la categoría de <em>camisa</em>. Podemos checar otras categorías de esta manera. Calibrar estas probabilidades puede ser más difícil, pero podemos construir regiones conformes con garantías de cobertura como mostramos abajo:</p>
+</section>
+<section id="regiones-conformes-para-clasificación" class="level2" data-number="10.4">
+<h2 data-number="10.4" class="anchored" data-anchor-id="regiones-conformes-para-clasificación"><span class="header-section-number">10.4</span> Regiones conformes para clasificación</h2>
+<p>Podemos construir conjuntos de predicción con la técnica de predicción conforme con muestra de prueba, siguiendo ideas de <span class="citation" data-cites="gentle21">(<a href="99-referencias.html#ref-gentle21" role="doc-biblioref">Angelopoulos y Bates 2021</a>)</span>, ver <a href="http://people.eecs.berkeley.edu/~angelopoulos/blog/posts/gentle-intro/">aquí</a> también.</p>
+<p>En este caso, no es necesario tener probabilidades calibradas, pero los conjuntos de predicción que obtendremos tendrán garantía de cobertura correcta promedio.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>preds_larga_tbl <span class="ot">&lt;-</span> preds_tbl <span class="sc">|&gt;</span> </span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_longer</span>(<span class="st">`</span><span class="at">playera/top</span><span class="st">`</span><span class="sc">:</span>bota, <span class="at">names_to =</span> <span class="st">"articulo_prob"</span>, <span class="at">values_to =</span> <span class="st">"prob"</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(id) <span class="sc">|&gt;</span> </span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(id, <span class="fu">desc</span>(prob)) <span class="sc">|&gt;</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">clase_verdadera =</span> articulo <span class="sc">==</span> articulo_prob) <span class="sc">|&gt;</span> </span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">acumulado =</span> <span class="fu">cumsum</span>(clase_verdadera))</span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>e_valores <span class="ot">&lt;-</span> preds_larga_tbl <span class="sc">|&gt;</span> </span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(clase_verdadera) <span class="sc">|&gt;</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(id) <span class="sc">|&gt;</span> </span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">e =</span> <span class="fu">sum</span>(prob))</span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>q <span class="ot">&lt;-</span> <span class="fu">quantile</span>(e_valores<span class="sc">$</span>e, <span class="at">prob =</span> <span class="fl">0.05</span>)</span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>e_valores <span class="sc">|&gt;</span> <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> e)) <span class="sc">+</span> <span class="fu">geom_histogram</span>() <span class="sc">+</span></span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_vline</span>(<span class="at">xintercept =</span> q, <span class="at">colour =</span> <span class="st">"red"</span>)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>`stat_bin()` using `bins = 30`. Pick better value with `binwidth`.</code></pre>
+</div>
+<div class="cell-output-display">
+<p><img src="10-clasificacion-calibracion_files/figure-html/unnamed-chunk-10-1.png" class="img-fluid" width="384"></p>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>conjuntos_conf <span class="ot">&lt;-</span> preds_larga_tbl <span class="sc">|&gt;</span> <span class="fu">group_by</span>(id) <span class="sc">|&gt;</span> </span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(prob <span class="sc">&gt;</span> q) <span class="sc">|&gt;</span> </span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(id, <span class="at">articulo =</span> articulo_prob, prob)</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>conjuntos_conf</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 14,408 × 3
+# Groups:   id [10,000]
+      id articulo     prob
+   &lt;int&gt; &lt;chr&gt;       &lt;dbl&gt;
+ 1     1 bota        0.827
+ 2     1 sandalia    0.117
+ 3     2 suéter      0.913
+ 4     3 pantalón    1.00 
+ 5     4 pantalón    1.00 
+ 6     5 camisa      0.565
+ 7     5 playera/top 0.274
+ 8     6 pantalón    0.998
+ 9     7 abrigo      0.955
+10     8 camisa      0.774
+# ℹ 14,398 more rows</code></pre>
+</div>
+</div>
+<p>Y así se ve el tamaño de los conjuntos conformes. La mayoría consiste de una sola clase (con probabilidad de 95%), pero muchos tienen 2 o 3 categorías posibles, de modo que el desempeño de nuestro modelo no es excelente.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>conjuntos_conf <span class="sc">|&gt;</span> <span class="fu">count</span>(id) <span class="sc">|&gt;</span> </span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(n) <span class="sc">|&gt;</span> <span class="fu">count</span>()</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Storing counts in `nn`, as `n` already present in input
+ℹ Use `name = "new_name"` to pick a new name.</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 5 × 2
+# Groups:   n [5]
+      n    nn
+  &lt;int&gt; &lt;int&gt;
+1     1  6583
+2     2  2530
+3     3   788
+4     4    94
+5     5     5</code></pre>
+</div>
+</div>
+<p>Por ejemplo:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="fu">filter</span>(conjuntos_conf, id <span class="sc">==</span> <span class="dv">21</span>)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 3 × 3
+# Groups:   id [1]
+     id articulo     prob
+  &lt;int&gt; &lt;chr&gt;       &lt;dbl&gt;
+1    21 suéter      0.644
+2    21 playera/top 0.195
+3    21 camisa      0.157</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(imager)</span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(<span class="fu">as.cimg</span>(<span class="fu">t</span>(ropa_prueba<span class="sc">$</span>x[<span class="dv">21</span>,,])), <span class="at">axes =</span> <span class="cn">FALSE</span>, <span class="at">main =</span> articulos[ropa_prueba<span class="sc">$</span>y[<span class="dv">21</span>] <span class="sc">+</span> <span class="dv">1</span>])</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="10-clasificacion-calibracion_files/figure-html/unnamed-chunk-14-1.png" class="img-fluid" width="384"></p>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>id_1 <span class="ot">&lt;-</span> <span class="dv">27</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>ejemplo_conf <span class="ot">&lt;-</span> <span class="fu">filter</span>(conjuntos_conf <span class="sc">|&gt;</span> <span class="fu">ungroup</span>(), id <span class="sc">==</span> id_1)</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>ejemplo_conf</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 2 × 3
+     id articulo  prob
+  &lt;int&gt; &lt;chr&gt;    &lt;dbl&gt;
+1    27 camisa   0.837
+2    27 abrigo   0.131</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(<span class="fu">as.cimg</span>(<span class="fu">t</span>(ropa_prueba<span class="sc">$</span>x[id_1,,])), <span class="at">axes =</span> <span class="cn">FALSE</span>, <span class="at">main =</span> articulos[ropa_prueba<span class="sc">$</span>y[id_1] <span class="sc">+</span> <span class="dv">1</span>])</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="10-clasificacion-calibracion_files/figure-html/unnamed-chunk-15-1.png" class="img-fluid" width="384"></p>
+</div>
+</div>
+</section>
+<section id="calibración-de-probabilidades-1" class="level2" data-number="10.5">
+<h2 data-number="10.5" class="anchored" data-anchor-id="calibración-de-probabilidades-1"><span class="header-section-number">10.5</span> Calibración de probabilidades</h2>
+<p>Cuando la calibración no es muy buena, es posible seguir el camino de predicción conforme de clase, o podemos también intentar un proceso de calibración. La idea es construir una funcion <span class="math inline">\({f}_cal\)</span> tal que si <span class="math inline">\(p'(x) = f_{cal}(p(x))\)</span> , las probabilidades dadas por <span class="math inline">\(p'(x)\)</span> tienen buena calibración.</p>
+<p>Los métodos más comunes son:</p>
+<ul>
+<li>Aplicar regresión logística (quizá con splines, por ejemplo), usando la probabilidad/score del modelo original como variable de entrada, y la respuesta como la variable de salida.</li>
+<li>Aplicar regresión isotónica, que es similar pero restringe a que la calibración preserve el orden de las probabilidades/scores del modelo original.</li>
+</ul>
+<p>Existen otros métodos ( ver por ejemplo https://www.tidymodels.org/learn/models/calibration/)</p>
+<p>Veamos un ejemplo donde queremos contruir un modelo para predecir que células están correctamente segmentadas y cuáles no, bajo un método que se llama High content screening. Las clases son PS (poorly segmented) y WS (well segmented):</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="fu">data</span>(cells)</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a><span class="fu">dim</span>(cells)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 2019   58</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>cells<span class="sc">$</span>case <span class="ot">&lt;-</span> <span class="cn">NULL</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>cells <span class="sc">|&gt;</span> <span class="fu">count</span>(class)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 2 × 2
+  class     n
+  &lt;fct&gt; &lt;int&gt;
+1 PS     1300
+2 WS      719</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(probably)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>
+Attaching package: 'probably'</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>The following objects are masked from 'package:base':
+
+    as.factor, as.ordered</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(discrim)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>
+Attaching package: 'discrim'</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>The following object is masked from 'package:dials':
+
+    smoothness</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb34"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">128</span>)</span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>split <span class="ot">&lt;-</span> <span class="fu">initial_split</span>(cells, <span class="at">strata =</span> class)</span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a>cells_tr <span class="ot">&lt;-</span> <span class="fu">training</span>(split)</span>
+<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a>cells_te <span class="ot">&lt;-</span> <span class="fu">testing</span>(split)</span>
+<span id="cb34-5"><a href="#cb34-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-6"><a href="#cb34-6" aria-hidden="true" tabindex="-1"></a>cells_rs <span class="ot">&lt;-</span> <span class="fu">vfold_cv</span>(cells_tr, <span class="at">v =</span> <span class="dv">10</span>, <span class="at">strata =</span> class) </span>
+<span id="cb34-7"><a href="#cb34-7" aria-hidden="true" tabindex="-1"></a>discrim_wflow <span class="ot">&lt;-</span></span>
+<span id="cb34-8"><a href="#cb34-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">workflow</span>() <span class="sc">|&gt;</span> </span>
+<span id="cb34-9"><a href="#cb34-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add_formula</span>(class <span class="sc">~</span> .) <span class="sc">|&gt;</span> </span>
+<span id="cb34-10"><a href="#cb34-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add_model</span>(<span class="fu">discrim_linear</span>() <span class="sc">|&gt;</span> <span class="fu">set_mode</span>(<span class="st">"classification"</span>)) </span>
+<span id="cb34-11"><a href="#cb34-11" aria-hidden="true" tabindex="-1"></a>metricas <span class="ot">&lt;-</span> <span class="fu">metric_set</span>(roc_auc, brier_class)</span>
+<span id="cb34-12"><a href="#cb34-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-13"><a href="#cb34-13" aria-hidden="true" tabindex="-1"></a>discrim_res <span class="ot">&lt;-</span></span>
+<span id="cb34-14"><a href="#cb34-14" aria-hidden="true" tabindex="-1"></a>  discrim_wflow <span class="sc">|&gt;</span></span>
+<span id="cb34-15"><a href="#cb34-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">fit_resamples</span>(<span class="at">resamples =</span> cells_rs, </span>
+<span id="cb34-16"><a href="#cb34-16" aria-hidden="true" tabindex="-1"></a>                <span class="at">metrics =</span> metricas, </span>
+<span id="cb34-17"><a href="#cb34-17" aria-hidden="true" tabindex="-1"></a>                <span class="at">control =</span> <span class="fu">control_resamples</span>(<span class="at">save_pred =</span> <span class="cn">TRUE</span>))</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>→ A | warning: variables are collinear</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>There were issues with some computations   A: x1</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>There were issues with some computations   A: x10</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code></code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb39"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="fu">collect_metrics</span>(discrim_res)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 2 × 6
+  .metric     .estimator  mean     n std_err .config             
+  &lt;chr&gt;       &lt;chr&gt;      &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;               
+1 brier_class binary     0.136    10 0.00281 Preprocessor1_Model1
+2 roc_auc     binary     0.879    10 0.00411 Preprocessor1_Model1</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb41"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cal_plot_breaks</span>(discrim_res, <span class="at">num_breaks =</span> <span class="dv">15</span>)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="10-clasificacion-calibracion_files/figure-html/unnamed-chunk-18-1.png" class="img-fluid" width="384"></p>
+</div>
+</div>
+<p>Corremos ahora validación con regresión logística com ejemplo:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb42"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a>logit_val <span class="ot">&lt;-</span> probably<span class="sc">::</span><span class="fu">cal_validate_logistic</span>(discrim_res, </span>
+<span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">metrics =</span> metricas, <span class="at">save_pred =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb42-3"><a href="#cb42-3" aria-hidden="true" tabindex="-1"></a><span class="fu">collect_metrics</span>(logit_val)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 4 × 7
+  .metric     .type        .estimator  mean     n std_err .config
+  &lt;chr&gt;       &lt;chr&gt;        &lt;chr&gt;      &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;  
+1 brier_class uncalibrated binary     0.136    10 0.00281 config 
+2 roc_auc     uncalibrated binary     0.879    10 0.00411 config 
+3 brier_class calibrated   binary     0.134    10 0.00296 config 
+4 roc_auc     calibrated   binary     0.879    10 0.00411 config </code></pre>
+</div>
+</div>
+<p>Y el resultado es ahora como sigue:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb44"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a><span class="fu">collect_predictions</span>(logit_val) <span class="sc">|&gt;</span> </span>
+<span id="cb44-2"><a href="#cb44-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(.type <span class="sc">==</span> <span class="st">"calibrated"</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb44-3"><a href="#cb44-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cal_plot_breaks</span>(<span class="at">truth =</span> class, <span class="at">estimate =</span> .pred_PS) </span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="10-clasificacion-calibracion_files/figure-html/unnamed-chunk-20-1.png" class="img-fluid" width="384"></p>
+</div>
+</div>
+
+
+<div id="refs" class="references csl-bib-body hanging-indent" role="list" style="display: none">
+<div id="ref-gentle21" class="csl-entry" role="listitem">
+Angelopoulos, Anastasios N., y Stephen Bates. 2021. <span>«A Gentle Introduction to Conformal Prediction and Distribution-Free Uncertainty Quantification»</span>. <a href="https://arxiv.org/abs/2107.07511">https://arxiv.org/abs/2107.07511</a>.
+</div>
+<div id="ref-kuhn" class="csl-entry" role="listitem">
+Kuhn, M., y K. Johnson. 2013. <em>Applied Predictive Modeling</em>. SpringerLink : B<span>ü</span>cher. Springer New York. <a href="https://books.google.com.mx/books?id=xYRDAAAAQBAJ">https://books.google.com.mx/books?id=xYRDAAAAQBAJ</a>.
+</div>
+</div>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copiado");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copiado");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="./09-clasificacion-2.html" class="pagination-link">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Decisiones de clasificación</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./81-apendice-descenso.html" class="pagination-link">
+        <span class="nav-page-text"><span class="chapter-number">A</span>&nbsp; <span class="chapter-title">Apéndice 1: descenso en gradiente</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+</body></html>
