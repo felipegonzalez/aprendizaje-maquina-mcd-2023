@@ -15,10 +15,14 @@ jobs:
     steps:
       - name: Install probably
         run: |
-          remotes::install_github("https://github.com/tidymodels/probably/", upgrade = "always", force = TRUE)  
+          remotes::install_github("https://github.com/tidymodels/probably/", upgrade = "always", force = TRUE)
+        shell: Rscript {0}
+      - name: Install others
+        run: |
+          install.packages(c("discrim"))
         shell: Rscript {0}
       - uses: actions/checkout@v2
-      - name: Render book 
+      - name: Render book
         # Add any command line argument needed
         run: |
           quarto render notas/ --to html
