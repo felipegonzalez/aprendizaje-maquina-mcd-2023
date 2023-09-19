@@ -16,6 +16,8 @@ book:
     - 08-clasificacion-1.qmd
     - 09-clasificacion-2.qmd
     - 10-clasificacion-calibracion.qmd
+    - 11-val-cruzada.qmd
+    - 12-arboles.qmd
   appendices:
     - 81-apendice-descenso.qmd
     - 82-apendice-descenso-estocastico.qmd
