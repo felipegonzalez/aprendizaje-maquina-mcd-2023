@@ -264,7 +264,7 @@ plot(as.cimg(t(ropa_prueba$x[id_1,,])), axes = FALSE, main = articulos[ropa_prue
 
 Cuando la calibración no es muy buena, es posible seguir el camino de
 predicción conforme de clase, o podemos también intentar un proceso de
-calibración. La idea es construir una funcion ${f}_cal$ tal que si 
+calibración. La idea es construir una funcion ${f}_{cal}$ tal que si 
 $p'(x) = f_{cal}(p(x))$ , las probabilidades dadas por $p'(x)$ tienen
 buena calibración.
 
