@@ -331,10 +331,11 @@ Propiedades de entrenamiento-validación-prueba
 <h2 data-number="11.1" class="anchored" data-anchor-id="validación-cruzada"><span class="header-section-number">11.1</span> Validación cruzada</h2>
 <p>En muchos casos, no queremos apartar una muestra de validación para seleccionar modelos, pues no tenemos muchos datos (al dividir la muestra obtendríamos un modelo relativamente malo en relación al que resulta de todos los datos, o obtendríamos un modelo que no podemos evaluar apropiadamente).</p>
 <p>Un criterio para afinar hiperparámetros (como regularización) es el de <strong>validación cruzada</strong>, que es un método computacional para producir una estimación interna (usando sólo muestra de entrenamiento) del error de predicción.</p>
+<p><img src="./figuras/div_muestra_cv_1.png" class="img-fluid"></p>
 <p>Validación cruzada también tiene nos da diagnósticos adicionales para entender la variación del desempeño según el conjunto de datos de entrenamiento que usemos, algo que es más difícil ver si solo tenemos una muestra de validación.</p>
 <p>En validación cruzada (con <span class="math inline">\(k\)</span> vueltas), construimos al azar una partición, con tamaños similares, de la muestra de entrenamiento <span class="math inline">\({\mathcal L}=\{ (x_i,y_i)\}_{i=1}^n\)</span>:</p>
 <p><span class="math display">\[ {\mathcal L}={\mathcal L}_1\cup {\mathcal L}_2\cup\cdots\cup {\mathcal L}_k.\]</span></p>
-<p><img src="./figuras/div_muestra_cv.png" class="img-fluid"></p>
+<p><img src="./figuras/div_muestra_cv.png" class="img-fluid" width="300"></p>
 <p>Construimos <span class="math inline">\(k\)</span> modelos distintos, digamos <span class="math inline">\(\hat{f}_j\)</span>, usando solamente la muestra <span class="math inline">\({\mathcal L}-{\mathcal L}_j\)</span>, para <span class="math inline">\(j=1,2,\ldots, k\)</span>. Cada uno de estos modelos lo evaluamos usando la parte que no usamos para entrenarlo, <span class="math inline">\({\mathcal L}_j\)</span>, para obtener una estimación <em>honesta</em> del error del modelo <span class="math inline">\(\hat{f}_k\)</span>, a la que denotamos por <span class="math inline">\(\hat{e}_j\)</span>.</p>
 <p>Notemos entonces que tenemos <span class="math inline">\(k\)</span> estimaciones del error <span class="math inline">\(\hat{e}_1,\ldots, \hat{e}_k\)</span>, una para cada uno de los modelos que construimos. La idea ahora es que</p>
 <ul>
