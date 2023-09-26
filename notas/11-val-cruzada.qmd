@@ -29,6 +29,7 @@ con varios parámetros afinados (como la $\lambda$ de regresión ridge).
 
 
 
+
 Cuando tenemos datos abundantes, este enfoque es el usual. Por ejemplo,
 podemos dividir la muestra en 50-25-25 por ciento. Ajustamos modelos
 con el primer 50\%, evaluamos y seleccionamos con el segundo 25\% y finalmente,
@@ -89,6 +90,9 @@ es el de **validación cruzada**, que es un método computacional
 para producir una estimación interna (usando sólo muestra de entrenamiento)
 del error de predicción.
 
+![](./figuras/div_muestra_cv_1.png)
+
+
 Validación cruzada también tiene nos da diagnósticos adicionales para entender
 la variación del desempeño según el conjunto de datos de entrenamiento que usemos,
 algo que es más difícil ver si solo tenemos una muestra de validación.
@@ -100,7 +104,7 @@ ${\mathcal L}=\{ (x_i,y_i)\}_{i=1}^n$:
 
 $$ {\mathcal L}={\mathcal L}_1\cup {\mathcal L}_2\cup\cdots\cup {\mathcal L}_k.$$
 
-![](./figuras/div_muestra_cv.png)
+![](./figuras/div_muestra_cv.png){width=300}
 
 Construimos $k$ modelos distintos, digamos $\hat{f}_j$, usando solamente
 la muestra ${\mathcal L}-{\mathcal L}_j$, para $j=1,2,\ldots, k$. Cada uno de estos modelos lo evaluamos

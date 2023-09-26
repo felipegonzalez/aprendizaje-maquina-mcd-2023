@@ -1,0 +1,22 @@
+digraph{
+
+      graph[rankdir = TB]
+
+      node[shape = plaintext style = filled ]
+
+
+      node[fillcolor = White, margin = 0.2]
+      C[label = Datos]
+
+      node[fillcolor = Cyan, margin = 0.2]
+      D[label = <Entrenamiento <FONT POINT-SIZE="11.0"><BR/>Ajuste de parámetros <BR/> de modelos</FONT>>]
+      node[fillcolor = Yellow, margin = 0.2]
+      E[label = <Validación <FONT POINT-SIZE="11.0"><BR/>Afinación de hiperparámetros <BR/> y selección de candidatos</FONT>>]
+      node[fillcolor = Salmon, margin = 0.2]
+      F[label = <Prueba <FONT POINT-SIZE="11.0"><BR/>Evaluación final</FONT>>]
+
+      edge[color = black, arrowhead = vee, arrowsize = 1.0]
+      C -> D
+      C -> E
+      C -> F
+      }
