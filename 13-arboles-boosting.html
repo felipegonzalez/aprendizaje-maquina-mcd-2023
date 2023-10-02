@@ -1,0 +1,1351 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="es" xml:lang="es"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.3.353">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Aprendizaje Máquina - 13&nbsp; Métodos basados en árboles: boosting</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./81-apendice-descenso.html" rel="next">
+<link href="./12-arboles.html" rel="prev">
+<script src="site_libs/quarto-html/quarto.js"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 20,
+  "language": {
+    "search-no-results-text": "Sin resultados",
+    "search-matching-documents-text": "documentos encontrados",
+    "search-copy-link-title": "Copiar el enlace en la búsqueda",
+    "search-hide-matches-text": "Ocultar resultados adicionales",
+    "search-more-match-text": "resultado adicional en este documento",
+    "search-more-matches-text": "resultados adicionales en este documento",
+    "search-clear-button-title": "Borrar",
+    "search-detached-cancel-button-title": "Cancelar",
+    "search-submit-button-title": "Enviar"
+  }
+}</script>
+
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+</head>
+
+<body class="nav-sidebar floating">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Alternar barra lateral" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+      <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./13-arboles-boosting.html"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Métodos basados en árboles: boosting</span></a></li></ol></nav>
+      <a class="flex-grow-1" role="button" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Alternar barra lateral" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+      </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Buscar" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./">Aprendizaje Máquina</a> 
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Buscar"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Temario y referencias</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./01-introduccion.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Introducción</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./02-principios-supervisado.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Principios de aprendizaje supervisado</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./03-metodos-locales.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Métodos locales no estructurados</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./04-lineales-ingenieria.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Métodos lineales e ingenería de entradas</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./05-regularizacion-1.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Regularización y variabilidad</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./06-redes-neuronales-1.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Redes neuronales (intro)</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./07-intervalos-predictivos.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Incertidumbre en las predicciones</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./08-clasificacion-1.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Clasificación y probabilidad</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./09-clasificacion-2.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Decisiones de clasificación</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./10-clasificacion-calibracion.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Calibración de probabilidades</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./11-val-cruzada.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Entrenamiento, Validación y Prueba</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./12-arboles.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Métodos basados en árboles</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./13-arboles-boosting.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Métodos basados en árboles: boosting</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-expanded="true">
+ <span class="menu-text">Appendices</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-expanded="true" aria-label="Alternar sección">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./81-apendice-descenso.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">A</span>&nbsp; <span class="chapter-title">Apéndice 1: descenso en gradiente</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./82-apendice-descenso-estocastico.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">B</span>&nbsp; <span class="chapter-title">Apéndice 2: Descenso estocástico</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./99-referencias.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Referencias</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Tabla de contenidos</h2>
+   
+  <ul>
+  <li><a href="#forward-stagewise-additive-modeling-fsam" id="toc-forward-stagewise-additive-modeling-fsam" class="nav-link active" data-scroll-target="#forward-stagewise-additive-modeling-fsam"><span class="header-section-number">13.1</span> Forward stagewise additive modeling (FSAM)</a></li>
+  <li><a href="#discusión" id="toc-discusión" class="nav-link" data-scroll-target="#discusión"><span class="header-section-number">13.2</span> Discusión</a></li>
+  <li><a href="#algoritmo-fsam" id="toc-algoritmo-fsam" class="nav-link" data-scroll-target="#algoritmo-fsam"><span class="header-section-number">13.3</span> Algoritmo FSAM</a></li>
+  <li><a href="#fsam-para-clasificación-binaria." id="toc-fsam-para-clasificación-binaria." class="nav-link" data-scroll-target="#fsam-para-clasificación-binaria."><span class="header-section-number">13.4</span> FSAM para clasificación binaria.</a></li>
+  <li><a href="#gradient-boosting" id="toc-gradient-boosting" class="nav-link" data-scroll-target="#gradient-boosting"><span class="header-section-number">13.5</span> Gradient boosting</a></li>
+  <li><a href="#algoritmo-de-gradient-boosting" id="toc-algoritmo-de-gradient-boosting" class="nav-link" data-scroll-target="#algoritmo-de-gradient-boosting"><span class="header-section-number">13.6</span> Algoritmo de gradient boosting</a></li>
+  <li><a href="#funciones-de-pérdida" id="toc-funciones-de-pérdida" class="nav-link" data-scroll-target="#funciones-de-pérdida"><span class="header-section-number">13.7</span> Funciones de pérdida</a>
+  <ul class="collapse">
+  <li><a href="#discusión-adaboost-opcional" id="toc-discusión-adaboost-opcional" class="nav-link" data-scroll-target="#discusión-adaboost-opcional">Discusión: adaboost (opcional)</a></li>
+  <li><a href="#ejemplo-precios-de-casas" id="toc-ejemplo-precios-de-casas" class="nav-link" data-scroll-target="#ejemplo-precios-de-casas">Ejemplo: precios de casas</a></li>
+  </ul></li>
+  <li><a href="#afinación-de-gradient-boosting" id="toc-afinación-de-gradient-boosting" class="nav-link" data-scroll-target="#afinación-de-gradient-boosting"><span class="header-section-number">13.8</span> Afinación de gradient boosting</a></li>
+  <li><a href="#tasa-de-aprendizaje-y-número-de-árboles" id="toc-tasa-de-aprendizaje-y-número-de-árboles" class="nav-link" data-scroll-target="#tasa-de-aprendizaje-y-número-de-árboles"><span class="header-section-number">13.9</span> Tasa de aprendizaje y número de árboles</a></li>
+  <li><a href="#profundidad-y-número-de-variables-por-nodo" id="toc-profundidad-y-número-de-variables-por-nodo" class="nav-link" data-scroll-target="#profundidad-y-número-de-variables-por-nodo"><span class="header-section-number">13.10</span> Profundidad y número de variables por nodo</a></li>
+  <li><a href="#submuestreo" id="toc-submuestreo" class="nav-link" data-scroll-target="#submuestreo"><span class="header-section-number">13.11</span> Submuestreo</a></li>
+  <li><a href="#otros-parámetros" id="toc-otros-parámetros" class="nav-link" data-scroll-target="#otros-parámetros"><span class="header-section-number">13.12</span> Otros parámetros</a></li>
+  <li><a href="#algoritmo-xgboost" id="toc-algoritmo-xgboost" class="nav-link" data-scroll-target="#algoritmo-xgboost"><span class="header-section-number">13.13</span> Algoritmo xgboost</a></li>
+  <li><a href="#regularización-por-complejidad-y-l2" id="toc-regularización-por-complejidad-y-l2" class="nav-link" data-scroll-target="#regularización-por-complejidad-y-l2">Regularización por complejidad y L2</a>
+  <ul class="collapse">
+  <li><a href="#paso-de-optimización-para-xgboost" id="toc-paso-de-optimización-para-xgboost" class="nav-link" data-scroll-target="#paso-de-optimización-para-xgboost">Paso de optimización para xgboost</a></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Métodos basados en árboles: boosting</span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+</header>
+
+<p>Boosting también utiliza la idea de un “ensemble” de árboles. La diferencia grande con bagging y bosques aleatorios en que la sucesión de árboles de boosting se <em>adapta</em> al comportamiento del predictor a lo largo de las iteraciones, haciendo reponderaciones de los datos de entrenamiento para que el algoritmo se concentre en las predicciones más pobres. Boosting típicamente funciona bien con árboles chicos (cada uno con sesgo alto), mientras que bosques aleatorios funciona con árboles grandes (sesgo bajo).</p>
+<ul>
+<li><p>En boosting usamos muchos árboles relativamente chicos adaptados secuencialmente. La disminución del sesgo proviene de usar distintos árboles que se encargan de adaptar el predictor a distintas partes del conjunto de entrenamiento. El control de varianza se logra con tasas de aprendizaje y tamaño de árboles, como veremos más adelante.</p></li>
+<li><p>En bosques aleatorios usamos muchos árboles grandes, cada uno con una muestra de entrenamiento perturbada (bootstrap). El control de varianza se logra promediando sobre esas muestras bootstrap de entrenamiento.</p></li>
+</ul>
+<p>Igual que bosques aleatorios, boosting es también un método que generalmente tiene alto poder predictivo.</p>
+<section id="forward-stagewise-additive-modeling-fsam" class="level2" data-number="13.1">
+<h2 data-number="13.1" class="anchored" data-anchor-id="forward-stagewise-additive-modeling-fsam"><span class="header-section-number">13.1</span> Forward stagewise additive modeling (FSAM)</h2>
+<p>Aunque existen versiones de boosting (Adaboost) desde los 90s, una buena manera de entender los algoritmos es mediante un proceso general de modelado por estapas (FSAM).</p>
+</section>
+<section id="discusión" class="level2" data-number="13.2">
+<h2 data-number="13.2" class="anchored" data-anchor-id="discusión"><span class="header-section-number">13.2</span> Discusión</h2>
+<p>Consideramos primero un problema de <em>regresión</em>, que queremos atacar con un predictor de la forma <span class="math display">\[f(x) = \sum_{k=1}^m \beta_k b_k(x),\]</span> donde los <span class="math inline">\(b_k\)</span> son árboles. Podemos absorber el coeficiente <span class="math inline">\(\beta_k\)</span> dentro del árbol <span class="math inline">\(b_k(x)\)</span>, y escribimos</p>
+<p><span class="math display">\[f(x) = \sum_{k=1}^m T_k(x),\]</span></p>
+<p>Para ajustar este tipo de modelos, buscamos minimizar la pérdida de entrenamiento:</p>
+<p><span class="math display">\[\begin{equation}
+\min \sum_{i=1}^N L(y^{(i)}, \sum_{k=1}^M T_k(x^{(i)}))
+\end{equation}\]</span></p>
+<p>Este puede ser un problema difícil, dependiendo de la familia que usemos para los árboles <span class="math inline">\(T_k\)</span>, y sería difícil resolver por fuerza bruta. Para resolver este problema, podemos intentar una heurística secuencial o por etapas:</p>
+<p>Si tenemos <span class="math display">\[f_{m-1}(x) = \sum_{k=1}^{m-1} T_k(x),\]</span></p>
+<p>intentamos resolver el problema (añadir un término adicional)</p>
+<p><span class="math display">\[\begin{equation}
+\min_{T} \sum_{i=1}^N L(y^{(i)}, f_{m-1}(x^{(i)}) + T(x^{(i)}))
+\end{equation}\]</span></p>
+<p>Por ejemplo, para pérdida cuadrática (en regresión), buscamos resolver</p>
+<p><span class="math display">\[\begin{equation}
+\min_{T} \sum_{i=1}^N (y^{(i)} - f_{m-1}(x^{(i)}) - T(x^{(i)}))^2
+\end{equation}\]</span></p>
+<p>Si ponemos <span class="math display">\[ r_{m-1}^{(i)} = y^{(i)} - f_{m-1}(x^{(i)}),\]</span> que es el error para el caso <span class="math inline">\(i\)</span> bajo el modelo <span class="math inline">\(f_{m-1}\)</span>, entonces reescribimos el problema anterior como <span class="math display">\[\begin{equation}
+\min_{T} \sum_{i=1}^N ( r_{m-1}^{(i)} - T(x^{(i)}))^2
+\end{equation}\]</span></p>
+<p>Este problema consiste en <em>ajustar un árbol a los residuales o errores del paso anterior</em>. Otra manera de decir esto es que añadimos un término adicional que intenta corregir los que el modelo anterior no pudo predecir bien. La idea es repetir este proceso para ir reduciendo los residuales, agregando un árbol a la vez.</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Nota
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>La primera idea central de boosting es concentrarnos, en el siguiente paso, en los datos donde tengamos errores, e intentar corregir añadiendo un término adicional al modelo.</p>
+</div>
+</div>
+</section>
+<section id="algoritmo-fsam" class="level2" data-number="13.3">
+<h2 data-number="13.3" class="anchored" data-anchor-id="algoritmo-fsam"><span class="header-section-number">13.3</span> Algoritmo FSAM</h2>
+<p>Esta idea es la base del siguiente algoritmo:</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Algoritmo FSAM (forward stagewise additive modeling)
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<ol type="1">
+<li>Tomamos <span class="math inline">\(f_0(x)=0\)</span></li>
+<li>Para <span class="math inline">\(m=1\)</span> hasta <span class="math inline">\(M\)</span>,</li>
+</ol>
+<ul>
+<li>Resolvemos <span class="math display">\[T_m = argmin_{T} \sum_{i=1}^N L(y^{(i)}, f_{m-1}(x^{(i)}) + T(x^{(i)}))\]</span></li>
+<li>Ponemos <span class="math display">\[f_m(x) = f_{m-1}(x) + T_m(x)\]</span></li>
+</ul>
+<ol start="3" type="1">
+<li>Nuestro predictor final es <span class="math inline">\(f(x) = \sum_{m=1}^M T_(x)\)</span>.</li>
+</ol>
+</div>
+</div>
+<p><strong>Observaciones</strong>: Generalmente los árboles sobre los que optimizamos están restringidos a una familia relativamente chica: por ejemplo, árboles de profundidad no mayor a <span class="math inline">\(2,3,\ldots, 8\)</span>.</p>
+<p>Este algoritmo se puede aplicar directamente para problemas de regresión, como vimos en la discusión anterior: simplemente hay que ajustar árboles a los residuales del modelo del paso anterior. Sin embargo, no está claro cómo aplicarlo cuando la función de pérdida no es mínimos cuadrados (por ejemplo, regresión logística).</p>
+<section id="ejemplo-regresión" class="level4 unnumbered">
+<h4 class="unnumbered anchored" data-anchor-id="ejemplo-regresión">Ejemplo (regresión)</h4>
+<p>Podemos hacer FSAM directamente sobre un problema de regresión.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">227818</span>)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(rpart)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>x <span class="ot">&lt;-</span> <span class="fu">rnorm</span>(<span class="dv">200</span>, <span class="dv">0</span>, <span class="dv">30</span>)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>y <span class="ot">&lt;-</span> <span class="dv">2</span><span class="sc">*</span><span class="fu">ifelse</span>(x <span class="sc">&lt;</span> <span class="dv">0</span>, <span class="dv">0</span>, <span class="fu">sqrt</span>(x)) <span class="sc">+</span> <span class="fu">rnorm</span>(<span class="dv">200</span>, <span class="dv">0</span>, <span class="fl">0.5</span>)</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>dat <span class="ot">&lt;-</span> <span class="fu">tibble</span>(<span class="at">x =</span> x, <span class="at">y =</span> y)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Pondremos los árboles de cada paso en una lista. Podemos comenzar con una constante en lugar de 0.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>arboles_fsam <span class="ot">&lt;-</span> <span class="fu">list</span>()</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>arboles_fsam[[<span class="dv">1</span>]] <span class="ot">&lt;-</span> <span class="fu">rpart</span>(y <span class="sc">~</span> x, <span class="at">data =</span> dat, </span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>                           <span class="at">control =</span> <span class="fu">list</span>(<span class="at">maxdepth =</span> <span class="dv">0</span>))</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>arboles_fsam[[<span class="dv">1</span>]]</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>n= 200 
+
+node), split, n, deviance, yval
+      * denotes terminal node
+
+1) root 200 5370.398 4.675925 *</code></pre>
+</div>
+</div>
+<p>Ahora construirmos nuestra función de predicción y el paso que agrega un árbol</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(patchwork)</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>predecir_arboles <span class="ot">&lt;-</span> <span class="cf">function</span>(arboles_fsam, dat){</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  preds <span class="ot">&lt;-</span> <span class="fu">map</span>(arboles_fsam, \(arbol) <span class="fu">predict</span>(arbol, dat)) <span class="sc">|&gt;</span> </span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">reduce</span>(<span class="st">`</span><span class="at">+</span><span class="st">`</span>)</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  dat <span class="sc">|&gt;</span> <span class="fu">mutate</span>(<span class="at">preds =</span> preds) <span class="sc">|&gt;</span> </span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">res =</span> y <span class="sc">-</span> preds)</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>agregar_arbol <span class="ot">&lt;-</span> <span class="cf">function</span>(arboles_fsam, dat, <span class="at">plot =</span> <span class="cn">TRUE</span>){</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>  preds_tbl <span class="ot">&lt;-</span> <span class="fu">predecir_arboles</span>(arboles_fsam, dat)</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>  g_agregado <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(preds_tbl, <span class="fu">aes</span>(<span class="at">x =</span> x)) <span class="sc">+</span> </span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_point</span>(<span class="fu">aes</span>(<span class="at">y =</span> y), <span class="at">size =</span> <span class="fl">1.1</span>, <span class="at">alpha =</span> <span class="fl">0.7</span>, <span class="at">colour =</span> <span class="st">"red"</span>) <span class="sc">+</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_line</span>(<span class="fu">aes</span>(<span class="at">y =</span> preds), <span class="at">colour =</span> <span class="st">'black'</span>,</span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>    <span class="at">size=</span><span class="fl">1.1</span>)  <span class="sc">+</span> </span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>    <span class="fu">labs</span>(<span class="at">title =</span><span class="st">'Ajuste acumulado'</span>)</span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>  <span class="co"># ajustar nuevo árbol </span></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>  n <span class="ot">&lt;-</span> <span class="fu">length</span>(arboles_fsam)</span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>  arboles_fsam[[n <span class="sc">+</span> <span class="dv">1</span>]] <span class="ot">&lt;-</span> <span class="fu">rpart</span>(res <span class="sc">~</span> x, preds_tbl, <span class="at">control =</span> <span class="fu">list</span>(<span class="at">maxdepth =</span> <span class="dv">1</span>))</span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>  <span class="co">#</span></span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>  preds_tbl <span class="ot">&lt;-</span> preds_tbl <span class="sc">|&gt;</span> </span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">preds_nuevo =</span> <span class="fu">predict</span>(arboles_fsam[[n <span class="sc">+</span> <span class="dv">1</span>]]), dat)</span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a>  g_res <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(preds_tbl, <span class="fu">aes</span>(<span class="at">x =</span> x)) <span class="sc">+</span> </span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_point</span>(<span class="fu">aes</span>(<span class="at">y =</span> res), <span class="at">size =</span><span class="fl">1.1</span>, <span class="at">alpha =</span> <span class="fl">0.7</span>, <span class="at">colour =</span><span class="st">"red"</span>) <span class="sc">+</span> </span>
+<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_line</span>(<span class="fu">aes</span>(<span class="at">y=</span>preds_nuevo)) <span class="sc">+</span></span>
+<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a>    <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">'Residuales y nueva T'</span>) <span class="sc">+</span> <span class="fu">ylim</span>(<span class="fu">c</span>(<span class="sc">-</span><span class="dv">10</span>,<span class="dv">10</span>))</span>
+<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span>(plot) <span class="fu">print</span>(g_agregado <span class="sc">+</span> g_res)</span>
+<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a>  arboles_fsam</span>
+<span id="cb4-27"><a href="#cb4-27" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Ahora construiremos el primer árbol. Usaremos ‘troncos’ (stumps), árboles con un solo corte: Los primeros residuales son simplemente las <span class="math inline">\(y\)</span>’s observadas</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>arboles_fsam <span class="ot">&lt;-</span> <span class="fu">agregar_arbol</span>(arboles_fsam, dat)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: Using `size` aesthetic for lines was deprecated in ggplot2 3.4.0.
+ℹ Please use `linewidth` instead.</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: Removed 8 rows containing missing values (`geom_point()`).</code></pre>
+</div>
+<div class="cell-output-display">
+<p><img src="13-arboles-boosting_files/figure-html/unnamed-chunk-5-1.png" class="img-fluid" width="576"></p>
+</div>
+</div>
+<p>Ajustamos un árbol de regresión a los residuales:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>arboles_fsam <span class="ot">&lt;-</span> <span class="fu">agregar_arbol</span>(arboles_fsam, dat)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="13-arboles-boosting_files/figure-html/unnamed-chunk-6-1.png" class="img-fluid" width="576"></p>
+</div>
+</div>
+<p>E iteramos:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>arboles_fsam <span class="ot">&lt;-</span> <span class="fu">agregar_arbol</span>(arboles_fsam, dat)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="13-arboles-boosting_files/figure-html/unnamed-chunk-7-1.png" class="img-fluid" width="576"></p>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>arboles_fsam <span class="ot">&lt;-</span> <span class="fu">agregar_arbol</span>(arboles_fsam, dat)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="13-arboles-boosting_files/figure-html/unnamed-chunk-8-1.png" class="img-fluid" width="576"></p>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>arboles_fsam <span class="ot">&lt;-</span> <span class="fu">agregar_arbol</span>(arboles_fsam, dat)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="13-arboles-boosting_files/figure-html/unnamed-chunk-9-1.png" class="img-fluid" width="576"></p>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>arboles_fsam <span class="ot">&lt;-</span> <span class="fu">agregar_arbol</span>(arboles_fsam, dat)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="13-arboles-boosting_files/figure-html/unnamed-chunk-10-1.png" class="img-fluid" width="576"></p>
+</div>
+</div>
+<p>Después de 20 iteraciones obtenemos:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span>(j <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">19</span>){</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>arboles_fsam <span class="ot">&lt;-</span> <span class="fu">agregar_arbol</span>(arboles_fsam, dat, <span class="at">plot =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>arboles_fsam <span class="ot">&lt;-</span> <span class="fu">agregar_arbol</span>(arboles_fsam, dat)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="13-arboles-boosting_files/figure-html/unnamed-chunk-11-1.png" class="img-fluid" width="576"></p>
+</div>
+</div>
+</section>
+</section>
+<section id="fsam-para-clasificación-binaria." class="level2" data-number="13.4">
+<h2 data-number="13.4" class="anchored" data-anchor-id="fsam-para-clasificación-binaria."><span class="header-section-number">13.4</span> FSAM para clasificación binaria.</h2>
+<p>Para problemas de clasificación, no tiene mucho sentido trabajar con un modelo aditivo sobre las probabilidades:</p>
+<p><span class="math display">\[p(x) = \sum_{k=1}^m T_k(x),\]</span></p>
+<p>Así que hacemos lo mismo que en regresión logística. Ponemos</p>
+<p><span class="math display">\[f(x) = \sum_{k=1}^m T_k(x),\]</span></p>
+<p>y entonces las probabilidades son <span class="math display">\[p(x) = h(f(x)),\]</span></p>
+<p>donde <span class="math inline">\(h(z)=1/(1+e^{-z})\)</span> es la función logística. La optimización de la etapa <span class="math inline">\(m\)</span> según fsam es</p>
+<p><span class="math display">\[
+T = argmin_{T} \sum_{i=1}^N L(y^{(i)}, f_{m-1}(x^{(i)}) + T(x^{(i)}))
+\]</span></p>
+<p>y queremos usar la devianza como función de pérdida. Por razones de comparación (con nuestro libro de texto y con el algoritmo Adaboost que mencionaremos más adelante), escogemos usar <span class="math display">\[y \in \{1,-1\}\]</span></p>
+<p>en lugar de nuestro tradicional <span class="math inline">\(y \in \{1,0\}\)</span>. En ese caso, la devianza binomial se ve como</p>
+<p><span class="math display">\[L(y, z) = -\left [ (y+1)\log h(z) - (y-1)\log(1-h(z))\right ],\]</span> que a su vez se puede escribir como (demostrar):</p>
+<p><span class="math display">\[L(y,z) = 2\log(1+e^{-yz})\]</span> Ahora consideremos cómo se ve nuestro problema de optimización:</p>
+<p><span class="math display">\[T = argmin_{T} 2\sum_{i=1}^N \log (1+ e^{-y^{(i)}(f_{m-1}(x^{(i)}) + T(x^{(i)}))})\]</span></p>
+<p>Nótese que sólo optimizamos con respecto a <span class="math inline">\(T\)</span>, así que podemos escribir</p>
+<p><span class="math display">\[T = argmin_{T} \sum_{i=1}^N \log (1+ d_{m,i}e^{- y^{(i)}T(x^{(i)})})\]</span></p>
+<p>Y vemos que el problema es más difícil que en regresión. No podemos usar un ajuste de árbol usual de regresión o clasificación, <em>como hicimos en regresión</em>. No está claro, por ejemplo, cuál debería ser el residual que tenemos que ajustar (aunque parece un problema donde los casos de entrenamiento están ponderados por <span class="math inline">\(d_{m,i}\)</span>). Una solución para resolver aproximadamente este problema de minimización, es <strong>gradient boosting</strong>.</p>
+</section>
+<section id="gradient-boosting" class="level2" data-number="13.5">
+<h2 data-number="13.5" class="anchored" data-anchor-id="gradient-boosting"><span class="header-section-number">13.5</span> Gradient boosting</h2>
+<p>La idea de gradient boosting es replicar la idea del residual en regresión, y usar árboles de regresión para resolver la ecuación de fsam mostrada arriba.</p>
+<p>Gradient boosting es una técnica general para funciones de pérdida generales.Regresamos entonces a nuestro problema original</p>
+<p><span class="math display">\[(\beta_m, b_m) = argmin_{T} \sum_{i=1}^N L(y^{(i)}, f_{m-1}(x^{(i)}) + T(x^{(i)}))\]</span></p>
+<p>La pregunta es: ¿hacia dónde tenemos qué mover la predicción de <span class="math inline">\(f_{m-1}(x^{(i)})\)</span> sumando el término <span class="math inline">\(T(x^{(i)})\)</span>? Consideremos un solo término de esta suma, y denotemos <span class="math inline">\(z_i = T(x^{(i)})\)</span>. Queremos agregar una cantidad <span class="math inline">\(z_i\)</span> tal que el valor de la pérdida <span class="math display">\[L(y, f_{m-1}(x^{(i)})+z_i)\]</span> se reduzca. Entonces sabemos que podemos mover la z en la dirección opuesta al gradiente</p>
+<p><span class="math display">\[z_i = -\gamma \frac{\partial L}{\partial z}(y^{(i)}, f_{m-1}(x^{(i)}))\]</span></p>
+<p>Sin embargo, necesitamos que las <span class="math inline">\(z_i\)</span> estén generadas por una función <span class="math inline">\(T(x)\)</span> que se pueda evaluar en toda <span class="math inline">\(x\)</span>. Quisiéramos que <span class="math display">\[T(x^{(i)})\approx -\gamma \frac{\partial L}{\partial z}(y^{(i)}, f_{m-1}(x^{(i)}))\]</span> Para tener esta aproximación, podemos poner <span class="math display">\[g_{i,m} = -\frac{\partial L}{\partial z}(y^{(i)}, f_{m-1}(x^{(i)}))\]</span> e intentar resolver <span class="math display">\[\begin{equation}
+\min_T \sum_{i=1}^n (g_{i,m} - T(x^{(i)}))^2,
+(\#eq:min-cuad-boost)
+\end{equation}\]</span></p>
+<p>es decir, intentamos replicar los gradientes lo más que sea posible. <strong>Este problema lo podemos resolver con un árbol usual de regresión</strong>. Finalmente, podríamos escoger <span class="math inline">\(\nu\)</span> (tamaño de paso o tasa de aprendizaje) suficientemente chica y ponemos <span class="math display">\[f_m(x) = f_{m-1}(x)+\nu T(x).\]</span></p>
+<p>Podemos hacer un refinamiento adicional que consiste en encontrar los cortes del árbol <span class="math inline">\(T\)</span> según @ref(eq:min-cuad-boost), pero optimizando por separado los valores que T(x) toma en cada una de las regiones encontradas.</p>
+</section>
+<section id="algoritmo-de-gradient-boosting" class="level2" data-number="13.6">
+<h2 data-number="13.6" class="anchored" data-anchor-id="algoritmo-de-gradient-boosting"><span class="header-section-number">13.6</span> Algoritmo de gradient boosting</h2>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Gradient boosting (versión simple)
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<ol type="1">
+<li><p>Inicializar con <span class="math inline">\(f_0(x) =\gamma\)</span></p></li>
+<li><p>Para <span class="math inline">\(m=0,1,\ldots, M\)</span>,</p></li>
+</ol>
+<ul>
+<li><p>Para <span class="math inline">\(i=1,\ldots, n\)</span>, calculamos el residual <span class="math display">\[r_{i,m}=-\frac{\partial L}{\partial z}(y^{(i)}, f_{m-1}(x^{(i)}))\]</span></p></li>
+<li><p>Ajustamos un árbol de regresión a la respuesta <span class="math inline">\(r_{1,m},r_{2,m},\ldots, r_{n,m}\)</span>. Supongamos que tiene regiones <span class="math inline">\(R_{j,m}\)</span>.</p></li>
+<li><p>Resolvemos (optimizamos directamente el valor que toma el árbol en cada región - este es un problema univariado, más fácil de resolver) <span class="math display">\[\gamma_{j,m} = argmin_\gamma \sum_{x^{(i)}\in R_{j,m}} L(y^{(i)},f_{m-1}(x^{i})+\gamma )\]</span> para cada región <span class="math inline">\(R_{j,m}\)</span> del árbol del inciso anterior.</p></li>
+<li><p>Actualizamos <span class="math display">\[f_m (x) = f_{m-1}(x) + \sum_j \gamma_{j,m} I(x\in R_{j,m})\]</span></p></li>
+</ul>
+<ol start="3" type="1">
+<li>El predictor final es <span class="math inline">\(f_M(x)\)</span>.</li>
+</ol>
+</div>
+</div>
+</section>
+<section id="funciones-de-pérdida" class="level2" data-number="13.7">
+<h2 data-number="13.7" class="anchored" data-anchor-id="funciones-de-pérdida"><span class="header-section-number">13.7</span> Funciones de pérdida</h2>
+<p>Para aplicar gradient boosting, tenemos primero que poder calcular el gradiente de la función de pérdida. Algunos ejemplos populares son:</p>
+<ul>
+<li>Pérdida cuadrática: <span class="math inline">\(L(y,f(x))=(y-f(x))^2\)</span>, <span class="math inline">\(\frac{\partial L}{\partial z} = -2(y-f(x))\)</span>.</li>
+<li>Pérdida absoluta (más robusta a atípicos que la cuadrática) <span class="math inline">\(L(y,f(x))=|y-f(x)|\)</span>, <span class="math inline">\(\frac{\partial L}{\partial z} = signo(y-f(x))\)</span>.</li>
+<li>Devianza binomial <span class="math inline">\(L(y, f(x)) = -\log(1+e^{-yf(x)})\)</span>, <span class="math inline">\(y\in\{-1,1\}\)</span>, <span class="math inline">\(\frac{\partial L}{\partial z} = I(y=1) - h(f(x))\)</span>.</li>
+<li>Adaboost, pérdida exponencial (para clasificación) <span class="math inline">\(L(y,z) = e^{-yf(x)}\)</span>, <span class="math inline">\(y\in\{-1,1\}\)</span>, <span class="math inline">\(\frac{\partial L}{\partial z} = -ye^{-yf(x)}\)</span>.</li>
+</ul>
+<section id="discusión-adaboost-opcional" class="level3 unnumbered">
+<h3 class="unnumbered anchored" data-anchor-id="discusión-adaboost-opcional">Discusión: adaboost (opcional)</h3>
+<p>En adaboost usamos la pérdida exponencial. Adaboost es uno de los algoritmos originales para boosting, y no es necesario usar gradient boosting para aplicarlo. La razón es que los árboles de clasificación <span class="math inline">\(T(x)\)</span> toman valores <span class="math inline">\(T(x)\in \{-1,1\}\)</span>, y el paso de optimización @ref(eq:fsam-paso) de cada árbol queda</p>
+<p><span class="math display">\[T = {argmin}_{T} \sum_{i=1}^N e^{-y^{(i)}f_{m-1}(x^{(i)})} e^{-y^{(i)}T(x^{(i)})}
+\]</span> <span class="math display">\[T = argmin_{T} \sum_{i=1}^N d_{m,i} e^{-y^{(i)}T(x^{(i)})}
+\]</span> De modo que la función objetivo toma dos valores: Si <span class="math inline">\(T(x^{i})\)</span> clasifica correctamente, entonces <span class="math inline">\(e^{-y^{(i)}T(x^{(i)})}=e^{-1}\)</span>, y si clasifica incorrectamente <span class="math inline">\(e^{-y^{(i)}T(x^{(i)})}=e^{1}\)</span>. Podemos entonces encontrar el árbol <span class="math inline">\(T\)</span> construyendo un árbol usual pero con datos ponderados por <span class="math inline">\(d_{m,i}\)</span>, donde buscamos maximizar la tasa de clasificación correcta (puedes ver más en nuestro libro de texto, o en <span class="citation" data-cites="ESL">(<a href="99-referencias.html#ref-ESL" role="doc-biblioref">Hastie, Tibshirani, y Friedman 2017</a>)</span>.</p>
+<p>¿Cuáles son las consecuencias de usar la pérdida exponencial? Una es que perdemos la conexión con los modelos logísticos e interpretación de probabilidad que tenemos cuando usamos la devianza. Sin embargo, son similares: compara cómo se ve la devianza (como la formulamos arriba, con <span class="math inline">\(y\in\{-1,1\}\)</span>) con la pérdida exponencial.</p>
+</section>
+<section id="ejemplo-precios-de-casas" class="level3 unnumbered">
+<h3 class="unnumbered anchored" data-anchor-id="ejemplo-precios-de-casas">Ejemplo: precios de casas</h3>
+<p>Consideramos el ejemplo de precio de casas. Haremos un mínimo de preprocesamiento:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(<span class="st">"../R/casas_traducir_geo.R"</span>)</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">83</span>)</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>casas_split <span class="ot">&lt;-</span> <span class="fu">initial_split</span>(casas, <span class="at">prop =</span> <span class="fl">0.75</span>)</span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>casas_entrena <span class="ot">&lt;-</span> <span class="fu">training</span>(casas_split)</span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>receta_casas <span class="ot">&lt;-</span> <span class="fu">recipe</span>(precio_miles <span class="sc">~</span> </span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>           nombre_zona <span class="sc">+</span> lat <span class="sc">+</span> long <span class="sc">+</span></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>           area_hab_m2 <span class="sc">+</span> area_garage_m2 <span class="sc">+</span> area_sotano_m2 <span class="sc">+</span> </span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>           area_1er_piso_m2 <span class="sc">+</span> area_2o_piso_m2 <span class="sc">+</span> </span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>           area_lote_m2 <span class="sc">+</span> </span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>           año_construccion <span class="sc">+</span> año_venta <span class="sc">+</span> </span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a>           calidad_gral <span class="sc">+</span> calidad_garage <span class="sc">+</span> calidad_sotano <span class="sc">+</span></span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a>           condicion_gral <span class="sc">+</span></span>
+<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a>           calefaccion <span class="sc">+</span></span>
+<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a>           baños_completos <span class="sc">+</span> baños_medios <span class="sc">+</span> </span>
+<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a>           num_coches  <span class="sc">+</span> </span>
+<span id="cb14-16"><a href="#cb14-16" aria-hidden="true" tabindex="-1"></a>           aire_acondicionado <span class="sc">+</span> condicion_venta <span class="sc">+</span> </span>
+<span id="cb14-17"><a href="#cb14-17" aria-hidden="true" tabindex="-1"></a>           valor_misc_miles, </span>
+<span id="cb14-18"><a href="#cb14-18" aria-hidden="true" tabindex="-1"></a>           <span class="at">data =</span> casas_entrena) <span class="sc">|&gt;</span> </span>
+<span id="cb14-19"><a href="#cb14-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_filter</span>(condicion_venta <span class="sc">==</span> <span class="st">"Normal"</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb14-20"><a href="#cb14-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_other</span>(nombre_zona, <span class="at">threshold =</span> <span class="fl">0.01</span>, <span class="at">other =</span> <span class="st">"otras"</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb14-21"><a href="#cb14-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_select</span>(<span class="sc">-</span>condicion_venta, <span class="at">skip =</span> <span class="cn">TRUE</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb14-22"><a href="#cb14-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_novel</span>(nombre_zona, calidad_sotano, calidad_garage, calefaccion) <span class="sc">|&gt;</span> </span>
+<span id="cb14-23"><a href="#cb14-23" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_unknown</span>(calidad_sotano, calidad_garage) <span class="sc">|&gt;</span> </span>
+<span id="cb14-24"><a href="#cb14-24" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_dummy</span>(<span class="fu">all_nominal_predictors</span>())</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Probaremos usando <em>xgboost</em>. Empezamos poniendo algunos parámetros antes de afinar:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co">#xgboost es el default</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>modelo_boosting <span class="ot">&lt;-</span> <span class="fu">boost_tree</span>(<span class="at">learn_rate =</span> <span class="fl">0.1</span>, <span class="at">trees =</span> <span class="fu">tune</span>(), </span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>                              <span class="at">mtry =</span> <span class="dv">10</span>, <span class="at">tree_depth =</span> <span class="dv">4</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_mode</span>(<span class="st">"regression"</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_args</span>(<span class="at">objective =</span> <span class="st">"reg:squarederror"</span>)</span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>flujo_casas <span class="ot">&lt;-</span> <span class="fu">workflow</span>() <span class="sc">|&gt;</span> <span class="fu">add_recipe</span>(receta_casas) <span class="sc">|&gt;</span> <span class="fu">add_model</span>(modelo_boosting)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>num_arboles_tbl <span class="ot">&lt;-</span> <span class="fu">tibble</span>(<span class="at">trees =</span> <span class="fu">seq</span>(<span class="dv">1</span>, <span class="dv">500</span>, <span class="dv">10</span>))</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">81</span>)</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>particion_vc <span class="ot">&lt;-</span> <span class="fu">vfold_cv</span>(casas_entrena, <span class="at">v =</span> <span class="dv">10</span>)</span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>mis_metricas <span class="ot">&lt;-</span> <span class="fu">metric_set</span>(mape, rsq)</span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>resultados <span class="ot">&lt;-</span> <span class="fu">tune_grid</span>(flujo_casas, particion_vc, <span class="at">grid =</span> num_arboles_tbl, <span class="at">metrics =</span> mis_metricas)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="fu">collect_metrics</span>(resultados) <span class="sc">|&gt;</span> </span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(.metric <span class="sc">==</span> <span class="st">"mape"</span>, trees <span class="sc">&gt;</span> <span class="dv">10</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> trees, <span class="at">y =</span> mean, <span class="at">ymin =</span> mean <span class="sc">-</span> std_err, <span class="at">ymax =</span> mean <span class="sc">+</span> std_err)) <span class="sc">+</span> </span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>() <span class="sc">+</span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>() <span class="sc">+</span> <span class="fu">geom_ribbon</span>(<span class="at">alpha =</span> <span class="fl">0.2</span>) <span class="sc">+</span> <span class="fu">ylab</span>(<span class="st">"mape val_cruzada"</span>)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="13-arboles-boosting_files/figure-html/unnamed-chunk-14-1.png" class="img-fluid" width="480"></p>
+</div>
+</div>
+<p>Y vemos que podemos obtener un buen resultado con un mínimo de ingenería de entradas (contrasta con la sección de métodos lineales e ingeniería de entradas).</p>
+</section>
+</section>
+<section id="afinación-de-gradient-boosting" class="level2" data-number="13.8">
+<h2 data-number="13.8" class="anchored" data-anchor-id="afinación-de-gradient-boosting"><span class="header-section-number">13.8</span> Afinación de gradient boosting</h2>
+<p>Para obtener los mejores resultados es necesario afinar parámetros del algoritmo. Consideraremos principalmente la implementación de <a href="https://xgboost.readthedocs.io/en/latest/">xgboost</a>. Los valores más importantes a tener en cuenta son:</p>
+<ul>
+<li>Tasa de aprendizaje</li>
+<li>Número de árboles</li>
+<li>Número de candidatos por nodo (como en bosques aleatorios)</li>
+<li>Reducción mínima de pérdida al agregar una partición (como costo-complejidad en árboles CART)</li>
+<li>Mínimo número de casos por nodo final (como en árboles CART)</li>
+<li>Submuestreo: entrenar cada árbol usando un subconjunto de los datos.</li>
+<li>Regularización L1/L2 a nivel de nodos terminales</li>
+</ul>
+<p>Existen otros parámetros a considerar que puedes ver en la documentación.</p>
+</section>
+<section id="tasa-de-aprendizaje-y-número-de-árboles" class="level2" data-number="13.9">
+<h2 data-number="13.9" class="anchored" data-anchor-id="tasa-de-aprendizaje-y-número-de-árboles"><span class="header-section-number">13.9</span> Tasa de aprendizaje y número de árboles</h2>
+<p>Funciona bien modificar el algoritmo usando una tasa de aprendizaje <span class="math inline">\(0&lt;\eta&lt;1\)</span>: <span class="math display">\[f_m(x) = f_{m-1}(x) + \eta \sum_j \gamma_{j,m} I(x\in R_{j,m})\]</span></p>
+<p>Este parámetro sirve como una manera de evitar sobreajuste rápido cuando construimos los predictores. Si este número es muy alto, podemos sobreajustar rápidamente con pocos árboles, y terminar con predictor de varianza alta. Si este número es muy bajo, puede ser que necesitemos demasiadas iteraciones para llegar a buen desempeño. <strong>Este, junto el número de iteraciones, es de los parámetros más importantes</strong>.</p>
+<p>Igualmente se prueba con varios valores de <span class="math inline">\(0&lt;\eta&lt;1\)</span> (típicamente <span class="math inline">\(\eta&lt;0.1\)</span>) para mejorar el desempeño en validación. <strong>Nota</strong>: cuando hacemos <span class="math inline">\(\eta\)</span> más chica, es necesario hacer <span class="math inline">\(M\)</span> más grande (correr más árboles) para obtener desempeño óptimo.</p>
+<p>Veamos que efecto tiene en nuestro ejemplo. Primero ponemos una tasa relativamente alta. (Usaremos directamente la interfaz de xgboost, pero ojo: la validación cruzada está hecha de manera ingenua):</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>entrena_proc <span class="ot">&lt;-</span> <span class="fu">juice</span>(<span class="fu">prep</span>(receta_casas)) </span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>x_entrena <span class="ot">&lt;-</span> entrena_proc <span class="sc">|&gt;</span>  <span class="fu">select</span>(<span class="sc">-</span>precio_miles) <span class="sc">|&gt;</span>  <span class="fu">as.matrix</span>()</span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="co"># escalamos para evitar problemas numéricos en xgboost</span></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>y_entrena <span class="ot">&lt;-</span> entrena_proc<span class="sc">$</span>precio_miles </span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a><span class="fu">dim</span>(x_entrena)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 907  55</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="co"># convertir a clase apropiada para xgboost</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>d_entrena <span class="ot">&lt;-</span> <span class="fu">xgb.DMatrix</span>(<span class="at">data =</span> x_entrena, <span class="at">label=</span> y_entrena)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Usaremos el paquete <em>xgboost</em> que usa la librería <a href="https://xgboost.readthedocs.io/en/latest/">xgboost</a>.</p>
+<p>Fijaremos el número de árboles en 100, de profundidad 1, y estimamos el error con validación cruzada. La salida muestra el error de entrenamiento y el estimado con validacion cruzada:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>num_vars <span class="ot">&lt;-</span> <span class="fu">dim</span>(x_entrena)[<span class="dv">2</span>]</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>params <span class="ot">&lt;-</span> <span class="fu">list</span>(</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">objective =</span> <span class="st">"reg:squarederror"</span>,</span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">eta =</span> <span class="fl">0.8</span>, <span class="co"># tamaño de paso</span></span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">max_depth =</span> <span class="dv">4</span>,</span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">colsample_bynode =</span> <span class="dv">10</span><span class="sc">/</span>num_vars)</span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">8121</span>) <span class="co"># para validación cruzada</span></span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a>mod_boost_cv <span class="ot">&lt;-</span> <span class="fu">xgb.cv</span>(<span class="at">params =</span> params, </span>
+<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a>                     <span class="at">data =</span> d_entrena,</span>
+<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a>                     <span class="at">nfold =</span> <span class="dv">10</span>, </span>
+<span id="cb21-11"><a href="#cb21-11" aria-hidden="true" tabindex="-1"></a>                     <span class="at">nrounds =</span> <span class="dv">500</span>, <span class="co"># número de árboles</span></span>
+<span id="cb21-12"><a href="#cb21-12" aria-hidden="true" tabindex="-1"></a>                     <span class="at">print_every_n =</span> <span class="dv">100</span>, <span class="at">metrics =</span> <span class="fu">c</span>(<span class="st">"mape"</span>))</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] train-mape:0.217364+0.004467    test-mape:0.222528+0.020858 
+[101]   train-mape:0.016227+0.001049    test-mape:0.126371+0.015221 
+[201]   train-mape:0.004270+0.000390    test-mape:0.127552+0.014581 
+[301]   train-mape:0.001287+0.000083    test-mape:0.127723+0.014453 
+[401]   train-mape:0.000449+0.000041    test-mape:0.127690+0.014375 
+[500]   train-mape:0.000197+0.000032    test-mape:0.127705+0.014395 </code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>transformar_eval <span class="ot">&lt;-</span> <span class="cf">function</span>(mod_boost_cv){</span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>    eval_tbl <span class="ot">&lt;-</span> mod_boost_cv<span class="sc">$</span>evaluation_log <span class="sc">|&gt;</span> </span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>        <span class="fu">pivot_longer</span>(<span class="at">cols =</span> <span class="sc">-</span><span class="fu">c</span>(iter), <span class="at">names_to =</span> <span class="st">"variable"</span>, <span class="at">values_to =</span> <span class="st">"valor"</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>        <span class="fu">separate</span>(variable, <span class="at">into =</span> <span class="fu">c</span>(<span class="st">"tipo"</span>, <span class="st">"metrica"</span>, <span class="st">"res"</span>)) <span class="sc">|&gt;</span> </span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>        <span class="fu">pivot_wider</span>(<span class="at">names_from =</span> res, <span class="at">values_from =</span> valor)</span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>    eval_tbl</span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a>graficar_vc <span class="ot">&lt;-</span> <span class="cf">function</span>(eval_tbl){</span>
+<span id="cb23-9"><a href="#cb23-9" aria-hidden="true" tabindex="-1"></a>    error_entrena <span class="ot">&lt;-</span> eval_tbl <span class="sc">|&gt;</span> <span class="fu">filter</span>(tipo <span class="sc">==</span> <span class="st">"train"</span>) <span class="sc">|&gt;</span> <span class="fu">pull</span>(mean) <span class="sc">|&gt;</span> <span class="fu">last</span>()</span>
+<span id="cb23-10"><a href="#cb23-10" aria-hidden="true" tabindex="-1"></a>    error_val <span class="ot">&lt;-</span> eval_tbl <span class="sc">|&gt;</span> <span class="fu">filter</span>(tipo <span class="sc">==</span> <span class="st">"test"</span>) <span class="sc">|&gt;</span> <span class="fu">pull</span>(mean) <span class="sc">|&gt;</span> <span class="fu">last</span>()</span>
+<span id="cb23-11"><a href="#cb23-11" aria-hidden="true" tabindex="-1"></a>    sd_error_val <span class="ot">&lt;-</span> eval_tbl <span class="sc">|&gt;</span> <span class="fu">filter</span>(tipo <span class="sc">==</span> <span class="st">"test"</span>) <span class="sc">|&gt;</span> <span class="fu">pull</span>(std) <span class="sc">|&gt;</span> <span class="fu">last</span>()</span>
+<span id="cb23-12"><a href="#cb23-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">sprintf</span>(<span class="st">"Error entrena: %.2f, Error valida: %.2f, ee valida: %.2f"</span>, </span>
+<span id="cb23-13"><a href="#cb23-13" aria-hidden="true" tabindex="-1"></a>            error_entrena, error_val, sd_error_val) <span class="sc">|&gt;</span> <span class="fu">print</span>()</span>
+<span id="cb23-14"><a href="#cb23-14" aria-hidden="true" tabindex="-1"></a>    <span class="fu">ggplot</span>(eval_tbl, <span class="fu">aes</span>(<span class="at">x =</span> iter, <span class="at">y =</span> mean, <span class="at">ymin =</span> mean <span class="sc">-</span> std, <span class="at">ymax =</span> mean <span class="sc">+</span> std,</span>
+<span id="cb23-15"><a href="#cb23-15" aria-hidden="true" tabindex="-1"></a>                     <span class="at">colour =</span> tipo)) <span class="sc">+</span></span>
+<span id="cb23-16"><a href="#cb23-16" aria-hidden="true" tabindex="-1"></a>        <span class="fu">scale_y_log10</span>(<span class="at">breaks =</span> <span class="fu">c</span>(<span class="fl">0.01</span>, <span class="fl">0.1</span>, <span class="fl">0.2</span>, <span class="fl">0.4</span>, <span class="fl">0.8</span>, <span class="fl">1.6</span>, <span class="fl">3.2</span>)) <span class="sc">+</span></span>
+<span id="cb23-17"><a href="#cb23-17" aria-hidden="true" tabindex="-1"></a>        <span class="fu">geom_line</span>() <span class="sc">+</span> <span class="fu">geom_ribbon</span>(<span class="fu">aes</span>(<span class="at">fill =</span> tipo), <span class="at">alpha =</span> <span class="fl">0.5</span>)</span>
+<span id="cb23-18"><a href="#cb23-18" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb23-19"><a href="#cb23-19" aria-hidden="true" tabindex="-1"></a>mod_boost_cv <span class="sc">|&gt;</span> <span class="fu">transformar_eval</span>() <span class="sc">|&gt;</span> <span class="fu">graficar_vc</span>()</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "Error entrena: 0.00, Error valida: 0.13, ee valida: 0.01"</code></pre>
+</div>
+<div class="cell-output-display">
+<p><img src="13-arboles-boosting_files/figure-html/unnamed-chunk-17-1.png" class="img-fluid" width="480"></p>
+</div>
+</div>
+<p>Nótese que el sobreajuste es muy grande rápidamente, y nos quedamos en un valor relativamente alto del error de predicción. Reduciendo la tasa de aprendizaje obtenemos mejores resultados con menos sobreajuste:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>params<span class="sc">$</span>eta <span class="ot">&lt;-</span> <span class="fl">0.01</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">8121</span>) <span class="co"># para validación cruzada</span></span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>mod_boost_cv <span class="ot">&lt;-</span> <span class="fu">xgb.cv</span>(<span class="at">params =</span> params, </span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>                     <span class="at">data =</span> d_entrena,</span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>                     <span class="at">nfold =</span> <span class="dv">10</span>, </span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a>                     <span class="at">nrounds =</span> <span class="dv">2000</span>, <span class="co"># número de árboles</span></span>
+<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a>                     <span class="at">print_every_n =</span> <span class="dv">100</span>, <span class="at">metrics =</span> <span class="fu">c</span>(<span class="st">"mape"</span>))</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] train-mape:0.986464+0.000047    test-mape:0.986403+0.000271 
+[101]   train-mape:0.348145+0.000301    test-mape:0.347009+0.009430 
+[201]   train-mape:0.138655+0.000834    test-mape:0.146337+0.017620 
+[301]   train-mape:0.084582+0.001337    test-mape:0.101148+0.016649 
+[401]   train-mape:0.072748+0.001170    test-mape:0.094042+0.016013 
+[501]   train-mape:0.068083+0.000981    test-mape:0.091808+0.014870 
+[601]   train-mape:0.064523+0.000941    test-mape:0.089771+0.014149 
+[701]   train-mape:0.061395+0.000843    test-mape:0.088189+0.013856 
+[801]   train-mape:0.058902+0.000830    test-mape:0.087147+0.013608 
+[901]   train-mape:0.056736+0.000812    test-mape:0.086451+0.013272 
+[1001]  train-mape:0.054760+0.000804    test-mape:0.085807+0.012984 
+[1101]  train-mape:0.052948+0.000759    test-mape:0.085497+0.012846 
+[1201]  train-mape:0.051307+0.000743    test-mape:0.085163+0.012781 
+[1301]  train-mape:0.049834+0.000736    test-mape:0.084946+0.012685 
+[1401]  train-mape:0.048468+0.000736    test-mape:0.084715+0.012635 
+[1501]  train-mape:0.047201+0.000748    test-mape:0.084590+0.012585 
+[1601]  train-mape:0.045965+0.000770    test-mape:0.084425+0.012558 
+[1701]  train-mape:0.044793+0.000808    test-mape:0.084327+0.012548 
+[1801]  train-mape:0.043689+0.000871    test-mape:0.084268+0.012576 
+[1901]  train-mape:0.042623+0.000899    test-mape:0.084234+0.012585 
+[2000]  train-mape:0.041580+0.000884    test-mape:0.084220+0.012547 </code></pre>
+</div>
+</div>
+<p>Nótese que fue necesario usar más árboles, pero obtuvimos un mejor resultado con la tasa de aprendizaje más chica. La tasa de aprendizaje está ligada con el número de árboles necesarios.</p>
+<p>Cuando la tasa de aprendizaje es muy grande, el modelo puede rápidamente sobreajustar cuando agregamos árboles. Si la tasa es demasiado chica, podemos tardar mucho en llegar a un predictor de buen desempeño.</p>
+</section>
+<section id="profundidad-y-número-de-variables-por-nodo" class="level2" data-number="13.10">
+<h2 data-number="13.10" class="anchored" data-anchor-id="profundidad-y-número-de-variables-por-nodo"><span class="header-section-number">13.10</span> Profundidad y número de variables por nodo</h2>
+<p>Como en CART, podemos usar el tamaño o profundidad de los árboles para controlar sesgo y varianza:</p>
+<ul>
+<li>Árboles más grandes son más complejos (menos regularización) y árboles más chicos tienen más simples (más regularización).</li>
+<li>Aumentar la profunidad permite capturar interacciones de orden más alto (si tomamos profunidad = 1, entonces no hay interacciones)</li>
+</ul>
+<p>Y como en bosques aleatorios, podemos seleccionar variables al azar para seleccionar en cada corte de un nodo:</p>
+<ul>
+<li>Más variables implican mayor complejidad (menos regularización) y menos implica menor complejidad (más regularización).</li>
+</ul>
+<p>Notamos también que estos parámetros interactúan con tasa de aprendizaje y número de árboles, así que generalmente es necesario afinar conjuntamente estos parámetros. En nuestro caso, todavía tenemos algo de sobreajuste.</p>
+<p>Intentamos con profundidad baja:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>params_temp <span class="ot">&lt;-</span> params</span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>params_temp<span class="sc">$</span>max_depth <span class="ot">&lt;-</span> <span class="dv">1</span></span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">8121</span>) </span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>mod_boost_cv <span class="ot">&lt;-</span> <span class="fu">xgb.cv</span>(<span class="at">params =</span> params_temp, </span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>                     <span class="at">data =</span> d_entrena,</span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a>                     <span class="at">nfold =</span> <span class="dv">10</span>, </span>
+<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a>                     <span class="at">nrounds =</span> <span class="dv">10000</span>, <span class="co"># número de árboles</span></span>
+<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a>                     <span class="at">print_every_n =</span> <span class="dv">1000</span>, <span class="at">metrics =</span> <span class="fu">c</span>(<span class="st">"mape"</span>))</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] train-mape:0.985738+0.000122    test-mape:0.985753+0.000499 
+[1001]  train-mape:0.106516+0.001902    test-mape:0.116484+0.017959 
+[2001]  train-mape:0.088908+0.001509    test-mape:0.100823+0.014509 
+[3001]  train-mape:0.083323+0.001513    test-mape:0.096414+0.013268 
+[4001]  train-mape:0.080568+0.001557    test-mape:0.094362+0.012721 
+[5001]  train-mape:0.078918+0.001526    test-mape:0.093399+0.012136 
+[6001]  train-mape:0.077741+0.001465    test-mape:0.092802+0.011736 
+[7001]  train-mape:0.076791+0.001392    test-mape:0.092325+0.011492 
+[8001]  train-mape:0.076011+0.001333    test-mape:0.092094+0.011328 
+[9001]  train-mape:0.075339+0.001299    test-mape:0.091939+0.011178 
+[10000] train-mape:0.074755+0.001280    test-mape:0.091826+0.011044 </code></pre>
+</div>
+</div>
+<p>Redujimos el sobreajuste, pero quizá ahora nuestro problema también es sesgo. Veamos ahora el efecto de disminuir el número de variables por nodo:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>params_temp <span class="ot">&lt;-</span> params</span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>params_temp<span class="sc">$</span>colsample_bynode <span class="ot">&lt;-</span> <span class="dv">1</span> <span class="sc">/</span> num_vars</span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">8121</span>) </span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a>mod_boost_cv <span class="ot">&lt;-</span> <span class="fu">xgb.cv</span>(<span class="at">params =</span> params_temp, </span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a>                     <span class="at">data =</span> d_entrena,</span>
+<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a>                     <span class="at">nfold =</span> <span class="dv">10</span>, </span>
+<span id="cb29-7"><a href="#cb29-7" aria-hidden="true" tabindex="-1"></a>                     <span class="at">nrounds =</span> <span class="dv">10000</span>, <span class="co"># número de árboles</span></span>
+<span id="cb29-8"><a href="#cb29-8" aria-hidden="true" tabindex="-1"></a>                     <span class="at">print_every_n =</span> <span class="dv">500</span>, <span class="at">metrics =</span> <span class="fu">c</span>(<span class="st">"mape"</span>))</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] train-mape:0.985630+0.000278    test-mape:0.985691+0.000535 
+[501]   train-mape:0.134607+0.003761    test-mape:0.142878+0.020000 
+[1001]  train-mape:0.103435+0.002077    test-mape:0.116225+0.015768 
+[1501]  train-mape:0.090767+0.001716    test-mape:0.106152+0.013628 
+[2001]  train-mape:0.083828+0.001521    test-mape:0.100863+0.012200 
+[2501]  train-mape:0.079117+0.001380    test-mape:0.098210+0.011304 
+[3001]  train-mape:0.075368+0.001180    test-mape:0.096273+0.010828 
+[3501]  train-mape:0.072269+0.001119    test-mape:0.094888+0.010529 
+[4001]  train-mape:0.069653+0.001045    test-mape:0.093580+0.010433 
+[4501]  train-mape:0.067271+0.001062    test-mape:0.092498+0.010352 
+[5001]  train-mape:0.065219+0.001023    test-mape:0.091691+0.010344 
+[5501]  train-mape:0.063403+0.000994    test-mape:0.090928+0.010394 
+[6001]  train-mape:0.061704+0.000972    test-mape:0.090230+0.010353 
+[6501]  train-mape:0.060132+0.000898    test-mape:0.089656+0.010266 
+[7001]  train-mape:0.058705+0.000936    test-mape:0.089229+0.010245 
+[7501]  train-mape:0.057425+0.000865    test-mape:0.088762+0.010179 
+[8001]  train-mape:0.056224+0.000803    test-mape:0.088443+0.010176 
+[8501]  train-mape:0.055087+0.000802    test-mape:0.088081+0.010082 
+[9001]  train-mape:0.054077+0.000820    test-mape:0.087814+0.010068 
+[9501]  train-mape:0.053096+0.000806    test-mape:0.087601+0.010025 
+[10000] train-mape:0.052183+0.000774    test-mape:0.087391+0.009995 </code></pre>
+</div>
+</div>
+<p>Después de experimentar un poco más obtenemos el siguiente ajuste</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>params<span class="sc">$</span>eta <span class="ot">&lt;-</span> <span class="fl">0.003</span></span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>params<span class="sc">$</span>max_depth <span class="ot">&lt;-</span> <span class="dv">4</span></span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>params<span class="sc">$</span>colsample_bynode <span class="ot">&lt;-</span> <span class="dv">5</span> <span class="sc">/</span> num_vars</span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a>ajustar_mod <span class="ot">&lt;-</span> <span class="cf">function</span>(d_entrena, <span class="at">verbose =</span> <span class="dv">0</span>, <span class="at">nrounds =</span> <span class="dv">4000</span>, params, <span class="at">every_n =</span> <span class="dv">500</span>, <span class="at">seed =</span> <span class="dv">8121</span>){</span>
+<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">set.seed</span>(seed) </span>
+<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a>    mod_boost_cv <span class="ot">&lt;-</span> <span class="fu">xgb.cv</span>(<span class="at">params =</span> params, </span>
+<span id="cb31-7"><a href="#cb31-7" aria-hidden="true" tabindex="-1"></a>                     <span class="at">data =</span> d_entrena,</span>
+<span id="cb31-8"><a href="#cb31-8" aria-hidden="true" tabindex="-1"></a>                     <span class="at">nfold =</span> <span class="dv">10</span>, </span>
+<span id="cb31-9"><a href="#cb31-9" aria-hidden="true" tabindex="-1"></a>                     <span class="at">nrounds =</span> nrounds, <span class="co"># número de árboles</span></span>
+<span id="cb31-10"><a href="#cb31-10" aria-hidden="true" tabindex="-1"></a>                     <span class="at">print_every_n =</span> every_n, </span>
+<span id="cb31-11"><a href="#cb31-11" aria-hidden="true" tabindex="-1"></a>                     <span class="at">nthread =</span> <span class="dv">4</span>, <span class="co"># modificar según recursos</span></span>
+<span id="cb31-12"><a href="#cb31-12" aria-hidden="true" tabindex="-1"></a>                     <span class="at">verbose =</span> verbose, <span class="at">metrics =</span> <span class="fu">c</span>(<span class="st">"mape"</span>))</span>
+<span id="cb31-13"><a href="#cb31-13" aria-hidden="true" tabindex="-1"></a>    eval_tbl <span class="ot">&lt;-</span> mod_boost_cv<span class="sc">$</span>evaluation_log <span class="sc">|&gt;</span> </span>
+<span id="cb31-14"><a href="#cb31-14" aria-hidden="true" tabindex="-1"></a>        <span class="fu">gather</span>(variable, valor, <span class="sc">-</span>iter) <span class="sc">|&gt;</span> </span>
+<span id="cb31-15"><a href="#cb31-15" aria-hidden="true" tabindex="-1"></a>        <span class="fu">separate</span>(variable, <span class="at">into =</span> <span class="fu">c</span>(<span class="st">"tipo"</span>, <span class="st">"metrica"</span>, <span class="st">"res"</span>)) <span class="sc">|&gt;</span> </span>
+<span id="cb31-16"><a href="#cb31-16" aria-hidden="true" tabindex="-1"></a>        <span class="fu">spread</span>(res, valor)</span>
+<span id="cb31-17"><a href="#cb31-17" aria-hidden="true" tabindex="-1"></a>    eval_tbl</span>
+<span id="cb31-18"><a href="#cb31-18" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb31-19"><a href="#cb31-19" aria-hidden="true" tabindex="-1"></a>res <span class="ot">&lt;-</span> <span class="fu">ajustar_mod</span>(d_entrena, <span class="at">verbose =</span> <span class="dv">1</span>, <span class="at">nrounds =</span> <span class="dv">10000</span>, <span class="at">params =</span> params)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] train-mape:0.993580+0.000039    test-mape:0.993565+0.000150 
+[501]   train-mape:0.211252+0.000632    test-mape:0.213516+0.016341 
+[1001]  train-mape:0.092366+0.001515    test-mape:0.105529+0.017606 
+[1501]  train-mape:0.078373+0.001343    test-mape:0.097116+0.015936 
+[2001]  train-mape:0.072055+0.001164    test-mape:0.093345+0.014211 
+[2501]  train-mape:0.067348+0.001065    test-mape:0.090671+0.013376 
+[3001]  train-mape:0.063588+0.000909    test-mape:0.088891+0.012869 
+[3501]  train-mape:0.060415+0.000928    test-mape:0.087768+0.012461 
+[4001]  train-mape:0.057706+0.000904    test-mape:0.086848+0.012015 
+[4501]  train-mape:0.055347+0.000874    test-mape:0.086163+0.011741 
+[5001]  train-mape:0.053293+0.000857    test-mape:0.085570+0.011511 
+[5501]  train-mape:0.051435+0.000848    test-mape:0.085143+0.011408 
+[6001]  train-mape:0.049711+0.000848    test-mape:0.084817+0.011401 
+[6501]  train-mape:0.048119+0.000857    test-mape:0.084538+0.011407 
+[7001]  train-mape:0.046657+0.000844    test-mape:0.084367+0.011356 
+[7501]  train-mape:0.045304+0.000829    test-mape:0.084179+0.011321 
+[8001]  train-mape:0.044021+0.000796    test-mape:0.084055+0.011304 
+[8501]  train-mape:0.042814+0.000788    test-mape:0.083966+0.011279 
+[9001]  train-mape:0.041661+0.000770    test-mape:0.083911+0.011278 
+[9501]  train-mape:0.040553+0.000767    test-mape:0.083888+0.011278 
+[10000] train-mape:0.039498+0.000751    test-mape:0.083851+0.011272 </code></pre>
+</div>
+</div>
+</section>
+<section id="submuestreo" class="level2" data-number="13.11">
+<h2 data-number="13.11" class="anchored" data-anchor-id="submuestreo"><span class="header-section-number">13.11</span> Submuestreo</h2>
+<p>Puede funcionar bien construir cada uno de los árboles con submuestras de la muestra de entrenamiento, como una manera adicional de reducir varianza al construir nuestro predictor (esta idea es parecida a la de los bosques aleatorios, aquí igualmente perturbamos la muestra de entrenamiento en cada paso para evitar sobreajuste). Adicionalmente, este proceso acelera considerablemente las iteraciones de boosting, y en algunos casos sin penalización en desempeño.</p>
+<p>En boosting se pueden tomar submuestras (una fracción mayor a 0.5 de la muestra de entrenamiento, pero puede ser más chica para conjuntos grandes de entrenamiento) sin reemplazo.</p>
+<p>Este parámetro también puede ser afinado con muestra de validación o validación cruzada.</p>
+<p>Finalmente, hacemos una evaluación correcta de validación cruzada:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="co">#xgboost es el default</span></span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>modelo_boosting <span class="ot">&lt;-</span> <span class="fu">boost_tree</span>(<span class="at">learn_rate =</span> <span class="fl">0.003</span>, <span class="at">trees =</span> <span class="fu">tune</span>(), </span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>                              <span class="at">mtry =</span> <span class="dv">5</span>, <span class="at">tree_depth =</span> <span class="dv">4</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_mode</span>(<span class="st">"regression"</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_args</span>(<span class="at">objective =</span> <span class="st">"reg:squarederror"</span>)</span>
+<span id="cb33-6"><a href="#cb33-6" aria-hidden="true" tabindex="-1"></a>flujo_casas <span class="ot">&lt;-</span> <span class="fu">workflow</span>() <span class="sc">|&gt;</span> <span class="fu">add_recipe</span>(receta_casas) <span class="sc">|&gt;</span> <span class="fu">add_model</span>(modelo_boosting)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb34"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a>num_arboles_tbl <span class="ot">&lt;-</span> <span class="fu">tibble</span>(<span class="at">trees =</span> <span class="fu">seq</span>(<span class="dv">1</span>, <span class="dv">10000</span>, <span class="dv">100</span>))</span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">81</span>)</span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a>particion_vc <span class="ot">&lt;-</span> <span class="fu">vfold_cv</span>(casas_entrena, <span class="at">v =</span> <span class="dv">10</span>)</span>
+<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a>mis_metricas <span class="ot">&lt;-</span> <span class="fu">metric_set</span>(mape, rsq)</span>
+<span id="cb34-5"><a href="#cb34-5" aria-hidden="true" tabindex="-1"></a>resultados <span class="ot">&lt;-</span> <span class="fu">tune_grid</span>(flujo_casas, particion_vc, <span class="at">grid =</span> num_arboles_tbl, <span class="at">metrics =</span> mis_metricas)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="fu">collect_metrics</span>(resultados) <span class="sc">|&gt;</span> </span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(.metric <span class="sc">==</span> <span class="st">"mape"</span>, trees <span class="sc">&gt;</span> <span class="dv">10</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> trees, <span class="at">y =</span> mean, <span class="at">ymin =</span> mean <span class="sc">-</span> std_err, <span class="at">ymax =</span> mean <span class="sc">+</span> std_err)) <span class="sc">+</span> </span>
+<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>() <span class="sc">+</span></span>
+<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>() <span class="sc">+</span> <span class="fu">geom_ribbon</span>(<span class="at">alpha =</span> <span class="fl">0.2</span>) <span class="sc">+</span> <span class="fu">ylab</span>(<span class="st">"mape val_cruzada"</span>)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="13-arboles-boosting_files/figure-html/unnamed-chunk-24-1.png" class="img-fluid" width="480"></p>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb36"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="fu">collect_metrics</span>(resultados) <span class="sc">|&gt;</span> <span class="fu">filter</span>(.metric <span class="sc">==</span> <span class="st">"mape"</span>) <span class="sc">|&gt;</span> <span class="fu">arrange</span>(mean) <span class="sc">|&gt;</span> <span class="fu">head</span>()</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 6 × 7
+  trees .metric .estimator  mean     n std_err .config               
+  &lt;dbl&gt; &lt;chr&gt;   &lt;chr&gt;      &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;                 
+1  9901 mape    standard    9.62    10   0.516 Preprocessor1_Model100
+2  9801 mape    standard    9.62    10   0.516 Preprocessor1_Model099
+3  9701 mape    standard    9.62    10   0.516 Preprocessor1_Model098
+4  9301 mape    standard    9.62    10   0.515 Preprocessor1_Model094
+5  9401 mape    standard    9.62    10   0.515 Preprocessor1_Model095
+6  9201 mape    standard    9.62    10   0.515 Preprocessor1_Model093</code></pre>
+</div>
+</div>
+<p>Finalmente podemos guardar el modelo en un formato estándar (R, Python, GCP y otros):</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb38"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="fu">system.time</span>(modelo <span class="ot">&lt;-</span> <span class="fu">xgb.train</span>(d_entrena, <span class="at">verbose =</span> <span class="dv">1</span>, <span class="at">nrounds =</span> <span class="dv">10000</span>, <span class="at">params =</span> params))</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>   user  system elapsed 
+  9.302   0.331   4.928 </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb40"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="fu">xgb.save</span>(<span class="at">model =</span> modelo, <span class="at">fname =</span> <span class="st">"./cache/casas_boost.xgb"</span>)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] TRUE</code></pre>
+</div>
+</div>
+</section>
+<section id="otros-parámetros" class="level2" data-number="13.12">
+<h2 data-number="13.12" class="anchored" data-anchor-id="otros-parámetros"><span class="header-section-number">13.12</span> Otros parámetros</h2>
+<p>También es posible usar hiperparámetros adicionales:</p>
+<ul>
+<li>Seleccionar variables al azar para construir cada árbol o seleccionar variables al azar por nivel de los árboles</li>
+<li>Número mínimo de casos por nodo</li>
+<li>Regularización L2 y L1</li>
+<li>Mínima reducción en pérdida (tipo costo-complejidad)</li>
+</ul>
+</section>
+<section id="algoritmo-xgboost" class="level2" data-number="13.13">
+<h2 data-number="13.13" class="anchored" data-anchor-id="algoritmo-xgboost"><span class="header-section-number">13.13</span> Algoritmo xgboost</h2>
+<p>El algoritmo <a href="https://www.kdd.org/kdd2016/papers/files/rfp0697-chenAemb.pdf">xgboost</a> tiene optimizaciones e ideas adicionales para mejorar desempeño, y <a href="https://xgboost.readthedocs.io/en/latest/">su implementación estándar</a> es una libraría robusta.</p>
+<p>Aquí discutiremos algunas diferencias del algoritmo original de gradient boosting y esta implementación.</p>
+</section>
+<section id="regularización-por-complejidad-y-l2" class="level2 unnumbered">
+<h2 class="unnumbered anchored" data-anchor-id="regularización-por-complejidad-y-l2">Regularización por complejidad y L2</h2>
+<p>En el algoritmo FSAM, buscábamos minimizar (encontrando un árbol que agregamos al predictor de la iteración anterior):</p>
+<p><span class="math display">\[\min_{T} \sum_{i=1}^N L(y^{(i)}, f_{m-1}(x^{(i)}) + T(x^{(i)}))\]</span> En <em>xgboost</em>, consideramos en lugar de esto la pérdida regularizada:</p>
+<p><span class="math display">\[\min_{T} \sum_{i=1}^N L(y^{(i)}, f_{m-1}(x^{(i)}) + T(x^{(i)})) + \Omega(T)\]</span> donde <span class="math display">\[\Omega(T) = \gamma |T| + \lambda \sum_t w_t ^2\]</span> donde las <span class="math inline">\(w_t\)</span> son los valores de <span class="math inline">\(T\)</span> en cada una de sus nodos terminales. Se usa entonces una penalización costo-complejidad como en árboles CART (el término de <span class="math inline">\(\gamma\)</span>), junto con una penalización L2 sobre las predicciones del nuevo árbol ajustado, donde <span class="math inline">\(T(x^{(i)}) = w_{t(i)}\)</span>.</p>
+<section id="paso-de-optimización-para-xgboost" class="level3 unnumbered">
+<h3 class="unnumbered anchored" data-anchor-id="paso-de-optimización-para-xgboost">Paso de optimización para xgboost</h3>
+<p>En <em>xgboost</em>, en lugar de usar solo el gradiente para hacer cada paso, se utiliza una aproximación de segundo orden a la función de pérdida y se optimiza analíticamente. Siguiendo a <span class="citation" data-cites="xgboost">(<a href="99-referencias.html#ref-xgboost" role="doc-biblioref">Chen y Guestrin 2016</a>)</span>, aproximamos la cantidad</p>
+<p><span class="math display">\[\sum_i L(y^{(i)}, f_{m-1}(x^{(i)}) + T(x^{(i)})) + \Omega(T) \]</span></p>
+<p>con</p>
+<p><span class="math display">\[\sum_i \left\{ L(y^{(i)}, f_{m-1}(x^{(i)})) +
+g_iT(x^{(i)}) + \frac{1}{2}h_i (T(x^{(i)}))^2 \right\}+ \Omega(T)\]</span></p>
+<p>donde <span class="math inline">\(g_i\)</span> es el gradiente y <span class="math inline">\(h_i\)</span> es la segunda derivada de la función de pérdida. El primer término del lado izquierdo de esta fórmula es constante, así que tenemos que minimizar (buscando sobre posibles árboles <span class="math inline">\(T\)</span>)</p>
+<p><span class="math display">\[\sum_i \left\{ g_iT(x^{(i)}) + \frac{1}{2}h_i (T(x^{(i)}))^2 \right\}+ \Omega(T) \]</span></p>
+<p>Supongamos que tenemos un árbol dado <span class="math inline">\(T\)</span>, con regiones terminales <span class="math inline">\(R_j\)</span> donde hacemos una misma predicción <span class="math inline">\(w_j\)</span>. Es decir <span class="math inline">\(T(x^{(i)}) = w_j\)</span> cuando <span class="math inline">\(x^{(i)}\in R_j\)</span>. Agrupando por regiones <span class="math inline">\(R_j\)</span>, podemos escribir la ecuación de arriba como (introduciendo adicionalmente el término de regularización L2 para las <span class="math inline">\(w_j\)</span>):</p>
+<p><span class="math display">\[\sum_{j=1}^{|T|} \left\{ G_jw_j +\frac{1}{2}(H_j + \lambda)w_j^2     \right\} + \gamma |T|\]</span> donde <span class="math inline">\(G_j\)</span> es la suma de todas las derivadas <span class="math inline">\(g_i\)</span> para los datos que satisfacen <span class="math inline">\(x^{(i)}\in R_j\)</span> (caen en la región <span class="math inline">\(R_j\)</span>) y análogamente <span class="math inline">\(H_j\)</span> es la suma de las segundas derivadas <span class="math inline">\(h_i\)</span> para los datos que satisfacen <span class="math inline">\(x^{(i)}\in R_j\)</span>.</p>
+<p>Como el árbol <span class="math inline">\(T\)</span> está fijo, podemos encontrar analíticamente la solución <span class="math inline">\(w_j^*\)</span> que minimiza este objetivo (derivando e igualando a cero):</p>
+<p><span class="math display">\[w_j^* = -\frac{G_j}{H_j + \lambda }\]</span> que sustituyendo en la ecuación anterior nos da un valor del objetivo de</p>
+<p><span class="math display">\[obj=-\frac{1}{2}\sum_{j=1}^{|T|} \frac{G_j^2}{H_j + \lambda} + \gamma |T|,\]</span> Este último valor objetivo, que ya considera optimizadas las predicciones en cada nodo, es una medida de la calidad de los cortes que hicimos para el árbol <span class="math inline">\(T\)</span>. Ahora podemos regresar a pensar en la estructura del árbol <span class="math inline">\(T\)</span> que es necesario escoger, y la idea es que debe minimizar esta cantidad. Para hacer esto, regresamos a la estrategia miope de árboles de decisión, pero considerando <em>esta última como medida a minimizar, en lugar de la impureza</em>. Para hacer un nuevo corte entonces calculamos el objetivo actual <span class="math inline">\(obj\)</span> con el que obtenemos al hacer un corte particular, que escribimos como <span class="math inline">\(obj'\)</span>. Como el nuevo árbol tiene un nodo más, y sólo divide uno de los nodos del árbol existente, estas sumas difieren en un término del árbol original:</p>
+<p><span class="math display">\[obj - obj' = \frac{1}{2}\left\{ \frac{G_L^2}{H_L + \lambda} + \frac{G_R^2}{H_R + \lambda} - \frac{(G_L+G_R)^2}{H_L + H_R +\lambda}\right\} - \gamma\]</span> y buscamos entonces el corte que hace este valor lo más grande posible (en lugar de usar im pureza). Dejamos de cortar si este valor es negativo para cualquier corte.</p>
+<p>También podemos entonces entrenar <span class="math inline">\(\gamma\)</span> (loss_reduction en tidymodels):</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb42"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="co">#xgboost es el default</span></span>
+<span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a>modelo_boosting <span class="ot">&lt;-</span> <span class="fu">boost_tree</span>(<span class="at">learn_rate =</span> <span class="fu">tune</span>(), <span class="at">trees =</span> <span class="fu">tune</span>(), </span>
+<span id="cb42-3"><a href="#cb42-3" aria-hidden="true" tabindex="-1"></a>                              <span class="at">mtry =</span> <span class="fu">tune</span>(), <span class="at">tree_depth =</span> <span class="fu">tune</span>(), </span>
+<span id="cb42-4"><a href="#cb42-4" aria-hidden="true" tabindex="-1"></a>                              <span class="at">loss_reduction =</span> <span class="fu">tune</span>()) <span class="sc">|&gt;</span> </span>
+<span id="cb42-5"><a href="#cb42-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_mode</span>(<span class="st">"regression"</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb42-6"><a href="#cb42-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_args</span>(<span class="at">objective =</span> <span class="st">"reg:squarederror"</span>) </span>
+<span id="cb42-7"><a href="#cb42-7" aria-hidden="true" tabindex="-1"></a>flujo_casas <span class="ot">&lt;-</span> <span class="fu">workflow</span>() <span class="sc">|&gt;</span> <span class="fu">add_recipe</span>(receta_casas) <span class="sc">|&gt;</span> <span class="fu">add_model</span>(modelo_boosting)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb43"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a>grid_pars_tbl <span class="ot">&lt;-</span> <span class="fu">grid_random</span>(<span class="fu">learn_rate</span>(<span class="at">range =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="dv">5</span>, <span class="sc">-</span><span class="dv">1</span>)), <span class="co"># escala log</span></span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a>                             <span class="fu">mtry</span>(<span class="at">range =</span> <span class="fu">c</span>(<span class="dv">3</span>, <span class="dv">30</span>)), </span>
+<span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a>                             <span class="fu">tree_depth</span>(<span class="at">range =</span> <span class="fu">c</span>(<span class="dv">2</span>, <span class="dv">6</span>)), </span>
+<span id="cb43-4"><a href="#cb43-4" aria-hidden="true" tabindex="-1"></a>                             <span class="fu">loss_reduction</span>(<span class="at">range =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="dv">10</span>, <span class="dv">1</span>)), <span class="co"># escala log</span></span>
+<span id="cb43-5"><a href="#cb43-5" aria-hidden="true" tabindex="-1"></a>                             <span class="at">size =</span> <span class="dv">40</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb43-6"><a href="#cb43-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">crossing</span>(<span class="at">trees =</span> <span class="fu">c</span>(<span class="dv">1000</span>, <span class="dv">5000</span>, <span class="dv">10000</span>, <span class="dv">15000</span>, <span class="dv">20000</span>))</span>
+<span id="cb43-7"><a href="#cb43-7" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">81</span>)</span>
+<span id="cb43-8"><a href="#cb43-8" aria-hidden="true" tabindex="-1"></a>particion_vc <span class="ot">&lt;-</span> <span class="fu">vfold_cv</span>(casas_entrena, <span class="at">v =</span> <span class="dv">5</span>)</span>
+<span id="cb43-9"><a href="#cb43-9" aria-hidden="true" tabindex="-1"></a>mis_metricas <span class="ot">&lt;-</span> <span class="fu">metric_set</span>(mape, rsq)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb44"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a>resultados <span class="ot">&lt;-</span> <span class="fu">tune_grid</span>(flujo_casas, particion_vc, <span class="at">grid =</span> grid_pars_tbl, <span class="at">metrics =</span> mis_metricas)</span>
+<span id="cb44-2"><a href="#cb44-2" aria-hidden="true" tabindex="-1"></a><span class="fu">write_rds</span>(resultados, <span class="st">"./cache/resultados-xgboost.rds"</span>)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb45"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a>resultados <span class="ot">&lt;-</span> <span class="fu">read_rds</span>(<span class="st">"cache/resultados-xgboost.rds"</span>)</span>
+<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a><span class="fu">show_best</span>(resultados, <span class="at">n =</span> <span class="dv">3</span>)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: No value of `metric` was given; metric 'mape' will be used.</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 3 × 11
+   mtry trees tree_depth learn_rate loss_reduction .metric .estimator  mean
+  &lt;int&gt; &lt;dbl&gt;      &lt;int&gt;      &lt;dbl&gt;          &lt;dbl&gt; &lt;chr&gt;   &lt;chr&gt;      &lt;dbl&gt;
+1    21 20000          4   0.000808       0.000114 mape    standard    9.74
+2    24 20000          4   0.000776       0.0156   mape    standard    9.77
+3     5  5000          4   0.0124         0.0132   mape    standard    9.78
+# ℹ 3 more variables: n &lt;int&gt;, std_err &lt;dbl&gt;, .config &lt;chr&gt;</code></pre>
+</div>
+</div>
+<p>Hay algunos resultados muy malos (específicamente, cuando la tasa de aprendizaje es muy baja y no corremos suficientes árboles):</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb48"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a><span class="fu">collect_metrics</span>(resultados) <span class="sc">|&gt;</span> </span>
+<span id="cb48-2"><a href="#cb48-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(.metric <span class="sc">==</span> <span class="st">"mape"</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb48-3"><a href="#cb48-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> trees, <span class="at">y =</span> mean, <span class="at">ymin =</span> mean <span class="sc">-</span> std_err, <span class="at">ymax =</span> mean <span class="sc">+</span> std_err,</span>
+<span id="cb48-4"><a href="#cb48-4" aria-hidden="true" tabindex="-1"></a>             <span class="at">colour =</span> learn_rate)) <span class="sc">+</span> </span>
+<span id="cb48-5"><a href="#cb48-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>() <span class="sc">+</span> <span class="fu">facet_wrap</span>(<span class="sc">~</span>mtry) <span class="sc">+</span></span>
+<span id="cb48-6"><a href="#cb48-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_linerange</span>(<span class="at">alpha =</span> <span class="fl">0.2</span>) <span class="sc">+</span></span>
+<span id="cb48-7"><a href="#cb48-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_hline</span>(<span class="at">yintercept =</span> <span class="dv">10</span>) <span class="sc">+</span></span>
+<span id="cb48-8"><a href="#cb48-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ylab</span>(<span class="st">"mape val_cruzada"</span>) <span class="sc">+</span> <span class="fu">scale_y_log10</span>()</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="13-arboles-boosting_files/figure-html/unnamed-chunk-31-1.png" class="img-fluid" width="480"></p>
+</div>
+</div>
+<p>Filtramos (recuérdese que tomamos un grid aleatorio, y por eso no aparecen todas las combinaciones de posibles valores):</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb49"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a><span class="fu">collect_metrics</span>(resultados) <span class="sc">|&gt;</span> </span>
+<span id="cb49-2"><a href="#cb49-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(.metric <span class="sc">==</span> <span class="st">"mape"</span>, trees  <span class="sc">&gt;</span> <span class="dv">4000</span>, learn_rate <span class="sc">&gt;</span> <span class="fl">0.001</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb49-3"><a href="#cb49-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(mtry, trees, learn_rate, loss_reduction) <span class="sc">|&gt;</span> </span>
+<span id="cb49-4"><a href="#cb49-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> trees, <span class="at">y =</span> mean, <span class="at">ymin =</span> mean <span class="sc">-</span> std_err, <span class="at">ymax =</span> mean <span class="sc">+</span> std_err,</span>
+<span id="cb49-5"><a href="#cb49-5" aria-hidden="true" tabindex="-1"></a>             <span class="at">colour =</span> learn_rate, </span>
+<span id="cb49-6"><a href="#cb49-6" aria-hidden="true" tabindex="-1"></a>             <span class="at">shape =</span> <span class="fu">factor</span>(tree_depth),</span>
+<span id="cb49-7"><a href="#cb49-7" aria-hidden="true" tabindex="-1"></a>             <span class="at">group =</span> <span class="fu">interaction</span>(tree_depth, learn_rate))) <span class="sc">+</span></span>
+<span id="cb49-8"><a href="#cb49-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_hline</span>(<span class="at">yintercept =</span> <span class="dv">10</span>, <span class="at">colour =</span> <span class="st">"red"</span>) <span class="sc">+</span></span>
+<span id="cb49-9"><a href="#cb49-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>() <span class="sc">+</span> <span class="fu">facet_wrap</span>( <span class="sc">~</span> mtry) <span class="sc">+</span> <span class="fu">geom_point</span>() <span class="sc">+</span></span>
+<span id="cb49-10"><a href="#cb49-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_linerange</span>(<span class="at">alpha =</span> <span class="fl">0.8</span>) <span class="sc">+</span> <span class="fu">ylab</span>(<span class="st">"mape val_cruzada"</span>) </span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="13-arboles-boosting_files/figure-html/unnamed-chunk-32-1.png" class="img-fluid" width="480"></p>
+</div>
+</div>
+<p>Y afinamos nuestro ajuste:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb50"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a><span class="co">#xgboost es el default</span></span>
+<span id="cb50-2"><a href="#cb50-2" aria-hidden="true" tabindex="-1"></a>modelo_boosting <span class="ot">&lt;-</span> <span class="fu">boost_tree</span>(<span class="at">learn_rate =</span> <span class="fl">0.002</span>, <span class="at">trees =</span> <span class="fu">tune</span>(), </span>
+<span id="cb50-3"><a href="#cb50-3" aria-hidden="true" tabindex="-1"></a>                              <span class="at">mtry =</span> <span class="dv">20</span>, <span class="at">tree_depth =</span> <span class="dv">4</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb50-4"><a href="#cb50-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_mode</span>(<span class="st">"regression"</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb50-5"><a href="#cb50-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_args</span>(<span class="at">objective =</span> <span class="st">"reg:squarederror"</span>)</span>
+<span id="cb50-6"><a href="#cb50-6" aria-hidden="true" tabindex="-1"></a>flujo_casas <span class="ot">&lt;-</span> <span class="fu">workflow</span>() <span class="sc">|&gt;</span> <span class="fu">add_recipe</span>(receta_casas) <span class="sc">|&gt;</span> <span class="fu">add_model</span>(modelo_boosting)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb51"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a>num_arboles_tbl <span class="ot">&lt;-</span> <span class="fu">tibble</span>(<span class="at">trees =</span> <span class="fu">seq</span>(<span class="dv">100</span>, <span class="dv">10000</span>, <span class="dv">100</span>)) </span>
+<span id="cb51-2"><a href="#cb51-2" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">81</span>)</span>
+<span id="cb51-3"><a href="#cb51-3" aria-hidden="true" tabindex="-1"></a>particion_vc <span class="ot">&lt;-</span> <span class="fu">vfold_cv</span>(casas_entrena, <span class="at">v =</span> <span class="dv">10</span>)</span>
+<span id="cb51-4"><a href="#cb51-4" aria-hidden="true" tabindex="-1"></a>mis_metricas <span class="ot">&lt;-</span> <span class="fu">metric_set</span>(mape, rsq)</span>
+<span id="cb51-5"><a href="#cb51-5" aria-hidden="true" tabindex="-1"></a>resultados <span class="ot">&lt;-</span> <span class="fu">tune_grid</span>(flujo_casas, particion_vc, <span class="at">grid =</span> num_arboles_tbl, <span class="at">metrics =</span> mis_metricas)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb52"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a><span class="fu">show_best</span>(resultados)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: No value of `metric` was given; metric 'mape' will be used.</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 5 × 7
+  trees .metric .estimator  mean     n std_err .config               
+  &lt;dbl&gt; &lt;chr&gt;   &lt;chr&gt;      &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;                 
+1  9800 mape    standard    9.72    10   0.467 Preprocessor1_Model098
+2  9900 mape    standard    9.72    10   0.467 Preprocessor1_Model099
+3 10000 mape    standard    9.72    10   0.467 Preprocessor1_Model100
+4  9600 mape    standard    9.72    10   0.466 Preprocessor1_Model096
+5  9400 mape    standard    9.72    10   0.465 Preprocessor1_Model094</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb55"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb55-1"><a href="#cb55-1" aria-hidden="true" tabindex="-1"></a><span class="fu">collect_metrics</span>(resultados) <span class="sc">|&gt;</span> </span>
+<span id="cb55-2"><a href="#cb55-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(.metric <span class="sc">==</span> <span class="st">"mape"</span>, trees <span class="sc">&gt;</span> <span class="dv">100</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb55-3"><a href="#cb55-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> trees, <span class="at">y =</span> mean, <span class="at">ymin =</span> mean <span class="sc">-</span> std_err, <span class="at">ymax =</span> mean <span class="sc">+</span> std_err)) <span class="sc">+</span> </span>
+<span id="cb55-4"><a href="#cb55-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>() <span class="sc">+</span></span>
+<span id="cb55-5"><a href="#cb55-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>() <span class="sc">+</span> <span class="fu">geom_ribbon</span>(<span class="at">alpha =</span> <span class="fl">0.2</span>) <span class="sc">+</span> <span class="fu">ylab</span>(<span class="st">"mape val_cruzada"</span>)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="13-arboles-boosting_files/figure-html/unnamed-chunk-36-1.png" class="img-fluid" width="480"></p>
+</div>
+</div>
+
+
+<div id="refs" class="references csl-bib-body hanging-indent" role="list" style="display: none">
+<div id="ref-xgboost" class="csl-entry" role="listitem">
+Chen, Tianqi, y Carlos Guestrin. 2016. <span>«XGBoost: A Scalable Tree Boosting System»</span>. En, 785-94. <a href="https://doi.org/10.1145/2939672.2939785">https://doi.org/10.1145/2939672.2939785</a>.
+</div>
+<div id="ref-ESL" class="csl-entry" role="listitem">
+Hastie, Trevor, Robert Tibshirani, y Jerome Friedman. 2017. <em>The Elements of Statistical Learning</em>. Springer Series en Statistics. Springer New York Inc. <a href="http://web.stanford.edu/~hastie/ElemStatLearn/">http://web.stanford.edu/~hastie/ElemStatLearn/</a>.
+</div>
+</div>
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copiado");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copiado");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="./12-arboles.html" class="pagination-link">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Métodos basados en árboles</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./81-apendice-descenso.html" class="pagination-link">
+        <span class="nav-page-text"><span class="chapter-number">A</span>&nbsp; <span class="chapter-title">Apéndice 1: descenso en gradiente</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+</body></html>

@@ -65,7 +65,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="site_libs/quarto-search/quarto-search.js"></script>
 <meta name="quarto:offset" content="./">
 <link href="./82-apendice-descenso-estocastico.html" rel="next">
-<link href="./12-arboles.html" rel="prev">
+<link href="./13-arboles-boosting.html" rel="prev">
 <script src="site_libs/quarto-html/quarto.js"></script>
 <script src="site_libs/quarto-html/popper.min.js"></script>
 <script src="site_libs/quarto-html/tippy.umd.min.js"></script>
@@ -210,6 +210,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <div class="sidebar-item-container"> 
   <a href="./12-arboles.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Métodos basados en árboles</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./13-arboles-boosting.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Métodos basados en árboles: boosting</span></span></a>
   </div>
 </li>
         <li class="sidebar-item sidebar-item-section">
@@ -601,11 +607,11 @@ Gradiente para regresión lineal
 <pre><code>[[1]]
             [,1]
 [1,] 0.007331367
-[2,] 0.016437240
+[2,] 0.016437238
 [3,] 0.004633876
 
 [[2]]
-[1] 0.00302865</code></pre>
+[1] 0.003028649</code></pre>
 </div>
 </div>
 <p>La implementación oficial de R es <em>lm</em>, que en general tiene buen desempeño para datos que caben en memoria:</p>
@@ -711,11 +717,17 @@ Gradiente para regresión lineal
 <p><img src="81-apendice-descenso_files/figure-html/unnamed-chunk-26-1.png" class="img-fluid" width="672"></p>
 </div>
 </div>
-<div class="cell" type="comment">
-<div class="comment">
-<p>
-Cuando normalizamos antes de ajustar el modelo, las predicciones deben hacerse con entradas normalizadas. La normalización se hace con los mismos valores que se usaron en el entrenamiento (y <strong>no</strong> recalculando medias y desviaciones estándar con el conjunto de prueba). En cuanto a la forma funcional del predictor <span class="math inline">(f)</span>, el problema con entradas normalizadas es equivalente al de las entradas no normalizadas. Asegúrate de esto escribiendo cómo correponden los coeficientes de cada modelo normalizado con los coeficientes del modelo no normalizado.
-</p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Tip
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Cuando normalizamos antes de ajustar el modelo, las predicciones deben hacerse con entradas normalizadas. La normalización se hace con los mismos valores que se usaron en el entrenamiento (y <strong>no</strong> recalculando medias y desviaciones estándar con el conjunto de prueba). En cuanto a la forma funcional del predictor <span class="math inline">\(f\)</span>, el problema con entradas normalizadas es equivalente al de las entradas no normalizadas. Asegúrate de esto escribiendo cómo correponden los coeficientes de cada modelo normalizado con los coeficientes del modelo no normalizado.</p>
 </div>
 </div>
 <p>Supongamos que el modelo en las variables originales es <span class="math display">\[{f}_\beta (X) = \beta_0 + \beta_1 X_1 + \beta_2 X_2 + \cdots + \beta_p X_p,\]</span> Consideramos el modelo con variables estandarizadas <span class="math display">\[{g}_{\beta^s} (X) = \beta_0^s + \beta_1^s Z_1 + \beta_2^s Z_2 + \cdots + \beta_p^s Z_p,\]</span></p>
@@ -770,7 +782,7 @@ Cuando normalizamos antes de ajustar el modelo, las predicciones deben hacerse c
 <span id="cb35-20"><a href="#cb35-20" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(historia, <span class="fu">aes</span>(<span class="at">x =</span> epoch, <span class="at">y =</span> value, <span class="at">colour =</span> tipo)) <span class="sc">+</span></span>
 <span id="cb35-21"><a href="#cb35-21" aria-hidden="true" tabindex="-1"></a>     <span class="fu">geom_line</span>() <span class="sc">+</span> <span class="fu">geom_point</span>() <span class="sc">+</span><span class="fu">scale_x_log10</span>() <span class="sc">+</span> <span class="fu">scale_y_log10</span>()</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
-<p><img src="81-apendice-descenso_files/figure-html/unnamed-chunk-30-1.png" class="img-fluid" width="672"></p>
+<p><img src="81-apendice-descenso_files/figure-html/unnamed-chunk-29-1.png" class="img-fluid" width="672"></p>
 </div>
 </div>
 <p>Observamos que el modelo con datos estandarizados convergió:</p>
@@ -1052,8 +1064,8 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
 </script>
 <nav class="page-navigation">
   <div class="nav-page nav-page-previous">
-      <a href="./12-arboles.html" class="pagination-link">
-        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Métodos basados en árboles</span></span>
+      <a href="./13-arboles-boosting.html" class="pagination-link">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Métodos basados en árboles: boosting</span></span>
       </a>          
   </div>
   <div class="nav-page nav-page-next">

@@ -64,7 +64,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="site_libs/quarto-search/fuse.min.js"></script>
 <script src="site_libs/quarto-search/quarto-search.js"></script>
 <meta name="quarto:offset" content="./">
-<link href="./81-apendice-descenso.html" rel="next">
+<link href="./13-arboles-boosting.html" rel="next">
 <link href="./11-val-cruzada.html" rel="prev">
 <script src="site_libs/quarto-html/quarto.js"></script>
 <script src="site_libs/quarto-html/popper.min.js"></script>
@@ -210,6 +210,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <div class="sidebar-item-container"> 
   <a href="./12-arboles.html" class="sidebar-item-text sidebar-link active">
  <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Métodos basados en árboles</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./13-arboles-boosting.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Métodos basados en árboles: boosting</span></span></a>
   </div>
 </li>
         <li class="sidebar-item sidebar-item-section">
@@ -1005,26 +1011,23 @@ Tip
 <p>El factor que limita la mejora de desempeño de bagging es que los árboles están correlacionados a través de la muestra de entrenamiento. Como vimos, si los árboles fueran independientes, entonces mejoramos por un factor de <span class="math inline">\(B\)</span> (número de muestras independientes). Veamos un argumento para entender cómo esa correlación limita las mejoras:</p>
 <p>Quiséramos calcular (para una <span class="math inline">\(x\)</span> fija)</p>
 <p><span class="math display">\[Var(T(x)) = Var\left(\frac{1}{B}\sum_{i=1}^B T^*_i\right)\]</span></p>
-<p>donde cada <span class="math inline">\(T^*_i\)</span> se construye a partir de una muestra bootstrap de <span class="math inline">\({\mathcal L}\)</span>. Nótese que esta varianza es sobre la muestra de entrenamiento <span class="math inline">\({\mathcal L}\)</span>. Usando la fórmula de la varianza para sumas generales: <span class="math display">\[\begin{equation}
+<p>donde cada <span class="math inline">\(T^*_i\)</span> se construye a partir de una muestra bootstrap de <span class="math inline">\({\mathcal L}\)</span>. Nótese que esta varianza es sobre la muestra de entrenamiento <span class="math inline">\({\mathcal L}\)</span>. Usando la fórmula de la varianza para sumas generales:</p>
+<p><span id="eq-varianza-ensamble"><span class="math display">\[
 Var(T(x)) = Var\left(\frac{1}{B}\sum_{i=1}^B T^*_i\right) =
 \sum_{i=1}^B \frac{1}{B^2} Var(T^*_i(x)) + \frac{2}{B^2}\sum_{i &lt; j} Cov(T_i^* (x), T_j^* (x))
-  (\#eq:varianza-ensamble)
-\end{equation}\]</span></p>
-<p>Ponemos ahora</p>
+\tag{12.1}\]</span></span> Ponemos ahora</p>
 <p><span class="math display">\[\sigma^2(x) = Var(T_i^* (x))\]</span> que son todas iguales porque los árboles bootstrap se extraen de la misma manera (<span class="math inline">\({\mathcal L}\to {\mathcal L}^*\to T^*\)</span>).</p>
 <p>Escribimos ahora <span class="math display">\[\rho(x) = corr(T_i^* (x), T_j^* (x))\]</span> que es una correlación sobre <span class="math inline">\({\mathcal L}\)</span> (asegúrate que entiendes este término). Todas estas correlaciones son iguales pues cada par de árboles se construye de la misma forma.</p>
-<p>Así que la fórmula @ref(eq:varianza-ensamble) queda</p>
+<p>Así que la fórmula (<a href="#eq-varianza-ensamble">Ecuación&nbsp;<span>12.1</span></a>) queda</p>
 <span class="math display">\[\begin{equation}
 Var(T(x)) =
 \frac{1}{B} \sigma^2(x) + \frac{B-1}{B} \rho(x)\sigma^2(x) =
 \sigma^2(x)\left(\frac{1}{B}  + \left(1-\frac{1}{B}\right )\rho(x)     \right)
-  (\#eq:varianza-ensamble-2)
 \end{equation}\]</span>
 <p>En el límite (cuando B es muy grande, es decir, promediamos muchos árboles):</p>
 <span class="math display">\[\begin{equation}
 Var(T(x)) = Var\left(\frac{1}{B}\sum_{i=1}^B T^*_i\right) \approx
 \sigma^2(x)\rho(x)     
-  (\#eq:varianza-ensamble-3)
 \end{equation}\]</span>
 <p>Si <span class="math inline">\(\rho(x)=0\)</span> (árboles no correlacionados), la varianza del ensemble es la fracción <span class="math inline">\(1/B\)</span> de la varianza de un solo árbol, y obtenemos una mejora considerable en varianza. En el otro extremo, si la correlación es alta <span class="math inline">\(\rho(x)\approx 1\)</span>, entonces no obtenemos ganancias por promediar árboles y la varianza del ensamble es similar a la de un solo árbol.</p>
 <div class="callout callout-style-default callout-tip callout-titled">
@@ -1995,8 +1998,8 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
       </a>          
   </div>
   <div class="nav-page nav-page-next">
-      <a href="./81-apendice-descenso.html" class="pagination-link">
-        <span class="nav-page-text"><span class="chapter-number">A</span>&nbsp; <span class="chapter-title">Apéndice 1: descenso en gradiente</span></span> <i class="bi bi-arrow-right-short"></i>
+      <a href="./13-arboles-boosting.html" class="pagination-link">
+        <span class="nav-page-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Métodos basados en árboles: boosting</span></span> <i class="bi bi-arrow-right-short"></i>
       </a>
   </div>
 </nav>
