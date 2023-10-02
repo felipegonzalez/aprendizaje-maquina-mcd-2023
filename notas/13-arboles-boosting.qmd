@@ -507,7 +507,7 @@ graficar_vc <- function(eval_tbl){
         scale_y_log10(breaks = c(0.01, 0.1, 0.2, 0.4, 0.8, 1.6, 3.2)) +
         geom_line() + geom_ribbon(aes(fill = tipo), alpha = 0.5)
 }
-#mod_boost_cv |> transformar_eval() |> graficar_vc()
+mod_boost_cv |> transformar_eval() |> graficar_vc()
 ```
 Nótese que el sobreajuste es muy grande rápidamente, y nos quedamos en un valor
 relativamente alto del error de predicción. Reduciendo la tasa de aprendizaje obtenemos
@@ -787,6 +787,7 @@ write_rds(resultados, "./cache/resultados-xgboost.rds")
 resultados <- read_rds("cache/resultados-xgboost.rds")
 show_best(resultados, n = 3)
 ```
+
 Hay algunos resultados muy malos (específicamente, cuando la 
 tasa de aprendizaje es muy baja y no corremos suficientes árboles):
 
@@ -828,7 +829,7 @@ flujo_casas <- workflow() |> add_recipe(receta_casas) |> add_model(modelo_boosti
 ```
 
 ```{r}
-num_arboles_tbl <- tibble(trees = seq(1, 10000, 100) - 1) 
+num_arboles_tbl <- tibble(trees = seq(100, 10000, 100)) 
 set.seed(81)
 particion_vc <- vfold_cv(casas_entrena, v = 10)
 mis_metricas <- metric_set(mape, rsq)

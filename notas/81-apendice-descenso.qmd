@@ -486,7 +486,7 @@ ggplot(dat_x) +
   geom_point(data = data.frame(iteraciones[, 2:3]), aes(x=X1, y=X2), colour = 'red')
 ```
 
-```{block, type = 'comment'}
+::: callout-tip
 Cuando normalizamos antes de ajustar el modelo, las predicciones deben
 hacerse con entradas normalizadas. La normalización se hace con los mismos
 valores que se usaron en el entrenamiento (y **no** recalculando medias
@@ -495,7 +495,7 @@ En cuanto a la forma funcional del predictor $f$, el problema
 con entradas normalizadas es equivalente al de las entradas no normalizadas. Asegúrate
 de esto escribiendo cómo correponden los coeficientes de cada modelo normalizado
 con los coeficientes del modelo no normalizado.
-```
+:::
 
 Supongamos que el modelo en las variables originales es
 $${f}_\beta (X) = \beta_0 + \beta_1 X_1 + \beta_2 X_2 + \cdots + \beta_p X_p,$$
