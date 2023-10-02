@@ -542,26 +542,25 @@ Quiséramos calcular (para una $x$ fija)
 
 $$Var(T(x)) = Var\left(\frac{1}{B}\sum_{i=1}^B T^*_i\right)$$
 
-donde cada $T^*_i$ se construye a partir de una muestra bootstrap de ${\mathcal L}$. Nótese que esta varianza es sobre la muestra de entrenamiento ${\mathcal L}$. Usando la fórmula de la varianza para sumas generales: \begin{equation}
+donde cada $T^*_i$ se construye a partir de una muestra bootstrap de ${\mathcal L}$. Nótese que esta varianza es sobre la muestra de entrenamiento ${\mathcal L}$. Usando la fórmula de la varianza para sumas generales: 
+
+$$
 Var(T(x)) = Var\left(\frac{1}{B}\sum_{i=1}^B T^*_i\right) =
 \sum_{i=1}^B \frac{1}{B^2} Var(T^*_i(x)) + \frac{2}{B^2}\sum_{i < j} Cov(T_i^* (x), T_j^* (x))
-  (\#eq:varianza-ensamble)
-\end{equation}
-
+$$ {#eq-varianza-ensamble}
 Ponemos ahora
 
 $$\sigma^2(x) = Var(T_i^* (x))$$ que son todas iguales porque los árboles bootstrap se extraen de la misma manera (${\mathcal L}\to {\mathcal L}^*\to T^*$).
 
 Escribimos ahora $$\rho(x) = corr(T_i^* (x), T_j^* (x))$$ que es una correlación sobre ${\mathcal L}$ (asegúrate que entiendes este término). Todas estas correlaciones son iguales pues cada par de árboles se construye de la misma forma.
 
-Así que la fórmula \@ref(eq:varianza-ensamble) queda
+Así que la fórmula (@eq-varianza-ensamble) queda
 
 ```{=tex}
 \begin{equation}
 Var(T(x)) = 
  \frac{1}{B} \sigma^2(x) + \frac{B-1}{B} \rho(x)\sigma^2(x) =
  \sigma^2(x)\left(\frac{1}{B}  + \left(1-\frac{1}{B}\right )\rho(x)     \right)
-  (\#eq:varianza-ensamble-2)
 \end{equation}
 ```
 En el límite (cuando B es muy grande, es decir, promediamos muchos árboles):
@@ -570,7 +569,6 @@ En el límite (cuando B es muy grande, es decir, promediamos muchos árboles):
 \begin{equation}
 Var(T(x)) = Var\left(\frac{1}{B}\sum_{i=1}^B T^*_i\right) \approx
  \sigma^2(x)\rho(x)     
-  (\#eq:varianza-ensamble-3)
 \end{equation}
 ```
 Si $\rho(x)=0$ (árboles no correlacionados), la varianza del ensemble es la fracción $1/B$ de la varianza de un solo árbol, y obtenemos una mejora considerable en varianza. En el otro extremo, si la correlación es alta $\rho(x)\approx 1$, entonces no obtenemos ganancias por promediar árboles y la varianza del ensamble es similar a la de un solo árbol.
