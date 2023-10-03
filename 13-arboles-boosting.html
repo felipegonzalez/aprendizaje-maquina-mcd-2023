@@ -929,7 +929,7 @@ Gradient boosting (versión simple)
 <div class="sourceCode cell-code" id="cb38"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="fu">system.time</span>(modelo <span class="ot">&lt;-</span> <span class="fu">xgb.train</span>(d_entrena, <span class="at">verbose =</span> <span class="dv">1</span>, <span class="at">nrounds =</span> <span class="dv">10000</span>, <span class="at">params =</span> params))</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>   user  system elapsed 
-  9.302   0.331   4.928 </code></pre>
+ 10.918   0.422   5.912 </code></pre>
 </div>
 <div class="sourceCode cell-code" id="cb40"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="fu">xgb.save</span>(<span class="at">model =</span> modelo, <span class="at">fname =</span> <span class="st">"./cache/casas_boost.xgb"</span>)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
@@ -998,24 +998,31 @@ g_iT(x^{(i)}) + \frac{1}{2}h_i (T(x^{(i)}))^2 \right\}+ \Omega(T)\]</span></p>
 <span id="cb44-2"><a href="#cb44-2" aria-hidden="true" tabindex="-1"></a><span class="fu">write_rds</span>(resultados, <span class="st">"./cache/resultados-xgboost.rds"</span>)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb45"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a>resultados <span class="ot">&lt;-</span> <span class="fu">read_rds</span>(<span class="st">"cache/resultados-xgboost.rds"</span>)</span>
-<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a><span class="fu">show_best</span>(resultados, <span class="at">n =</span> <span class="dv">3</span>)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb45"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a>resultados_exp <span class="ot">&lt;-</span> <span class="fu">read_rds</span>(<span class="st">"cache/resultados-xgboost.rds"</span>)</span>
+<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a><span class="fu">show_best</span>(resultados_exp, <span class="at">n =</span> <span class="dv">10</span>)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
 <pre><code>Warning: No value of `metric` was given; metric 'mape' will be used.</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
-<pre><code># A tibble: 3 × 11
-   mtry trees tree_depth learn_rate loss_reduction .metric .estimator  mean
-  &lt;int&gt; &lt;dbl&gt;      &lt;int&gt;      &lt;dbl&gt;          &lt;dbl&gt; &lt;chr&gt;   &lt;chr&gt;      &lt;dbl&gt;
-1    21 20000          4   0.000808       0.000114 mape    standard    9.74
-2    24 20000          4   0.000776       0.0156   mape    standard    9.77
-3     5  5000          4   0.0124         0.0132   mape    standard    9.78
+<pre><code># A tibble: 10 × 11
+    mtry trees tree_depth learn_rate loss_reduction .metric .estimator  mean
+   &lt;int&gt; &lt;dbl&gt;      &lt;int&gt;      &lt;dbl&gt;          &lt;dbl&gt; &lt;chr&gt;   &lt;chr&gt;      &lt;dbl&gt;
+ 1    21 20000          4   0.000808   0.000114     mape    standard    9.74
+ 2    24 20000          4   0.000776   0.0156       mape    standard    9.77
+ 3     5  5000          4   0.0124     0.0132       mape    standard    9.78
+ 4    21 15000          4   0.000808   0.000114     mape    standard    9.79
+ 5    19  1000          5   0.0101     0.00000368   mape    standard    9.81
+ 6     4 20000          4   0.00103    0.0000000114 mape    standard    9.82
+ 7    24 15000          4   0.000776   0.0156       mape    standard    9.82
+ 8    19 20000          6   0.000417   0.0000237    mape    standard    9.86
+ 9    23 10000          6   0.00121    0.0256       mape    standard    9.86
+10    19  5000          5   0.0101     0.00000368   mape    standard    9.86
 # ℹ 3 more variables: n &lt;int&gt;, std_err &lt;dbl&gt;, .config &lt;chr&gt;</code></pre>
 </div>
 </div>
 <p>Hay algunos resultados muy malos (específicamente, cuando la tasa de aprendizaje es muy baja y no corremos suficientes árboles):</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb48"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a><span class="fu">collect_metrics</span>(resultados) <span class="sc">|&gt;</span> </span>
+<div class="sourceCode cell-code" id="cb48"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a><span class="fu">collect_metrics</span>(resultados_exp) <span class="sc">|&gt;</span> </span>
 <span id="cb48-2"><a href="#cb48-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(.metric <span class="sc">==</span> <span class="st">"mape"</span>) <span class="sc">|&gt;</span> </span>
 <span id="cb48-3"><a href="#cb48-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> trees, <span class="at">y =</span> mean, <span class="at">ymin =</span> mean <span class="sc">-</span> std_err, <span class="at">ymax =</span> mean <span class="sc">+</span> std_err,</span>
 <span id="cb48-4"><a href="#cb48-4" aria-hidden="true" tabindex="-1"></a>             <span class="at">colour =</span> learn_rate)) <span class="sc">+</span> </span>
@@ -1029,8 +1036,8 @@ g_iT(x^{(i)}) + \frac{1}{2}h_i (T(x^{(i)}))^2 \right\}+ \Omega(T)\]</span></p>
 </div>
 <p>Filtramos (recuérdese que tomamos un grid aleatorio, y por eso no aparecen todas las combinaciones de posibles valores):</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb49"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a><span class="fu">collect_metrics</span>(resultados) <span class="sc">|&gt;</span> </span>
-<span id="cb49-2"><a href="#cb49-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(.metric <span class="sc">==</span> <span class="st">"mape"</span>, trees  <span class="sc">&gt;</span> <span class="dv">4000</span>, learn_rate <span class="sc">&gt;</span> <span class="fl">0.001</span>) <span class="sc">|&gt;</span> </span>
+<div class="sourceCode cell-code" id="cb49"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a><span class="fu">collect_metrics</span>(resultados_exp) <span class="sc">|&gt;</span> </span>
+<span id="cb49-2"><a href="#cb49-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(.metric <span class="sc">==</span> <span class="st">"mape"</span>, trees  <span class="sc">&gt;</span> <span class="dv">4000</span>, mean <span class="sc">&lt;</span> <span class="dv">12</span>) <span class="sc">|&gt;</span> </span>
 <span id="cb49-3"><a href="#cb49-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(mtry, trees, learn_rate, loss_reduction) <span class="sc">|&gt;</span> </span>
 <span id="cb49-4"><a href="#cb49-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> trees, <span class="at">y =</span> mean, <span class="at">ymin =</span> mean <span class="sc">-</span> std_err, <span class="at">ymax =</span> mean <span class="sc">+</span> std_err,</span>
 <span id="cb49-5"><a href="#cb49-5" aria-hidden="true" tabindex="-1"></a>             <span class="at">colour =</span> learn_rate, </span>
@@ -1039,50 +1046,44 @@ g_iT(x^{(i)}) + \frac{1}{2}h_i (T(x^{(i)}))^2 \right\}+ \Omega(T)\]</span></p>
 <span id="cb49-8"><a href="#cb49-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_hline</span>(<span class="at">yintercept =</span> <span class="dv">10</span>, <span class="at">colour =</span> <span class="st">"red"</span>) <span class="sc">+</span></span>
 <span id="cb49-9"><a href="#cb49-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>() <span class="sc">+</span> <span class="fu">facet_wrap</span>( <span class="sc">~</span> mtry) <span class="sc">+</span> <span class="fu">geom_point</span>() <span class="sc">+</span></span>
 <span id="cb49-10"><a href="#cb49-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_linerange</span>(<span class="at">alpha =</span> <span class="fl">0.8</span>) <span class="sc">+</span> <span class="fu">ylab</span>(<span class="st">"mape val_cruzada"</span>) </span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>`geom_line()`: Each group consists of only one observation.
+ℹ Do you need to adjust the group aesthetic?</code></pre>
+</div>
 <div class="cell-output-display">
 <p><img src="13-arboles-boosting_files/figure-html/unnamed-chunk-32-1.png" class="img-fluid" width="480"></p>
 </div>
 </div>
-<p>Y afinamos nuestro ajuste:</p>
+<p>Con esta gráfica podemos continuar nuestra afinación con más idea de buenos lugares dónde comenzar. En primer lugar, observamos que la mayoría de nuestras soluciones involucran profundidad de árboles igual a 4 y una tasa de aprendizaje relativamente chica. Podemos afinar algunas soluciones, por ejemplo la que involucra <span class="math inline">\(mtry=4\)</span>, que parece requerir más iteraciones que las que probamos. Afinamos nuestro ajuste, probando por ejemplo también con sample_size:</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb50"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a><span class="co">#xgboost es el default</span></span>
-<span id="cb50-2"><a href="#cb50-2" aria-hidden="true" tabindex="-1"></a>modelo_boosting <span class="ot">&lt;-</span> <span class="fu">boost_tree</span>(<span class="at">learn_rate =</span> <span class="fl">0.002</span>, <span class="at">trees =</span> <span class="fu">tune</span>(), </span>
-<span id="cb50-3"><a href="#cb50-3" aria-hidden="true" tabindex="-1"></a>                              <span class="at">mtry =</span> <span class="dv">20</span>, <span class="at">tree_depth =</span> <span class="dv">4</span>) <span class="sc">|&gt;</span> </span>
-<span id="cb50-4"><a href="#cb50-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_mode</span>(<span class="st">"regression"</span>) <span class="sc">|&gt;</span> </span>
-<span id="cb50-5"><a href="#cb50-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_args</span>(<span class="at">objective =</span> <span class="st">"reg:squarederror"</span>)</span>
-<span id="cb50-6"><a href="#cb50-6" aria-hidden="true" tabindex="-1"></a>flujo_casas <span class="ot">&lt;-</span> <span class="fu">workflow</span>() <span class="sc">|&gt;</span> <span class="fu">add_recipe</span>(receta_casas) <span class="sc">|&gt;</span> <span class="fu">add_model</span>(modelo_boosting)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb51"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a><span class="co">#xgboost es el default</span></span>
+<span id="cb51-2"><a href="#cb51-2" aria-hidden="true" tabindex="-1"></a>modelo_boosting <span class="ot">&lt;-</span> <span class="fu">boost_tree</span>(<span class="at">learn_rate =</span> <span class="fl">0.001</span>, </span>
+<span id="cb51-3"><a href="#cb51-3" aria-hidden="true" tabindex="-1"></a>                              <span class="at">trees =</span> <span class="fu">tune</span>(), </span>
+<span id="cb51-4"><a href="#cb51-4" aria-hidden="true" tabindex="-1"></a>                              <span class="at">mtry =</span> <span class="dv">4</span>, <span class="at">tree_depth =</span> <span class="dv">4</span>,</span>
+<span id="cb51-5"><a href="#cb51-5" aria-hidden="true" tabindex="-1"></a>                              <span class="at">loss_reduction =</span> <span class="fl">1e-8</span>, <span class="at">sample_size =</span> <span class="fl">0.3</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb51-6"><a href="#cb51-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_mode</span>(<span class="st">"regression"</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb51-7"><a href="#cb51-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_args</span>(<span class="at">objective =</span> <span class="st">"reg:squarederror"</span>)</span>
+<span id="cb51-8"><a href="#cb51-8" aria-hidden="true" tabindex="-1"></a>flujo_casas <span class="ot">&lt;-</span> <span class="fu">workflow</span>() <span class="sc">|&gt;</span> <span class="fu">add_recipe</span>(receta_casas) <span class="sc">|&gt;</span> <span class="fu">add_model</span>(modelo_boosting)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb51"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a>num_arboles_tbl <span class="ot">&lt;-</span> <span class="fu">tibble</span>(<span class="at">trees =</span> <span class="fu">seq</span>(<span class="dv">100</span>, <span class="dv">10000</span>, <span class="dv">100</span>)) </span>
-<span id="cb51-2"><a href="#cb51-2" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">81</span>)</span>
-<span id="cb51-3"><a href="#cb51-3" aria-hidden="true" tabindex="-1"></a>particion_vc <span class="ot">&lt;-</span> <span class="fu">vfold_cv</span>(casas_entrena, <span class="at">v =</span> <span class="dv">10</span>)</span>
-<span id="cb51-4"><a href="#cb51-4" aria-hidden="true" tabindex="-1"></a>mis_metricas <span class="ot">&lt;-</span> <span class="fu">metric_set</span>(mape, rsq)</span>
-<span id="cb51-5"><a href="#cb51-5" aria-hidden="true" tabindex="-1"></a>resultados <span class="ot">&lt;-</span> <span class="fu">tune_grid</span>(flujo_casas, particion_vc, <span class="at">grid =</span> num_arboles_tbl, <span class="at">metrics =</span> mis_metricas)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb52"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a>num_arboles_tbl <span class="ot">&lt;-</span> <span class="fu">tibble</span>(<span class="at">trees =</span> <span class="fu">c</span>(<span class="dv">20000</span>, <span class="dv">30000</span>, <span class="dv">40000</span>)) </span>
+<span id="cb52-2"><a href="#cb52-2" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">81</span>)</span>
+<span id="cb52-3"><a href="#cb52-3" aria-hidden="true" tabindex="-1"></a>particion_vc <span class="ot">&lt;-</span> <span class="fu">vfold_cv</span>(casas_entrena, <span class="at">v =</span> <span class="dv">10</span>)</span>
+<span id="cb52-4"><a href="#cb52-4" aria-hidden="true" tabindex="-1"></a>mis_metricas <span class="ot">&lt;-</span> <span class="fu">metric_set</span>(mape, rsq)</span>
+<span id="cb52-5"><a href="#cb52-5" aria-hidden="true" tabindex="-1"></a>resultados <span class="ot">&lt;-</span> <span class="fu">tune_grid</span>(flujo_casas, particion_vc, <span class="at">grid =</span> num_arboles_tbl, <span class="at">metrics =</span> mis_metricas)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb52"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a><span class="fu">show_best</span>(resultados)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb53"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a><span class="fu">show_best</span>(resultados)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
 <pre><code>Warning: No value of `metric` was given; metric 'mape' will be used.</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
-<pre><code># A tibble: 5 × 7
-  trees .metric .estimator  mean     n std_err .config               
-  &lt;dbl&gt; &lt;chr&gt;   &lt;chr&gt;      &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;                 
-1  9800 mape    standard    9.72    10   0.467 Preprocessor1_Model098
-2  9900 mape    standard    9.72    10   0.467 Preprocessor1_Model099
-3 10000 mape    standard    9.72    10   0.467 Preprocessor1_Model100
-4  9600 mape    standard    9.72    10   0.466 Preprocessor1_Model096
-5  9400 mape    standard    9.72    10   0.465 Preprocessor1_Model094</code></pre>
-</div>
-</div>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb55"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb55-1"><a href="#cb55-1" aria-hidden="true" tabindex="-1"></a><span class="fu">collect_metrics</span>(resultados) <span class="sc">|&gt;</span> </span>
-<span id="cb55-2"><a href="#cb55-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(.metric <span class="sc">==</span> <span class="st">"mape"</span>, trees <span class="sc">&gt;</span> <span class="dv">100</span>) <span class="sc">|&gt;</span> </span>
-<span id="cb55-3"><a href="#cb55-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> trees, <span class="at">y =</span> mean, <span class="at">ymin =</span> mean <span class="sc">-</span> std_err, <span class="at">ymax =</span> mean <span class="sc">+</span> std_err)) <span class="sc">+</span> </span>
-<span id="cb55-4"><a href="#cb55-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>() <span class="sc">+</span></span>
-<span id="cb55-5"><a href="#cb55-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>() <span class="sc">+</span> <span class="fu">geom_ribbon</span>(<span class="at">alpha =</span> <span class="fl">0.2</span>) <span class="sc">+</span> <span class="fu">ylab</span>(<span class="st">"mape val_cruzada"</span>)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output-display">
-<p><img src="13-arboles-boosting_files/figure-html/unnamed-chunk-36-1.png" class="img-fluid" width="480"></p>
+<pre><code># A tibble: 3 × 7
+  trees .metric .estimator  mean     n std_err .config             
+  &lt;dbl&gt; &lt;chr&gt;   &lt;chr&gt;      &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;               
+1 40000 mape    standard    9.57    10   0.549 Preprocessor1_Model3
+2 30000 mape    standard    9.61    10   0.540 Preprocessor1_Model2
+3 20000 mape    standard    9.71    10   0.531 Preprocessor1_Model1</code></pre>
 </div>
 </div>
 
