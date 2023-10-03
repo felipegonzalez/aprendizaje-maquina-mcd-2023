@@ -784,15 +784,15 @@ write_rds(resultados, "./cache/resultados-xgboost.rds")
 
 
 ```{r}
-resultados <- read_rds("cache/resultados-xgboost.rds")
-show_best(resultados, n = 3)
+resultados_exp <- read_rds("cache/resultados-xgboost.rds")
+show_best(resultados_exp, n = 10)
 ```
 
 Hay algunos resultados muy malos (específicamente, cuando la 
 tasa de aprendizaje es muy baja y no corremos suficientes árboles):
 
 ```{r}
-collect_metrics(resultados) |> 
+collect_metrics(resultados_exp) |> 
   filter(.metric == "mape") |> 
   ggplot(aes(x = trees, y = mean, ymin = mean - std_err, ymax = mean + std_err,
              colour = learn_rate)) + 
@@ -805,8 +805,8 @@ Filtramos (recuérdese que tomamos un grid aleatorio, y por eso
 no aparecen todas las combinaciones de posibles valores):
 
 ```{r}
-collect_metrics(resultados) |> 
-  filter(.metric == "mape", trees  > 4000, learn_rate > 0.001) |> 
+collect_metrics(resultados_exp) |> 
+  filter(.metric == "mape", trees  > 4000, mean < 12) |> 
   group_by(mtry, trees, learn_rate, loss_reduction) |> 
   ggplot(aes(x = trees, y = mean, ymin = mean - std_err, ymax = mean + std_err,
              colour = learn_rate, 
@@ -817,19 +817,27 @@ collect_metrics(resultados) |>
   geom_linerange(alpha = 0.8) + ylab("mape val_cruzada") 
 ```
 
-Y afinamos nuestro ajuste:
+Con esta gráfica podemos continuar nuestra afinación con más idea
+de buenos lugares dónde comenzar. En primer lugar, observamos
+que la mayoría de nuestras soluciones involucran profundidad 
+de árboles igual a 4 y una tasa de aprendizaje relativamente chica. 
+Podemos afinar algunas soluciones, por ejemplo la que involucra
+$mtry=4$, que parece requerir más iteraciones que las que probamos.
+Afinamos nuestro ajuste, probando por ejemplo también con sample_size:
 
 ```{r}
 #xgboost es el default
-modelo_boosting <- boost_tree(learn_rate = 0.002, trees = tune(), 
-                              mtry = 20, tree_depth = 4) |> 
+modelo_boosting <- boost_tree(learn_rate = 0.001, 
+                              trees = tune(), 
+                              mtry = 4, tree_depth = 4,
+                              loss_reduction = 1e-8, sample_size = 0.3) |> 
   set_mode("regression") |> 
   set_args(objective = "reg:squarederror")
 flujo_casas <- workflow() |> add_recipe(receta_casas) |> add_model(modelo_boosting)
 ```
 
 ```{r}
-num_arboles_tbl <- tibble(trees = seq(100, 10000, 100)) 
+num_arboles_tbl <- tibble(trees = c(20000, 30000, 40000)) 
 set.seed(81)
 particion_vc <- vfold_cv(casas_entrena, v = 10)
 mis_metricas <- metric_set(mape, rsq)
@@ -841,10 +849,4 @@ show_best(resultados)
 ```
 
 
-```{r}
-collect_metrics(resultados) |> 
-  filter(.metric == "mape", trees > 100) |> 
-  ggplot(aes(x = trees, y = mean, ymin = mean - std_err, ymax = mean + std_err)) + 
-  geom_point() +
-  geom_line() + geom_ribbon(alpha = 0.2) + ylab("mape val_cruzada")
-```
+
