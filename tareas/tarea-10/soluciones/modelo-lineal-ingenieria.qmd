@@ -1,0 +1,262 @@
+---
+title: "Concurso - hoteles. Exploracion y modelo base"
+format: html
+---
+
+
+En esta parte exploramos los datos y construimos nuestros primeros modelos.
+
+## Conjunto de prueba y de entrenamiento
+
+```{r}
+#| message: false
+library(tidyverse)
+library(tidymodels)
+entrena_concurso <- read_csv("../concurso/hoteles-entrena.csv")
+prueba_concurso <- read_csv("../concurso/hoteles-prueba.csv")
+```
+
+Consideramos las fechas para las queremos hacer predicciones:
+
+```{r}
+tab_1 <- entrena_concurso |> summarise(min = min(arrival_date), max = max(arrival_date))
+tab_2 <- prueba_concurso |> summarise(min = min(arrival_date), max = max(arrival_date))
+bind_rows(tab_1 |> mutate(tipo = "entrena"), tab_2 |> mutate(tipo = "prueba"))
+```
+
+Los datos de prueba son en el futuro: de ** a **. Examinaremos
+solamente la cantidad de reservaciones que hay en cada mes, tanto para
+los datos de entrenamiento como para aquellos que queremos hacer predicciones:
+
+```{r}
+datos_todos <- bind_rows(entrena_concurso, prueba_concurso)
+datos_todos |> group_by(arrival_date, hotel) |> 
+  count() |> 
+  ggplot(aes(x = arrival_date, y = n, colour = hotel)) + 
+  geom_point(alpha = 0.2) + geom_smooth(span = 0.1, se = FALSE) +
+  geom_vline(xintercept = lubridate::ymd("2017-06-01"))
+```
+
+Nótese que los datos de 2015 parecen algo diferentes a lo que vemos el resto
+de los años, en particular en cuanto al comportamiento de hoteles de ciudad.
+Esto nos indica que podemos esperar alguna degradación en nuestro modelo cuando
+busquemos hacer predicciones para 3 meses en el futuro, y necesariamente incluir
+efectos anuales por tipo de hotel.
+
+
+Comenzamos por dividir la muestra de entrenamiento y validación. Separamos
+la muestra de entrenamiento y prueba según el tiempo, pues esperamos
+que tenemos que predecir datos en el futuro:
+
+```{r}
+#set.seed(123)
+#splits <- initial_split(entrena_concurso, strata = children)
+#hotel_entrena <- training(splits)
+set.seed(234)
+entrena_concurso <- entrena_concurso |>
+  arrange(arrival_date)
+val_set <- initial_split(entrena_concurso, prop = 0.8)
+hoteles_ent <- training(val_set)
+hoteles_val <- testing(val_set)
+nrow(hoteles_ent)
+nrow(hoteles_val)
+```
+
+## Exploración
+
+```{r}
+hoteles_ent |> count(children) |> 
+  mutate(prop = n / sum(n))
+```
+La mayoría de las reservas no incluyen niños.
+
+
+```{r}
+library(skimr)
+skim(hoteles_ent)
+```
+
+
+Entre las variables, consideramos primero que deben ser importantes
+
+- Época del año
+- tipo de hotel (ciudad o resort)
+- número de adultos registrados
+- la tarifa promedio, average daily rate (son diferentes para gente que viaja de negocios, por ejemplo).
+
+En primer lugar, de Junio a Agosto hay más proporción de reservaciones con niños, especialmente
+en resorts. 
+
+```{r}
+library(lubridate)
+resumen <- hoteles_ent |>
+  mutate(mes_año = floor_date(arrival_date, unit = "month")) |> 
+  group_by(mes_año, children, hotel) |> 
+  summarise(n = n()) |>
+  group_by(mes_año, hotel) |>
+  mutate(p_children = n / sum(n)) 
+ggplot(resumen |> filter(children == "children"), 
+       aes(x = mes_año, y = p_children, colour = hotel)) +
+  geom_point() + geom_line()
+```
+
+La tarifa está fuertemente relacionado con la proporción de reservaciones con niños:
+
+```{r}
+resumen_tarifa <- hoteles_ent |> 
+  mutate(tarifa_gpo = cut_number(average_daily_rate, 20)) |> 
+  group_by(tarifa_gpo) |> 
+  summarise(tarifa_media = mean(average_daily_rate),
+              prop_children = sum(children == "children") / n(), n = n())
+resumen_tarifa |> ggplot(aes(x = tarifa_media, y = prop_children)) +
+  geom_point()
+```
+
+Y finalmente, observamos también que el lead time tiene relación con nuestra variable objetivo,
+aunque notamos que se debe principalmente a que lead times muy cortos y muy largos parecen
+tener menos reservas con niños. La relación es diferente en hoteles resort y de ciudad.
+
+```{r}
+resumen_lead <- hoteles_ent |> 
+  mutate(lead_gpo = cut_number(lead_time, 10)) |> 
+  group_by(lead_gpo, hotel) |> 
+  summarise(lead_media = mean(lead_time),
+              prop_children = sum(children == "children") / n(), n = n())
+resumen_lead|> ggplot(aes(x = lead_media, y = prop_children, colour = hotel)) +
+  geom_point() + geom_line()
+```
+```{r}
+hoteles_ent |> group_by(adults) |> 
+    summarise(prop_children = sum(children == "children") / n(), n = n())
+```
+Hay una proporción chica de reservas sin adultos. Esto puede suceder: lo extraño es que
+una proporción de estas tampoco tiene registrados menores. Esto probablemente es un 
+error de registro o extracción. Sin embargo, 2 o más adultos está asociado con niños
+(vs 1 solo adulto).
+
+```{r}
+hoteles_ent |> group_by(adults, children) |> 
+    summarise(prop_children = sum(children == "children") / n(), n = n())
+```
+
+
+
+## Modelo base
+
+Comenzamos con regresión logística con baja regularización para obtener un
+modelo base. Incluimos directamente la otras variables categóricas:
+
+```{r}
+reg_modelo <- 
+  logistic_reg(penalty = 0.00001, mixture = 0.1) |> 
+  set_engine("glmnet")
+receta_basica <- 
+  recipe(children ~  arrival_date + hotel + adults + 
+         average_daily_rate + lead_time + meal + is_repeated_guest +
+         previous_cancellations + reserved_room_type + assigned_room_type + booking_changes +
+         days_in_waiting_list + customer_type + required_car_parking_spaces + 
+         total_of_special_requests, data = hoteles_ent) |>
+  step_mutate(no_adults_reg = ifelse(adults == 0, 1, 0)) |> 
+  step_ns(lead_time, deg_free = 3) |> 
+  step_ns(average_daily_rate, deg_free = 3) |> 
+  step_mutate(no_adults = as.numeric(adults == 0)) |> 
+  step_ns(adults, deg_free = 3) |> 
+  step_date(arrival_date) |>  
+  step_mutate(year = lubridate::year(arrival_date)) |> 
+  step_rm(arrival_date) |> 
+  step_dummy(all_nominal_predictors()) |> 
+  # interacciones
+  step_interact( ~ starts_with("lead_time"):hotel_Resort_Hotel) |> 
+  step_interact( ~ starts_with("hotel"):starts_with("average_daily")) |> 
+  step_interact( ~ starts_with("adults"):hotel_Resort_Hotel) |> 
+  step_interact( ~ no_adults:hotel_Resort_Hotel) |> 
+  step_zv(all_predictors()) 
+```
+
+
+```{r}
+prep(receta_basica) |> juice() |> head() |> names()
+```
+
+
+```{r}
+flujo_hoteles <- workflow() |> 
+  add_model(reg_modelo) |> 
+  add_recipe(receta_basica)
+```
+
+
+```{r}
+ajustado <- fit(flujo_hoteles, hoteles_ent)
+```
+
+
+```{r}
+preds_ent <- predict(ajustado, hoteles_ent, type = "prob") |>
+  bind_cols(hoteles_ent)
+preds_ent$children <- factor(preds_ent$children)
+preds_ent |> mn_log_loss(children, .pred_children)
+preds_val <- predict(ajustado, hoteles_val, type = "prob") |>
+  bind_cols(hoteles_val)
+preds_val$children <- factor(preds_val$children)
+
+preds_val |> mn_log_loss(children, .pred_children)
+
+```
+
+Afinaremos más adelante el modelo, pero preparamos esta entrega:
+
+```{r}
+ajustado_ent <- fit(flujo_hoteles, entrena_concurso)
+submission <- predict(ajustado_ent, prueba_concurso, type = "prob") |> 
+  bind_cols(prueba_concurso |> select(id)) |> 
+  select(id, prob = .pred_children)
+ggplot(submission, aes(x = prob)) + geom_histogram()
+```
+
+
+```{r}
+write_csv(submission, "entregas/modelo-base.csv")
+```
+
+
+Este modelo pasa el benchmark con scores 0.22662, 0.23703 en público y privado. 
+Notamos sin
+embargo que nuestro score de validación es muy distinto al que obtenemos
+en el leaderboard. La razón, como vimos antes, probablemente 
+tiene que ver con las fechas para las que estamos haciendo
+predicción.  
+
+## Precisión de estimación de error
+
+Bootstrap de la muestra de validación (variabilidad en la estimación del 
+error en el leaderboard público):
+
+```{r}
+map_df(1:100, function(rep){
+  hoteles_val_boot <- slice_sample(hoteles_val, prop = 1, replace = TRUE)
+  preds_val <- predict(ajustado, hoteles_val_boot, type = "prob") |>
+    bind_cols(hoteles_val_boot)
+  preds_val |> mn_log_loss(factor(children), .pred_children)
+}) |> 
+  ggplot(aes(x = .estimate)) + geom_histogram()
+```
+
+
+## Otras variables
+
+```{r}
+hoteles_ent |> group_by(agent, children) |> 
+  count() |> group_by(agent) |> mutate(p_child = n / sum(n), total = sum(n)  )  |> 
+  filter(children == "children") |> 
+  select(-n) |> 
+  arrange(desc(total))
+```
+
+```{r}
+hoteles_ent |> group_by(company, children) |> 
+  count() |> group_by(company) |> mutate(p_child = n / sum(n), total = sum(n)  )  |> 
+  filter(children == "children") |> 
+  select(-n) |> 
+  arrange(desc(total))
+```

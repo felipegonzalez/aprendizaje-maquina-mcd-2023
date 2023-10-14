@@ -1,0 +1,151 @@
+---
+title: "Concurso: xgboost, primer intento"
+format: html
+---
+
+
+En esta parte exploramos los datos y construimos nuestros primeros modelos.
+
+## Conjunto de prueba y de entrenamiento
+
+```{r}
+#| message: false
+library(tidyverse)
+library(tidymodels)
+entrena_concurso <- read_csv("../concurso/hoteles-entrena.csv")
+prueba_concurso <- read_csv("../concurso/hoteles-prueba.csv")
+```
+
+
+Comenzamos por dividir la muestra de entrenamiento y validación:
+
+```{r}
+set.seed(234)
+#entrena_concurso <- entrena_concurso |>
+#  arrange(arrival_date)
+val_split <- initial_split(entrena_concurso, prop = 0.8)
+hoteles_ent <- training(val_split)
+hoteles_val <- testing(val_split)
+nrow(hoteles_ent)
+nrow(hoteles_val)
+```
+
+
+## Modelo base
+
+Comenzamos con regresión logística con baja regularización para obtener un
+modelo base. Incluimos además:
+
+- otras variables categóricas, 
+- intracciones lead time y average_daily_rate
+- interacción average_daily_rate y room type
+- interacción país y semana del año (diferentes vacaciones)
+- 
+
+Vamos a afinar también la regularización:
+
+```{r}
+
+xgb_modelo <- boost_tree(
+  trees = 5000, 
+  tree_depth = tune(), min_n = 10, 
+  #loss_reduction = tune(),
+  sample_size = 1, mtry = tune(),
+  learn_rate = tune(),
+) |>  
+  set_engine("xgboost") |>  
+  set_mode("classification")
+
+
+receta <- 
+  recipe(children ~  arrival_date + hotel + adults + 
+           average_daily_rate + lead_time + meal + is_repeated_guest +
+           market_segment + distribution_channel + 
+           stays_in_weekend_nights + stays_in_week_nights +
+           previous_cancellations + reserved_room_type + assigned_room_type + booking_changes +
+           deposit_type + country + 
+           days_in_waiting_list + customer_type + required_car_parking_spaces + 
+           total_of_special_requests + agent, data = hoteles_ent) |>
+  step_novel(country, agent) |> 
+  step_other(country, agent, threshold = 0.001) |> 
+  step_date(arrival_date) |>
+  step_mutate(week_no = lubridate::week(arrival_date)) |> 
+  step_rm(arrival_date) |> 
+  step_dummy(all_nominal_predictors()) |> 
+  step_zv(all_predictors()) 
+```
+
+
+```{r}
+#prep(receta) |> juice() |> names()
+```
+
+
+
+```{r}
+flujo_hoteles <- workflow() |> 
+  add_model(xgb_modelo) |> 
+  add_recipe(receta)
+```
+
+Ajustar según el número de cores:
+
+```{r}
+all_cores <- parallel::detectCores(logical = FALSE)
+
+library(doFuture)
+registerDoFuture()
+plan(multisession, workers = 8)
+```
+
+```{r}
+val_eval <- manual_rset(val_split |> list(), "validación")
+#val_eval <- vfold_cv(hoteles_ent, 10)
+params <- parameters(learn_rate(range = c(-3, -1), log10_trans()),
+                     mtry(range = c(1, 4)),
+                     tree_depth(range = c(1, 4)))
+lambda_grid <- grid_regular(params, levels = c(learn_rate = 5, mtry = 3, tree_depth = 3)) 
+evaluacion <- tune_grid(flujo_hoteles, resamples = val_eval, grid = lambda_grid,
+                            metrics = metric_set(mn_log_loss, roc_auc),
+  control = control_grid(verbose = TRUE, parallel_over = "everything"))
+```
+
+```{r}
+evaluacion |> collect_metrics() |> filter(.metric == "mn_log_loss") |> arrange((mean))
+```
+
+**Observaciones**: estamos alcanzando los valores máximos de *mtry* y
+*tree_depth*, de forma que es necesario expandir el rango de búsqueda
+en iteraciones futuras.
+
+Error de entrenamiento:
+
+```{r}
+minimo <-  evaluacion |> select_best(metric = "mn_log_loss")
+minimo
+modelo_final <- finalize_workflow(flujo_hoteles, minimo) |> 
+  fit(hoteles_ent)
+preds_ent <- predict(modelo_final, hoteles_ent, type = "prob") |>
+  bind_cols(hoteles_ent)
+preds_ent$children <- factor(preds_ent$children)
+preds_ent |> mn_log_loss(children, .pred_children)
+
+```
+
+Preparamos la entrega:
+
+```{r}
+modelo_final_ent <- finalize_workflow(flujo_hoteles, minimo) |> 
+  fit(entrena_concurso)
+submission <- predict(modelo_final_ent, prueba_concurso, type = "prob") |> 
+  bind_cols(prueba_concurso |> select(id)) |> 
+  select(id, prob = .pred_children)
+ggplot(submission, aes(x = prob)) + geom_histogram()
+```
+
+
+```{r}
+write_csv(submission, "entregas/modelo-base-xgboost.csv")
+```
+
+
