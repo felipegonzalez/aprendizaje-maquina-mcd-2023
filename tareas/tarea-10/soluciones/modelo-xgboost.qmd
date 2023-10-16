@@ -31,18 +31,8 @@ nrow(hoteles_val)
 ```
 
 
-## Modelo base
+## Xgboost
 
-Comenzamos con regresión logística con baja regularización para obtener un
-modelo base. Incluimos además:
-
-- otras variables categóricas, 
-- intracciones lead time y average_daily_rate
-- interacción average_daily_rate y room type
-- interacción país y semana del año (diferentes vacaciones)
-- 
-
-Vamos a afinar también la regularización:
 
 ```{r}
 

@@ -220,12 +220,6 @@ write_csv(submission, "entregas/modelo-base.csv")
 ```
 
 
-Este modelo pasa el benchmark con scores 0.22662, 0.23703 en público y privado. 
-Notamos sin
-embargo que nuestro score de validación es muy distinto al que obtenemos
-en el leaderboard. La razón, como vimos antes, probablemente 
-tiene que ver con las fechas para las que estamos haciendo
-predicción.  
 
 ## Precisión de estimación de error
 
@@ -237,7 +231,8 @@ map_df(1:100, function(rep){
   hoteles_val_boot <- slice_sample(hoteles_val, prop = 1, replace = TRUE)
   preds_val <- predict(ajustado, hoteles_val_boot, type = "prob") |>
     bind_cols(hoteles_val_boot)
-  preds_val |> mn_log_loss(factor(children), .pred_children)
+  preds_val$children <- factor(preds_val$children)
+  preds_val |> mn_log_loss(children, .pred_children)
 }) |> 
   ggplot(aes(x = .estimate)) + geom_histogram()
 ```
