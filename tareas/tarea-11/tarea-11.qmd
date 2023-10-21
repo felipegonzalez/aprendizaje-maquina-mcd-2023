@@ -1,0 +1,225 @@
+---
+title: "Tarea 11: importancia y dependencia parcial"
+format: html
+editor: visual
+---
+
+## Importancia predictiva: dependencia del modelo
+
+
+Primero veremos que las medidas de importancia predictiva de variables
+se refieren **al modelo particular que estamos considerando**. Usaremos
+la importancia basada en permutaciones que vimos en clase (revisa las notas
+si es necesario).
+
+
+```{r}
+library(tidyverse)
+library(tidymodels)
+library(iml)
+```
+
+
+Consideramos un modelo con 4 entradas. La forma funcional verdadera que
+no conocemos es lineal,
+con una interacción entre $x1$ y $x2$. Las variables $x_1$ y $x_4$ están
+correlacionadas:
+
+$$f(x) = x_1 + x_3 + 2x_4 + 2x_1x_2$$
+
+Simulamos datos:
+
+```{r}
+n <- 200
+set.seed(88)
+dat_tbl <- tibble(x_1 = rnorm(n, 0, 1), 
+                  x_2 = sample(c(0, 1), n, replace = T),
+                  x_3 = rnorm(n, 0, 1),
+                  x_4 = rnorm(n, x_1, 0.2)) |> 
+    mutate(y =  x_1 + 2*x_4 + x_3 + 2*x_1*x_2 + rnorm(n, 0 , 0.2)) |> 
+    mutate(tipo = sample(c("entrena", "valida"), n, replace = TRUE))
+valida_tbl <- dat_tbl |> filter(tipo == "valida")
+# Función que calcula importancias
+importancias <- function(valida_tbl, mod){
+    x <- valida_tbl |> dplyr::select(-y, -tipo)
+    predictor_1 <- Predictor$new(model = mod, 
+        data = x, y = valida_tbl$y, 
+        class = "regression")
+    imp <- FeatureImp$new(predictor_1, loss = "rmse", 
+        compare = "difference", n.repetitions = 20)
+    imp
+}
+graficar_imp <- function(imp){
+    imp_tbl <- imp$results# |> mutate(feature = fct_reorder(feature, importance))
+    ggplot(imp_tbl, aes(x = feature, y = importance, ymax = importance, ymin= 0)) +
+        geom_point() + geom_linerange() + coord_flip()
+}
+```
+
+
+Nótese que no sabemos la forma real, así que intentamos distintos modelos: primero
+dos modelos lineales, uno que incluye x4 y otro que no:
+
+
+```{r}
+# sin interacción, lineal, sin x_4
+mod_0 <- lm(y ~ x_1 + x_2 + x_3, dat_tbl |> filter(tipo == "entrena"))
+imp_0 <- importancias(valida_tbl, mod_0)
+g_0 <- graficar_imp(imp_0) + labs(subtitle = "Sin interacciones/ sin x4")
+# sin interacción, lineal
+mod_1 <- lm(y ~ x_1 + x_2 + x_3 + x_4, dat_tbl |> filter(tipo == "entrena"))
+imp_1 <- importancias(valida_tbl, mod_1)
+g_1 <- graficar_imp(imp_1) + labs(subtitle = "Sin interacciones")
+```
+
+Examinemos primero el modelo donde no incluimos x4
+
+```{r}
+g_0
+```
+
+
+
+
+
+**Pregunta 1**: En este modelo, ¿por qué x4 tiene importancia cero? ¿Por qué
+x_2 tiene importancia cercana a cero? ¿Esto implica que ni x_4 ni x_2 influyen
+en los valores observados $y$ ?
+
+
+
+Ahora consideramos el modelo lineal con las 4 variables:
+
+```{r}
+g_1
+```
+
+**Pregunta 2**: ¿Cuál es la diferencia con las importancias de la gráfica anterior? 
+¿Por qué cuando incluimos x_4 la importancia de x_1 baja?  
+¿Cómo se compara la importancia de x_3 en los dos modelos? Explica por qué ninguna
+de las dos gráficas "es la correcta", sino que ambas describen cómo funcionan
+dos modelos diferentes para los mismos datos.
+
+
+Ahora construimos un modelo con algunas interacciones:
+
+
+```{r}
+# con interacción
+mod_2 <- lm(y ~ x_1 + x_2 + x_3 + x_4 + x_1*x_2 + x_2*x_3, 
+            dat_tbl |> filter(tipo == "entrena"))
+imp_2 <- importancias(valida_tbl, mod_2)
+g_2 <- graficar_imp(imp_2) + labs(subtitles = "Con interacciones")
+g_2
+```
+
+*Pregunta 3*: ¿Por qué los términos de interacción que pusimos en el modelo
+no aparecen esta gráfica? ¿Cuál es la diferencia de intrepretación más grande
+entre esta gráfica y las dos anteriores?
+
+
+## Importancia predictiva: otro ejemplo
+
+La importancia basada en permutaciones puede utilizarse para cualquier
+función de predicción. Por ejemplo, consideramos abajo redes neuronales 
+construidas con keras:
+
+```{r, message = FALSE}
+dat_grasa <- read_csv(file = './datos/bodyfat.csv') 
+set.seed(183)
+grasa_particion <- initial_split(dat_grasa, 0.5)
+grasa_ent <- training(grasa_particion)
+grasa_pr <- testing(grasa_particion)
+nrow(grasa_ent)
+```
+
+```{r}
+grasa_receta <- recipe(grasacorp ~ ., grasa_ent) |> 
+  step_filter(estatura > 50) |>
+  step_normalize(all_predictors()) |> 
+  prep()
+```
+
+```{r}
+library(keras)
+x_grasa <- grasa_receta |> juice() |> 
+  dplyr::select(-grasacorp) |> as.matrix()
+vars_nombres <- colnames(x_grasa)
+y_grasa <- grasa_receta |> juice() |> pull(grasacorp)
+# validación
+x_grasa_pr <- grasa_receta |> bake(grasa_pr) |> 
+  dplyr::select(-grasacorp) |> as.matrix()
+y_grasa_pr <- grasa_receta |> bake(grasa_pr) |> pull(grasacorp)
+```
+
+```{r, message=FALSE, warning=FALSE}
+modelo_red_2 <- keras_model_sequential() |> 
+  layer_dense(units = 30, activation = "sigmoid", 
+              kernel_regularizer = regularizer_l2(0.1)) |> 
+  layer_dense(units = 30, activation = "sigmoid",
+              kernel_regularizer = regularizer_l2(0.1)) |> 
+  layer_dense(units = 1, activation = "linear", 
+              kernel_regularizer = regularizer_l2(0.01))
+modelo_red_2 |> compile(loss = "mse",metrics = c("mse"),
+  optimizer = optimizer_sgd(learning_rate = 0.0005, momentum = 0.95)
+)
+historia <- modelo_red_2 |> fit(
+  x = x_grasa, y = y_grasa,
+  validation_data = list(x_grasa_pr, y_grasa_pr),
+  batch_size = 30, epochs = 500, verbose = 0)
+```
+
+
+Una vez ajustado el modelo, construimos algunas funciones de
+ayuda para el paquete *iml*
+
+```{r}
+# la función de predicción de iml debe tener los siguientes argumentos:
+pred_iml <- function(model, newdata){
+   keras::predict_on_batch(model, newdata) 
+}
+pred_iml(modelo_red_2, newdata = x_grasa_pr[1:3,])
+# probar predictor:
+predictor <- Predictor$new(model = modelo_red_2, data = grasa_receta |> bake(grasa_pr) , 
+  y = "grasacorp", predict.fun = pred_iml)
+```
+
+
+Y calculamos las importancias:
+
+```{r}
+vars_usadas <- colnames(x_grasa_pr)
+
+imp_red <- FeatureImp$new(predictor, loss = "mape",  
+                             compare = "difference", n.repetitions = 5, 
+                          features = vars_usadas)
+
+importancias <- imp_red$results |> 
+    mutate(feature = fct_reorder(feature, importance))
+importancias
+```
+
+**Pregunta 4**: explica por qué para calcular la importancia predictiva en
+este caso sólo necesitamos la función *predict* de la red, y no es necesario
+conocer ningún detalle de la arquitectura o pesos de la red que ajustamos.
+¿Cuáles son las variables más importantes en esta red?
+
+
+
+## Gráficas de dependencia parcial
+
+En la red de arriba podemos ver cómo actúa *abdomen* sobre nuestra predicción:
+
+```{r}
+pred_fun <-  function(object, newdata){ 
+  keras::predict_on_batch(object, newdata) |> mean()
+} 
+pdp::partial(modelo_red_2, train = x_grasa,  
+             pred.var = c("abdomen"), plot = TRUE, pred.fun = pred_fun)
+```
+
+**Pregunta 5*: Explica usando las notas y el código de arriba explica 
+cómo se calculan los valores de esta curva de dependencia parcial.
+
+
+
