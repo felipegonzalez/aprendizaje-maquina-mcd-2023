@@ -1,0 +1,87 @@
+---
+title: "Tarea 12: explicación de estimación de valores de Shapley"
+format: html
+---
+
+Esta sección está basada en el algoritmo mostrado en [esta liga](https://christophm.github.io/interpretable-ml-book/shapley.html),
+en la sección 9.5.3.3 
+
+
+Como vimos en clase, dado un predictor $f(x)$ un caso 
+$x = (x_1,x_2,\ldots, x_p)$ queremos calcular las contribuciones $\phi_j(x)$ de cada variable a la predicción $f(x)$. 
+
+
+## Contribución bajo un ordenamiento:
+
+En un ordenamiento $o$ donde la variable $j$ aparece en la posición $k$,
+consideramos las variables que aparecen antes de la posición $k$, 
+que escribimos como $x_{(1)}, x_{(2)}, \ldots x_{(k-1)}$
+y calculamos dos valores esperados:
+
+1) Sin la variable $j$: calculamos el promedio de $f(x)$ fijando las variables
+$S = x_{(1)}, x_{(2)}, \ldots x_{(k-1)}$, promediando sobre el resto de variables que no aparecen.
+
+Por ejemplo, supongamos que nos interesa la variable 2, y tenemos el caso $(x_1,x_2,x_3,x_4,x_5)$,. Si tenemos el ordenamiento 4, 1, 2, 3, 5, entonces
+calculamos, sobre la muestra de entrenamiento (entran x_4 y x_1 y los otros valores los tomamos de los casos de entrenamiento)
+
+$$\frac{1}{N}\sum_{z_2, z_3, z_5} f({\bf x}_1, z_2, z_3, {\bf x_4}, z_5)$$
+
+2) Con la variable $j$: calculamos el promedio de $f(x)$ fijando las variables
+$S_j = x_{(1)}, x_{(2)}, \ldots x_{(k-1)}, x_{(k)} = x_j$, promediando sobre el resto de variables que no aparecen. En nuestro ejemplo, calcularíamos (fijando x_4, x_1 y x_2, y tomando el resto de variables de los casos de entrenamiento):
+
+$$\frac{1}{N}\sum_{z_3, z_5} f({\bf x}_1, {\bf x_2}, z_3, {\bf x_4}, z_5)$$
+
+Calculamos la diferencia $S_j - S$ para obtener la aportación de la
+variable $j$ en este ordenamiento.
+
+## Promediar sobre todos los ordenamientos:
+
+La contribución $\phi_j$ se define como el promedio de los valores $S_j - S$ sobre todos los ordenamientos posibles de las variables. Sin embargo, 
+esto no es factible de hacer si hay un número no chico de variables (pues hay $2^j$ ordenamientos posibles).
+
+## Aproximación de contribuciones:
+
+Haremos una aproximación con $M$ iteraciones. Para cada iteración $m$, 
+
+1. Construimos una permutación de las variables escogida al azar. Supongamos
+que la variable $j$ de interés aparece en la posición $k$.
+2. Obtenemos un caso $z$ del conjunto de entrenamiento escogido al azar.
+3. Evaluamos $f$ tomando de $x$ todas las variables que aparecen en las
+primeras posiciones de 1 hasta $k-1$, y para el resto de los valores tomamos 
+los valores correspondientes de $z$. Llamamos a esta cantidad $a$.
+4. Evaluamos $f$ tomando de $x$ todas las variables que aparecen en las
+primeras posiciones de 1 hasta $k$, y para el resto de los valores tomamos 
+los valores correspondientes de $z$. Llamamos a esta cantidad $b$.
+5. Calculamos $\phi^m_j = b - a$
+
+Finalmente, tomamos como estimador
+
+$$\hat{\phi}_j = \frac{1}{M}\sum_m \phi^m_j$$
+
+Por ejemplo: sea $(x_1,x_2,x_3,x_4,x_5)$ un caso de interés, y $3$ la variable de interés.
+
+1. Escogemos una permutación al azar, por ejemplo obtenemos: 5, 2, 1, 3, 4. 
+(3 aparece en la posición k = 4).
+2. Escogemos un caso al azar $(z_1,z_2,z_3,z_4,z_5)$ de la muestra
+de entrenamiento.
+3. Las primeras $k-1$ posiciones son ocupadas por las variables 5, 2 y 1,
+que fijamos en los valores de $x$. El resto sustituimos valores de $z$, y calculamos entonces $a = f(x_1, x_2, z_3, z_4, x_5)$
+4. Las primeras $k$ posiciones son ocupadas por las variables 5, 2 , 1 y 3 Calculamos $b = f(x_1, x_2, x_3, z_4, x_5)$
+5. Calculamos $b-a$
+
+Y repetimos este proceso varias veces, promediando sobre los resultados
+del paso 5.
+
+Nota que podemos escribir este estimador como
+
+$$\hat{\phi_j} = \frac{1}{M}\sum_m (\phi^m_{j} - \phi^m_{-j})$$
+
+**Pregunta**: explica intuitivamente por qué
+este estimador, cuando $M$ es grande, aproxima la contribución
+exacta $\phi_j$ (considera cómo se hace el muestreo en el algoritmo).
+
+
+
+
+
+
