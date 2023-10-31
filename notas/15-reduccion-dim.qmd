@@ -586,7 +586,8 @@ que es igual a
 $$ \mathrm{Tr} (XX^t) - 2\sigma \mathrm{Tr} ( X(vu^t)) + \sigma^2\mathrm{Tr}(uv^tvu^t)$$ 
 
 Como $u$ y $v$ tienen norma 1, tenemos que $v^tv=1$, y 
-$\textrm{Tr(uu^t)} = \sum_i u_i^2 = 1$.
+$Tr(uu^t) = \sum_i u_i^2 = 1$.
+
 Adicionalmente, usando el hecho de que $Xv=\sigma u$ obtenemos
 
 $$ ||X-\sigma uv^t||_F^2 = \mathrm{Tr} (XX^t) - \sigma^2$$
@@ -696,7 +697,7 @@ podemos demostrar igual que arriba que
 
 $$|| X - \sigma_1 u_1 v_1^t - \sigma_2 u_2 v_2^{t} ||_F^2 = \textrm{Tr} (XX^t) - (\sigma_1^2 + \sigma_2^2) = ||X||_F^2 - (\sigma_1^2 + \sigma_2^2)$$
 De modo que obtenemos la mejor aproximación escogiendo los dos valores de $\sigma_1^2$ y $\sigma_2^2$
-más grandes para los que hay solución de \@ref(eq:valor-propio-derecho) y \@ref(eq:valor-propio-izquierdo) y
+más grandes para los que hay solución de @ref(eq-valor-propio-derecho) y @ref(eq-valor-propio-izquierdo).
 
 **Observaciones**:
 
@@ -738,8 +739,8 @@ es sucesivamente mejor.
 para encontrar las aproximación de rango bajo,
 sino que se usan algoritmos para encontrar vectores propios de $X^tX$ (que son las $v$'s),
 o más generalmente algoritmos basados en álgebra lineal 
-que intentan encontrar directamente los pares de vectores (u_i, v_i), y otros algoritmos
-numéricos (por ejemplo, basados en iteraciones).
+que intentan encontrar directamente los pares de vectores $(u_i, v_i)$, y otros algoritmos
+numéricos (por ejemplo, iterativos).
 
 
 2. Un resultado interesante (que faltaría por demostrar) es que si tomamos la aproximación de 
@@ -1152,13 +1153,16 @@ de aproximación de matrices de rango bajo en uno de aproximaciones que buscan
 explicar la mayoría de la *varianza* (incluyendo covarianza) 
 de las variables de la matriz de datos $X$. 
 Consideremos entonces una matriz de datos $X$ de tamaño $n\times p$. Definimos
-la **matrix centrada** por columna $\tilde{X}$ , que se calcula como
+la **matriz centrada** por columna $\tilde{X}$ , que se calcula como
 $$\tilde{X}_{i,j} = X_{i,j} - \mu_j$$
   donde $\mu_j = \frac{1}{n} \sum_j X_{i,j}$.
+
 - La diferencia en construcción entre Svd y Svd con columnas centradas (componentes principales)
 es que en Svd las proyecciones se hacen pasando por el origen, pero en componentes principales se hacen a partir del centroide de los datos.
+
 ### Ejemplo {-}
-Veamos primero el último ejemplo simulado que hicimos anterioremnte. Primero centramos
+
+Veamos primero el último ejemplo simulado que hicimos anterioremente. Primero centramos
 los datos por columna:
   
 ```{r}
@@ -1231,13 +1235,16 @@ $$C = \frac{1}{n} \tilde{X}^t \tilde{X}$$
 
 Nótese que las proyecciones  (que se llaman **componentes principales**) 
 $\tilde{X}v_j = \sigma_j u_j = d_j$ satisfacen que
+
 1. La media de las proyecciones $d_j$ es igual a cero
 Pues $$\sigma_j \sum_k {u_{j,k}} = \sum_k \sum_i (\tilde{X}_{k,i})v_{j,i} =
   \sum_i v_{j,i}\sum_k (\tilde{X}_{k,i}) = 0,$$
   pues las columnas de $\tilde{X}$ tienen media cero.
-2- $\sigma_j^2/n$ es la varianza de la proyección $d_j$, pues
+
+2. $\sigma_j^2/n$ es la varianza de la proyección $d_j$, pues
 $$Var(d_j) = \frac{\sigma_j^2}{n} \sum_k (u_{j,k} - 0)^2 = \frac{\sigma_j^2}{n},$$
   y el vector $u_j$ tienen norma 1.
+
 3. La ortogonalidad de los vectores $u_j$ se interpreta ahora en términos
 de covarianza:
   $$Cov(d_i,d_j) = \frac{1}{n}\sum_{k=1}^n (d_{i,k}-0)(d_{j,k}-0) =
