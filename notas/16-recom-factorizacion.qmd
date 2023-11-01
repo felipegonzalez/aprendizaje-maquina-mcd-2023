@@ -155,7 +155,7 @@ donde $u_i$ es el renglón $i$-esimo de $U$ (gustos latentes del usuario $i$ en 
 
 
 ::: callout-note
-# ¿Por qué funciona la idea de factores latentes?**
+# ¿Por qué funciona la idea de factores latentes?
 
 - El método de factorización de matrices de grado bajo ($k$)
 funciona compartiendo información a lo largo de películas y usuarios. Como tenemos
@@ -348,16 +348,16 @@ un programa (contando vistas parciales, así que es un número real).
 
 La función objetivo (sin regularización) se define como
 
-\begin{equation}
+$$
 L =  \sum_{(i,j)} c_{ij}(p_{ij}  - \sum_{l=1}^k u_{i,l}v_{j,l})^2
-(#eq:implicita)
-\end{equation}
+$$ {#eq-implicita}
+
 
 
 Nótese que :
 
 - Cuando $c_ij$ es alta (porque $r_{i,j}$ es alta), para minimizar
-esta cantidad tenemos que hacer la predicción de $p_{ij}cercana a 1, pues el error
+esta cantidad tenemos que hacer la predicción de $p_{ij}$ cercana a 1, pues el error
 se multiplica por $c_{ij}$. Sin embargo, 
 - Cuando $r_{i,j}$ es bajo, no es tan
 importante ajustar esta información con precisión: si $p_{ij} = 1$, puede ser
@@ -785,7 +785,7 @@ vectorial de palabras,  es posible
 simplificar considerablemente el modelo de arriba  o LLMs para poder entrenarlos mucho más rápido, y obtener una representación que en muchas tareas se desempeña bien ([@word2vec]).
 
 Hay dos ideas básicas que se pueden usar para reducir la complejidad del entrenamiento (ver más
-en [@goodfellow] y [@word2vec]:
+en  [@word2vec]):
 
 - Eliminar la segunda capa oculta: modelo de *bag-of-words* continuo y modelo de *skip-gram*.
 - Cambiar la función objetivo (minimizar devianza/maximizar verosimilitud) por una más simple, mediante un truco que se llama *negative sampling*.
@@ -1083,8 +1083,7 @@ closest_to(modelo, ~ "tío" + "presidenta" - "presidente", n = 5) |> filter(word
 ### Evaluación de calidad de modelos {-}
 
 La evaluación de estas aplicaciones puede hacerse por ejemplo, con tareas de analogía,
-con listas de singular/plurales, de adjetivos/adverbios, masculino/femenino, etc (ver [@word2vec]),
-(ver por ejemplo https://github.com/tmikolov/word2vec/blob/master/questions-words.txt). Adicionalmente,
+con listas de singular/plurales, de adjetivos/adverbios, masculino/femenino, etc (ver [@word2vec]), ver por ejemplo [aquí](https://github.com/tmikolov/word2vec/blob/master/questions-words.txt). Adicionalmente,
 si se utilizan en alguna tarea *downstream*, pueden evaluarse en el desempeño de esa
 tarea particular.
 
