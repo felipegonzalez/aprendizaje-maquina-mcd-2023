@@ -485,7 +485,7 @@ Factorización de matrices para recomendación
 <i class="callout-icon"></i>
 </div>
 <div class="callout-title-container flex-fill">
-¿Por qué funciona la idea de factores latentes?**
+¿Por qué funciona la idea de factores latentes?
 </div>
 </div>
 <div class="callout-body-container callout-body">
@@ -522,10 +522,10 @@ X \approx UV^t
 \]</span> Ahora supongamos que conocemos <span class="math inline">\(V_1\)</span>. Si este es el caso, entonces queremos resolver para <span class="math inline">\(U_1\)</span>: <span class="math display">\[ \min_{U_1}|| X - U_1V_1^t||_{obs}^2\]</span> Como <span class="math inline">\(V_1^t\)</span> están fijas, este es un problema de mínimos cuadrados usual, y puede resolverse analíticamente (o usar descenso en gradiente, que es simple de calcular de forma analítica) para encontrar <span class="math inline">\(U_1\)</span>. Una vez que encontramos <span class="math inline">\(U_1\)</span>, la fijamos, e intentamos ahora resolver para <span class="math inline">\(V\)</span>:</p>
 <p><span class="math display">\[ \min_{V_2}|| X - U_1V_2^t||_{obs}^2\]</span> Y una vez que encontramos <span class="math inline">\(V_2\)</span> resolvemos</p>
 <p><span class="math display">\[ \min_{U_2}|| X - U_2V_2^t||_{obs}^2\]</span></p>
-<p>Continuamos este proceso hasta encontrar un mínimo local o hasta cierto número de iteraciones. Para inicializar <span class="math inline">\(V_1\)</span>, en <span class="citation" data-cites="alsreg">(<a href="99-referencias.html#ref-alsreg" role="doc-biblioref"><strong>alsreg?</strong></a>)</span> se recomienda tomar como primer renglón el promedio de las calificaciones de las películas, y el resto números aleatorios chicos (por ejemplo <span class="math inline">\(U(0,1)\)</span>). También pueden inicializarse con números aleatorios chicos las dos matrices.</p>
+<p>Continuamos este proceso hasta encontrar un mínimo local o hasta cierto número de iteraciones. Para inicializar <span class="math inline">\(V_1\)</span>, en <span class="citation" data-cites="alsreg">(<a href="99-referencias.html#ref-alsreg" role="doc-biblioref">Zhou et&nbsp;al. 2008</a>)</span> se recomienda tomar como primer renglón el promedio de las calificaciones de las películas, y el resto números aleatorios chicos (por ejemplo <span class="math inline">\(U(0,1)\)</span>). También pueden inicializarse con números aleatorios chicos las dos matrices.</p>
 <section id="mínimos-cuadrados-alternados-con-regularización" class="level3" data-number="16.3.1">
 <h3 data-number="16.3.1" class="anchored" data-anchor-id="mínimos-cuadrados-alternados-con-regularización"><span class="header-section-number">16.3.1</span> Mínimos cuadrados alternados con regularización</h3>
-<p>Para agregar regularización y lidiar con los datos ralos, podemos incluir un coeficiente adicional. Minimizamos entonces (como en <span class="citation" data-cites="alsreg">(<a href="99-referencias.html#ref-alsreg" role="doc-biblioref"><strong>alsreg?</strong></a>)</span>):</p>
+<p>Para agregar regularización y lidiar con los datos ralos, podemos incluir un coeficiente adicional. Minimizamos entonces (como en <span class="citation" data-cites="alsreg">(<a href="99-referencias.html#ref-alsreg" role="doc-biblioref">Zhou et&nbsp;al. 2008</a>)</span>):</p>
 <p><span class="math display">\[\min_{U,V}\sum_{(i,j)\, obs} (x_{ij}-u_i^tv_j)^2 +
 \lambda \left ( \sum_i n_{i}||u_i||^2 + \sum_j m_{j} ||v_j||^2 \right)\]</span></p>
 <p>y modificamos de manera correspondiente cada paso de mínimos cuadrados mostrado arriba. <span class="math inline">\(n_{i}\)</span> es el número de evaluaciones del usuario <span class="math inline">\(i\)</span>, y <span class="math inline">\(m_j\)</span> es el número de evaluaciones de la película <span class="math inline">\(j\)</span>.</p>
@@ -535,12 +535,12 @@ X \approx UV^t
 <li>Nótese también que los pesos <span class="math inline">\(n_i\)</span> y <span class="math inline">\(m_j\)</span> en esta regularización hace comparables el término que aparece en la suma de los residuales al cuadrado (la primera suma), y el término de regularización: por ejemplo, si el usuario <span class="math inline">\(i\)</span> hizo <span class="math inline">\(n_i\)</span> evaluaciones, entonces habrá <span class="math inline">\(n_i\)</span> términos en la suma de la izquierda. Lo mismo podemos decir acerca de las películas.</li>
 <li>Este no es el único término de regularización posible. Por ejemplo, podríamos <em>no</em> usar los pesos <span class="math inline">\(n_i\)</span> y <span class="math inline">\(m_j\)</span>, y obtendríamos un esquema razonable también, donde hay más regularización relativa para usuarios/películas que tengan pocas evaluaciones.</li>
 </ul>
-<p>Este método está implementado en <a href="https://spark.apache.org/docs/3.0.0/mllib-collaborative-filtering.html">spark</a>. La implementación está basada parcialmente en <span class="citation" data-cites="alsreg">(<a href="99-referencias.html#ref-alsreg" role="doc-biblioref"><strong>alsreg?</strong></a>)</span>. La inicialización es diferente en spark, ver <a href="https://github.com/apache/spark/blob/v3.0.0/mllib/src/main/scala/org/apache/spark/ml/recommendation/ALS.scala">el código</a>, donde cada renglón se inicializa con un vector de <span class="math inline">\(N(0,1)\)</span> normalizado.</p>
+<p>Este método está implementado en <a href="https://spark.apache.org/docs/3.0.0/mllib-collaborative-filtering.html">spark</a>. La implementación está basada parcialmente en <span class="citation" data-cites="alsreg">(<a href="99-referencias.html#ref-alsreg" role="doc-biblioref">Zhou et&nbsp;al. 2008</a>)</span>. La inicialización es diferente en spark, ver <a href="https://github.com/apache/spark/blob/v3.0.0/mllib/src/main/scala/org/apache/spark/ml/recommendation/ALS.scala">el código</a>, donde cada renglón se inicializa con un vector de <span class="math inline">\(N(0,1)\)</span> normalizado.</p>
 </section>
 </section>
 <section id="retroalimentación-implícita" class="level2" data-number="16.4">
 <h2 data-number="16.4" class="anchored" data-anchor-id="retroalimentación-implícita"><span class="header-section-number">16.4</span> Retroalimentación implícita</h2>
-<p>Esta sección está basada en <span class="citation" data-cites="recomendacion-implicita">(<a href="99-referencias.html#ref-recomendacion-implicita" role="doc-biblioref"><strong>recomendacion-implicita?</strong></a>)</span>.</p>
+<p>Esta sección está basada en <span class="citation" data-cites="recomendacion-implicita">(<a href="99-referencias.html#ref-recomendacion-implicita" role="doc-biblioref">Hu, Koren, y Volinsky 2008</a>)</span>.</p>
 <p>En el ejemplo que vimos arriba, la retroalimentación es expícita en el sentido de que los usuarios califican los artículos (<span class="math inline">\(1-\)</span> no me gustó nada, hasta <span class="math inline">\(5-\)</span> me gustó mucho). Sin embargo, es común encontrar casos donde no existe esta retroalimentación explícita, y solo tenemos medidas del gusto implícito, por ejemplo:</p>
 <ul>
 <li>Cuántas veces un usuario ha pedido un cierto artículo.</li>
@@ -581,22 +581,21 @@ X \approx UV^t
 </div>
 <p>Quiséramos encontrar una manera de considerar los 0’s como información más suave (es decir, alguien puede tener valores bajos de interacción con una película, pero esto no implica necesariamente que no sea preferida). Esto implica que es más importante ajustar los valores altos del indicador implícito de preferencia.</p>
 <hr>
-<p>Una solución propuesta en <span class="citation" data-cites="recomendacion-implicita">(<a href="99-referencias.html#ref-recomendacion-implicita" role="doc-biblioref"><strong>recomendacion-implicita?</strong></a>)</span> (e implementada en spark) es darle menos importancia al valor <span class="math inline">\(r_{ij}\)</span> en la construcción de los factores latentes, especialmente si tiene valores bajos.</p>
+<p>Una solución propuesta en <span class="citation" data-cites="recomendacion-implicita">(<a href="99-referencias.html#ref-recomendacion-implicita" role="doc-biblioref">Hu, Koren, y Volinsky 2008</a>)</span> (e implementada en spark) es darle menos importancia al valor <span class="math inline">\(r_{ij}\)</span> en la construcción de los factores latentes, especialmente si tiene valores bajos.</p>
 <p>Para hacer esto, primero definimos la variable de preferencia</p>
 <p><span class="math display">\[p_{ij} =
 \begin{cases}
 1, &amp;\mbox{si } r_{ij}&gt;0,\\
 0, &amp;\mbox{si } r_{ij}=0.\\
 \end{cases}\]</span></p>
-<p>Esta variable <span class="math inline">\(p_{ij}\)</span>, cuando vale uno, indica algún nivel de confianza en la preferencia. ¿Pero qué tanto valor debemos darle a esta preferencia? Definimos la confianza como <span class="math display">\[c_{ij} = 1+ \alpha r_{ui},\]</span> donde <span class="math inline">\(\alpha\)</span> es un parámetro que hay que afinar (por ejemplo <span class="math inline">\(\alpha\)</span> entre <span class="math inline">\(1\)</span> y <span class="math inline">\(50\)</span>). Para predicciones de vistas de TV, en <span class="citation" data-cites="recomendacion-implicita">(<a href="99-referencias.html#ref-recomendacion-implicita" role="doc-biblioref"><strong>recomendacion-implicita?</strong></a>)</span> utilizan <span class="math inline">\(\alpha = 40\)</span>, donde <span class="math inline">\(r_{ij}\)</span> es el número de veces que el usuario ha visto un programa (contando vistas parciales, así que es un número real).</p>
+<p>Esta variable <span class="math inline">\(p_{ij}\)</span>, cuando vale uno, indica algún nivel de confianza en la preferencia. ¿Pero qué tanto valor debemos darle a esta preferencia? Definimos la confianza como <span class="math display">\[c_{ij} = 1+ \alpha r_{ui},\]</span> donde <span class="math inline">\(\alpha\)</span> es un parámetro que hay que afinar (por ejemplo <span class="math inline">\(\alpha\)</span> entre <span class="math inline">\(1\)</span> y <span class="math inline">\(50\)</span>). Para predicciones de vistas de TV, en <span class="citation" data-cites="recomendacion-implicita">(<a href="99-referencias.html#ref-recomendacion-implicita" role="doc-biblioref">Hu, Koren, y Volinsky 2008</a>)</span> utilizan <span class="math inline">\(\alpha = 40\)</span>, donde <span class="math inline">\(r_{ij}\)</span> es el número de veces que el usuario ha visto un programa (contando vistas parciales, así que es un número real).</p>
 <p>La función objetivo (sin regularización) se define como</p>
-<p><span class="math display">\[\begin{equation}
+<p><span id="eq-implicita"><span class="math display">\[
 L =  \sum_{(i,j)} c_{ij}(p_{ij}  - \sum_{l=1}^k u_{i,l}v_{j,l})^2
-(#eq:implicita)
-\end{equation}\]</span></p>
+\tag{16.1}\]</span></span></p>
 <p>Nótese que :</p>
 <ul>
-<li>Cuando <span class="math inline">\(c_ij\)</span> es alta (porque <span class="math inline">\(r_{i,j}\)</span> es alta), para minimizar esta cantidad tenemos que hacer la predicción de $p_{ij}cercana a 1, pues el error se multiplica por <span class="math inline">\(c_{ij}\)</span>. Sin embargo,</li>
+<li>Cuando <span class="math inline">\(c_ij\)</span> es alta (porque <span class="math inline">\(r_{i,j}\)</span> es alta), para minimizar esta cantidad tenemos que hacer la predicción de <span class="math inline">\(p_{ij}\)</span> cercana a 1, pues el error se multiplica por <span class="math inline">\(c_{ij}\)</span>. Sin embargo,</li>
 <li>Cuando <span class="math inline">\(r_{i,j}\)</span> es bajo, no es tan importante ajustar esta información con precisión: si <span class="math inline">\(p_{ij} = 1\)</span>, puede ser que <span class="math inline">\(\sum_{l=1}^k u_{i,l}v_{j,l}\)</span> sea muy bajo, y si <span class="math inline">\(p_{ij}=0\)</span>, puede ser que <span class="math inline">\(\sum_{l=1}^k u_{i,l}v_{j,l}\)</span> sea cercano a 1 sin afectar tanto el error.</li>
 <li>Esto permite que en el ajuste podamos descubrir artículos con <span class="math inline">\(p_{ij}\)</span> alta para algún usuario, aún cuando <span class="math inline">\(r_{ij}\)</span> es cero o muy chico.</li>
 </ul>
@@ -625,7 +624,7 @@ L =  \sum_{(i,j)} c_{ij}(p_{ij}  - \sum_{l=1}^k u_{i,l}v_{j,l})^2
 <span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>opt_exp <span class="ot">&lt;-</span> <span class="fu">optim</span>(<span class="at">par =</span> uv_inicial, error_explicito, <span class="at">method =</span> <span class="st">"BFGS"</span>)</span>
 <span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>opt_exp<span class="sc">$</span>par[<span class="dv">7</span><span class="sc">:</span><span class="dv">10</span>]</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>[1] 11.61039230 14.38951022  3.64758323  0.09367983</code></pre>
+<pre><code>[1] 11.32636293 14.03753092  3.55842584  0.09139421</code></pre>
 </div>
 <div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="fu">t</span>(<span class="fu">t</span>(opt_exp<span class="sc">$</span>par[<span class="dv">1</span><span class="sc">:</span><span class="dv">6</span>])) <span class="sc">%*%</span> <span class="fu">t</span>(opt_exp<span class="sc">$</span>par[<span class="dv">7</span><span class="sc">:</span><span class="dv">10</span>]) <span class="sc">|&gt;</span> <span class="fu">round</span>()</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
@@ -644,7 +643,7 @@ L =  \sum_{(i,j)} c_{ij}(p_{ij}  - \sum_{l=1}^k u_{i,l}v_{j,l})^2
 <div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>opt_imp <span class="ot">&lt;-</span> <span class="fu">optim</span>(<span class="at">par =</span> uv_inicial, error_implicito, <span class="at">method =</span> <span class="st">"BFGS"</span>)</span>
 <span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>opt_imp<span class="sc">$</span>par[<span class="dv">7</span><span class="sc">:</span><span class="dv">10</span>]</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>[1] 1.319968 1.322077 1.316455 0.819997</code></pre>
+<pre><code>[1] 1.524054 1.526493 1.519993 0.946767</code></pre>
 </div>
 <div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="fu">t</span>(<span class="fu">t</span>(opt_imp<span class="sc">$</span>par[<span class="dv">1</span><span class="sc">:</span><span class="dv">6</span>])) <span class="sc">%*%</span> <span class="fu">t</span>(opt_imp<span class="sc">$</span>par[<span class="dv">7</span><span class="sc">:</span><span class="dv">10</span>]) <span class="sc">|&gt;</span> <span class="fu">round</span>(<span class="dv">2</span>)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
@@ -1074,7 +1073,7 @@ _ss_  0.04169529</code></pre>
 <h2 data-number="17.3" class="anchored" data-anchor-id="modelos-de-word2vec"><span class="header-section-number">17.3</span> Modelos de word2vec</h2>
 <p>En estos ejemplos veremos cómo producir embeddings de palabras que son precursores de embeddings más refinados como los producidos por Modelos grandes de lenguajes (LLMs). Ver por ejemplo <a href="https://platform.openai.com/docs/guides/embeddings/what-are-embeddings">aquí</a>.</p>
 <p>Si lo que principalmente nos interesa es obtener una representación vectorial de palabras, es posible simplificar considerablemente el modelo de arriba o LLMs para poder entrenarlos mucho más rápido, y obtener una representación que en muchas tareas se desempeña bien (<span class="citation" data-cites="word2vec">(<a href="99-referencias.html#ref-word2vec" role="doc-biblioref">Mikolov et&nbsp;al. 2013</a>)</span>).</p>
-<p>Hay dos ideas básicas que se pueden usar para reducir la complejidad del entrenamiento (ver más en <span class="citation" data-cites="goodfellow">(<a href="99-referencias.html#ref-goodfellow" role="doc-biblioref"><strong>goodfellow?</strong></a>)</span> y <span class="citation" data-cites="word2vec">(<a href="99-referencias.html#ref-word2vec" role="doc-biblioref">Mikolov et&nbsp;al. 2013</a>)</span>:</p>
+<p>Hay dos ideas básicas que se pueden usar para reducir la complejidad del entrenamiento (ver más en <span class="citation" data-cites="word2vec">(<a href="99-referencias.html#ref-word2vec" role="doc-biblioref">Mikolov et&nbsp;al. 2013</a>)</span>):</p>
 <ul>
 <li>Eliminar la segunda capa oculta: modelo de <em>bag-of-words</em> continuo y modelo de <em>skip-gram</em>.</li>
 <li>Cambiar la función objetivo (minimizar devianza/maximizar verosimilitud) por una más simple, mediante un truco que se llama <em>negative sampling</em>.</li>
@@ -1135,7 +1134,7 @@ _ss_  0.04169529</code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code>
 ── R CMD build ─────────────────────────────────────────────────────────────────
-* checking for file ‘/tmp/RtmpnxvROi/remotes65625bacaea4/bmschmidt-wordVectors-ad127c1/DESCRIPTION’ ... OK
+* checking for file ‘/tmp/RtmpptQpA3/remotes8fbc1db72913/bmschmidt-wordVectors-ad127c1/DESCRIPTION’ ... OK
 * preparing ‘wordVectors’:
 * checking DESCRIPTION meta-information ... OK
 * cleaning src
@@ -1189,7 +1188,7 @@ _ss_  0.04169529</code></pre>
 <pre><code>Beginning tokenization to text file at ./cache/noticias_w2v.txt</code></pre>
 </div>
 <div class="cell-output cell-output-stderr">
-<pre><code>Prepping /tmp/RtmpnxvROi/file65625735b8ec</code></pre>
+<pre><code>Prepping /tmp/RtmpptQpA3/file8fbc9d92b0a</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Starting training using file ./cache/noticias_w2v.txt
@@ -1778,7 +1777,7 @@ Words written: 21000K</code></pre>
            [,1]       [,2]        [,3]       [,4]        [,5]       [,6]
 [1,] -0.2301596 -0.2543171 -0.04071745 -0.2292878 0.004059255 -0.2283908
 attr(,".cache")
-&lt;environment: 0x5595ea1d3598&gt;</code></pre>
+&lt;environment: 0x560a60e79388&gt;</code></pre>
 </div>
 </div>
 <p>que es un vector en el espacio de representación de palabras. Ahora sumamos este vector a un sustantivo en singular, y vemos qué palabras están cercas de esta “palabra sintética”:</p>
@@ -1846,7 +1845,7 @@ attr(,".cache")
 </section>
 <section id="evaluación-de-calidad-de-modelos" class="level3 unnumbered">
 <h3 class="unnumbered anchored" data-anchor-id="evaluación-de-calidad-de-modelos">Evaluación de calidad de modelos</h3>
-<p>La evaluación de estas aplicaciones puede hacerse por ejemplo, con tareas de analogía, con listas de singular/plurales, de adjetivos/adverbios, masculino/femenino, etc (ver <span class="citation" data-cites="word2vec">(<a href="99-referencias.html#ref-word2vec" role="doc-biblioref">Mikolov et&nbsp;al. 2013</a>)</span>), (ver por ejemplo https://github.com/tmikolov/word2vec/blob/master/questions-words.txt). Adicionalmente, si se utilizan en alguna tarea <em>downstream</em>, pueden evaluarse en el desempeño de esa tarea particular.</p>
+<p>La evaluación de estas aplicaciones puede hacerse por ejemplo, con tareas de analogía, con listas de singular/plurales, de adjetivos/adverbios, masculino/femenino, etc (ver <span class="citation" data-cites="word2vec">(<a href="99-referencias.html#ref-word2vec" role="doc-biblioref">Mikolov et&nbsp;al. 2013</a>)</span>), ver por ejemplo <a href="https://github.com/tmikolov/word2vec/blob/master/questions-words.txt">aquí</a>. Adicionalmente, si se utilizan en alguna tarea <em>downstream</em>, pueden evaluarse en el desempeño de esa tarea particular.</p>
 <p><strong>Ejercicio</strong>: ¿cómo usarías esta geometría para encontrar el país en el que está una capital dada?</p>
 <p><strong>Observación</strong>: falta afinar los parámetros en este modelo. Puedes probar cambiando negative sampling (por ejemplo, incrementa a 40), el número de vectores (50-200, por ejemplo), e incrementando <em>window</em> y el número de iteraciones.</p>
 <p>Considera también un modelo preentrenado mucho más grande como <a href="https://github.com/uchile-nlp/spanish-word-embeddings">este</a>. Puedes bajar los vectores de palabras y repetir las tareas mostradas (el formato bin es estándar para la implementación que usamos de word2vec).</p>
@@ -1856,8 +1855,14 @@ attr(,".cache")
 <div id="ref-bengio" class="csl-entry" role="listitem">
 Bengio, Yoshua, Réjean Ducharme, Pascal Vincent, y Christian Janvin. 2003. <span>«A Neural Probabilistic Language Model»</span>. <em>J. Mach. Learn. Res.</em> 3 (marzo): 1137-55. <a href="http://dl.acm.org/citation.cfm?id=944919.944966">http://dl.acm.org/citation.cfm?id=944919.944966</a>.
 </div>
+<div id="ref-recomendacion-implicita" class="csl-entry" role="listitem">
+Hu, Y., Y. Koren, y C. Volinsky. 2008. <span>«Collaborative Filtering for Implicit Feedback Datasets»</span>. En <em>2008 Eighth IEEE International Conference on Data Mining</em>, 263-72. <a href="https://doi.org/10.1109/ICDM.2008.22">https://doi.org/10.1109/ICDM.2008.22</a>.
+</div>
 <div id="ref-word2vec" class="csl-entry" role="listitem">
 Mikolov, Tomas, Kai Chen, Greg Corrado, y Jeffrey Dean. 2013. <span>«Efficient Estimation of Word Representations in Vector Space»</span>. <em>CoRR</em> abs/1301.3781. <a href="http://arxiv.org/abs/1301.3781">http://arxiv.org/abs/1301.3781</a>.
+</div>
+<div id="ref-alsreg" class="csl-entry" role="listitem">
+Zhou, Yunhong, Dennis Wilkinson, Robert Schreiber, y Rong Pan. 2008. <span>«Large-Scale Parallel Collaborative Filtering for the Netflix Prize»</span>. En <em>Algorithmic Aspects in Information and Management</em>, editado por Rudolf Fleischer y Jinhui Xu, 337-48. Berlin, Heidelberg: Springer Berlin Heidelberg.
 </div>
 </div>
 </section>
