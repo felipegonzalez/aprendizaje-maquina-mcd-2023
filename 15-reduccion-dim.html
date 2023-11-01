@@ -301,6 +301,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   </ul></li>
   <li><a href="#componentes-principales" id="toc-componentes-principales" class="nav-link" data-scroll-target="#componentes-principales"><span class="header-section-number">15.9</span> Componentes principales</a>
   <ul class="collapse">
+  <li><a href="#ejemplo-5" id="toc-ejemplo-5" class="nav-link" data-scroll-target="#ejemplo-5">Ejemplo</a></li>
   <li><a href="#varianza-en-componentes-principales" id="toc-varianza-en-componentes-principales" class="nav-link" data-scroll-target="#varianza-en-componentes-principales">Varianza en componentes principales</a></li>
   <li><a href="#centrar-o-no-centrar-por-columna" id="toc-centrar-o-no-centrar-por-columna" class="nav-link" data-scroll-target="#centrar-o-no-centrar-por-columna">¿Centrar o no centrar por columna?</a></li>
   <li><a href="#ejemplo-resultados-similares" id="toc-ejemplo-resultados-similares" class="nav-link" data-scroll-target="#ejemplo-resultados-similares">Ejemplo: resultados similares</a></li>
@@ -609,7 +610,7 @@ Private Education    0.341  1.80  3.64</code></pre>
 <pre><code>Warning: `qplot()` was deprecated in ggplot2 3.4.0.</code></pre>
 </div>
 <div class="cell-output-display">
-<p><img src="15-reduccion-dim_files/figure-html/unnamed-chunk-13-1.png" class="img-fluid" width="384"></p>
+<p><img src="15-reduccion-dim_files/figure-html/unnamed-chunk-14-1.png" class="img-fluid" width="384"></p>
 </div>
 <div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="fu">round</span>(R,<span class="dv">2</span>)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
@@ -715,7 +716,7 @@ Private Education   -0.46 -0.38  0.36</code></pre>
 <span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_hline</span>(<span class="at">yintercept =</span> <span class="dv">0</span>, <span class="at">colour=</span><span class="st">'red'</span>) <span class="sc">+</span> <span class="fu">xlab</span>(<span class="st">'Ciencia ficción'</span>)<span class="sc">+</span></span>
 <span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ylab</span>(<span class="st">'Mainstream'</span>)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
-<p><img src="15-reduccion-dim_files/figure-html/unnamed-chunk-17-1.png" class="img-fluid" width="480"></p>
+<p><img src="15-reduccion-dim_files/figure-html/unnamed-chunk-18-1.png" class="img-fluid" width="480"></p>
 </div>
 </div>
 <p>Y también podemos graficar las películas</p>
@@ -725,7 +726,7 @@ Private Education   -0.46 -0.38  0.36</code></pre>
 <span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_hline</span>(<span class="at">yintercept =</span> <span class="dv">0</span>, <span class="at">colour=</span><span class="st">'red'</span>)<span class="sc">+</span> <span class="fu">xlab</span>(<span class="st">'Ciencia ficción'</span>)<span class="sc">+</span></span>
 <span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ylab</span>(<span class="st">'Mainstream'</span>) <span class="sc">+</span> <span class="fu">geom_text</span>()</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
-<p><img src="15-reduccion-dim_files/figure-html/unnamed-chunk-18-1.png" class="img-fluid" width="480"></p>
+<p><img src="15-reduccion-dim_files/figure-html/unnamed-chunk-19-1.png" class="img-fluid" width="480"></p>
 </div>
 </div>
 <p>¿Cómo calculariamos ahora la afinidad de una persona por una película? Necesitamos calcular (dando el mismo peso a las dos dimensiones) <span class="math display">\[X_{i,j} = \sigma_1 u_{1,i} v_{1,j} + \sigma_2 u_{2,i} v_{2,j}\]</span></p>
@@ -927,7 +928,7 @@ Tip
 <pre><code>`geom_smooth()` using formula = 'y ~ x'</code></pre>
 </div>
 <div class="cell-output-display">
-<p><img src="15-reduccion-dim_files/figure-html/unnamed-chunk-24-1.png" class="img-fluid" width="384"></p>
+<p><img src="15-reduccion-dim_files/figure-html/unnamed-chunk-25-1.png" class="img-fluid" width="384"></p>
 </div>
 </div>
 <p>Y también</p>
@@ -938,7 +939,7 @@ Tip
 <pre><code>`geom_smooth()` using formula = 'y ~ x'</code></pre>
 </div>
 <div class="cell-output-display">
-<p><img src="15-reduccion-dim_files/figure-html/unnamed-chunk-25-1.png" class="img-fluid" width="384"></p>
+<p><img src="15-reduccion-dim_files/figure-html/unnamed-chunk-26-1.png" class="img-fluid" width="384"></p>
 </div>
 </div>
 <p>Ahora normalizamos <span class="math inline">\(u\)</span> y <span class="math inline">\(v\)</span> para encontrar <span class="math inline">\(\sigma\)</span>:</p>
@@ -970,7 +971,8 @@ Private Education   123.4799</code></pre>
 <p><span class="math display">\[||X-\sigma uv^t||_F^2 = \mathrm{Tr} ((X-\sigma uv^t)(X-\sigma uv^t)^t)\]</span></p>
 <p>que es igual a</p>
 <p><span class="math display">\[ \mathrm{Tr} (XX^t) - 2\sigma \mathrm{Tr} ( X(vu^t)) + \sigma^2\mathrm{Tr}(uv^tvu^t)\]</span></p>
-<p>Como <span class="math inline">\(u\)</span> y <span class="math inline">\(v\)</span> tienen norma 1, tenemos que <span class="math inline">\(v^tv=1\)</span>, y <span class="math inline">\(\textrm{Tr(uu^t)} = \sum_i u_i^2 = 1\)</span>. Adicionalmente, usando el hecho de que <span class="math inline">\(Xv=\sigma u\)</span> obtenemos</p>
+<p>Como <span class="math inline">\(u\)</span> y <span class="math inline">\(v\)</span> tienen norma 1, tenemos que <span class="math inline">\(v^tv=1\)</span>, y <span class="math inline">\(Tr(uu^t) = \sum_i u_i^2 = 1\)</span>.</p>
+<p>Adicionalmente, usando el hecho de que <span class="math inline">\(Xv=\sigma u\)</span> obtenemos</p>
 <p><span class="math display">\[ ||X-\sigma uv^t||_F^2 = \mathrm{Tr} (XX^t) - \sigma^2\]</span> que es una igualdad interesante: quiere decir que <strong>la mejor aproximación se encuentra encontrando el par de valores propios tal que el valor propio asociado <span class="math inline">\(\sigma\)</span> tiene el valor <span class="math inline">\(\sigma^2\)</span> más grande posible.</strong> La cantidad a la cantidad <span class="math inline">\(\mathrm{Tr} (XX^t)\)</span> está dada por <span class="math display">\[\mathrm{Tr} (XX^t) = ||X||_F^2 = \sum_{i,j} X_{i,j}^2,\]</span> que es una medida del “tamaño” de la matriz <span class="math inline">\(X\)</span>.</p>
 </section>
 </section>
@@ -1011,7 +1013,7 @@ Resumen de vectores singulares
 <span id="cb56-6"><a href="#cb56-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_vline</span>(<span class="at">xintercept =</span> <span class="dv">0</span>, <span class="at">colour=</span><span class="st">'red'</span>) <span class="sc">+</span></span>
 <span id="cb56-7"><a href="#cb56-7" aria-hidden="true" tabindex="-1"></a> <span class="fu">geom_hline</span>(<span class="at">yintercept =</span> <span class="dv">0</span>, <span class="at">colour=</span><span class="st">'red'</span>)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
-<p><img src="15-reduccion-dim_files/figure-html/unnamed-chunk-28-1.png" class="img-fluid" width="672"></p>
+<p><img src="15-reduccion-dim_files/figure-html/unnamed-chunk-29-1.png" class="img-fluid" width="672"></p>
 </div>
 </div>
 <p>Hacemos descomposición en valores singulares y extraemos la primera dimensión:</p>
@@ -1037,7 +1039,7 @@ Resumen de vectores singulares
 ℹ Please use `linewidth` instead.</code></pre>
 </div>
 <div class="cell-output-display">
-<p><img src="15-reduccion-dim_files/figure-html/unnamed-chunk-30-1.png" class="img-fluid" width="672"></p>
+<p><img src="15-reduccion-dim_files/figure-html/unnamed-chunk-31-1.png" class="img-fluid" width="672"></p>
 </div>
 </div>
 <ul>
@@ -1055,7 +1057,7 @@ Resumen de vectores singulares
 <li><span class="math inline">\((u_2, v_2)\)</span> tienen que ser vectores propios derecho e izquierdo asociados a <span class="math inline">\(\sigma_2\geq 0\)</span>.</li>
 </ul>
 <p>Usando el hecho de que <span class="math inline">\(v_1\)</span> y <span class="math inline">\(v_2\)</span> son ortogonales, podemos podemos demostrar igual que arriba que</p>
-<p><span class="math display">\[|| X - \sigma_1 u_1 v_1^t - \sigma_2 u_2 v_2^{t} ||_F^2 = \textrm{Tr} (XX^t) - (\sigma_1^2 + \sigma_2^2) = ||X||_F^2 - (\sigma_1^2 + \sigma_2^2)\]</span> De modo que obtenemos la mejor aproximación escogiendo los dos valores de <span class="math inline">\(\sigma_1^2\)</span> y <span class="math inline">\(\sigma_2^2\)</span> más grandes para los que hay solución de @ref(eq:valor-propio-derecho) y @ref(eq:valor-propio-izquierdo) y</p>
+<p><span class="math display">\[|| X - \sigma_1 u_1 v_1^t - \sigma_2 u_2 v_2^{t} ||_F^2 = \textrm{Tr} (XX^t) - (\sigma_1^2 + \sigma_2^2) = ||X||_F^2 - (\sigma_1^2 + \sigma_2^2)\]</span> De modo que obtenemos la mejor aproximación escogiendo los dos valores de <span class="math inline">\(\sigma_1^2\)</span> y <span class="math inline">\(\sigma_2^2\)</span> más grandes para los que hay solución de <span class="citation" data-cites="ref">(<a href="99-referencias.html#ref-ref" role="doc-biblioref"><strong>ref?</strong></a>)</span>(eq-valor-propio-derecho) y <span class="citation" data-cites="ref">(<a href="99-referencias.html#ref-ref" role="doc-biblioref"><strong>ref?</strong></a>)</span>(eq-valor-propio-izquierdo).</p>
 <p><strong>Observaciones</strong>:</p>
 <ul>
 <li>Aunque aquí usamos un argumento incremental o <em>greedy</em> (comenzando con la mejor aproximación de rango 1), es posible demostrar que la mejor aproximación de rango 2 se puede construir de este modo. Ver por ejemplo <a href="https://www.cs.cmu.edu/~venkatg/teaching/CStheory-infoage/book-chapter-4.pdf">estas notas</a>.</li>
@@ -1085,7 +1087,7 @@ Aproximación de matrices mediante valores singulares
 </div>
 <p><strong>Observaciones</strong>:</p>
 <ol type="1">
-<li><p>Normalmente no optimizamos como hicimos en el ejemplo de la matriz de gastos para encontrar las aproximación de rango bajo, sino que se usan algoritmos para encontrar vectores propios de <span class="math inline">\(X^tX\)</span> (que son las <span class="math inline">\(v\)</span>’s), o más generalmente algoritmos basados en álgebra lineal que intentan encontrar directamente los pares de vectores (u_i, v_i), y otros algoritmos numéricos (por ejemplo, basados en iteraciones).</p></li>
+<li><p>Normalmente no optimizamos como hicimos en el ejemplo de la matriz de gastos para encontrar las aproximación de rango bajo, sino que se usan algoritmos para encontrar vectores propios de <span class="math inline">\(X^tX\)</span> (que son las <span class="math inline">\(v\)</span>’s), o más generalmente algoritmos basados en álgebra lineal que intentan encontrar directamente los pares de vectores <span class="math inline">\((u_i, v_i)\)</span>, y otros algoritmos numéricos (por ejemplo, iterativos).</p></li>
 <li><p>Un resultado interesante (que faltaría por demostrar) es que si tomamos la aproximación de rango <span class="math inline">\(p\)</span> (cuando <span class="math inline">\(p\leq n\)</span>), obtenemos que <span class="math display">\[X= \sigma_1 u_1v_1^t + \sigma_2 u_2v_2^t + \ldots \sigma_p u_pv_p^t\]</span> es decir, la aproximación es exacta. Esto es un fraseo del <strong>teorema de descomposición en valores singulares</strong>, que normalmente se expresa de otra forma (ver más adelante).</p></li>
 </ol>
 </section>
@@ -1260,7 +1262,7 @@ Proyecciones
 <span id="cb78-6"><a href="#cb78-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_vline</span>(<span class="at">xintercept =</span> <span class="dv">0</span>, <span class="at">colour=</span><span class="st">'red'</span>) <span class="sc">+</span></span>
 <span id="cb78-7"><a href="#cb78-7" aria-hidden="true" tabindex="-1"></a> <span class="fu">geom_hline</span>(<span class="at">yintercept =</span> <span class="dv">0</span>, <span class="at">colour=</span><span class="st">'red'</span>)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
-<p><img src="15-reduccion-dim_files/figure-html/unnamed-chunk-40-1.png" class="img-fluid" width="672"></p>
+<p><img src="15-reduccion-dim_files/figure-html/unnamed-chunk-41-1.png" class="img-fluid" width="672"></p>
 </div>
 </div>
 <p>Hacemos descomposición en valores singulares y graficamos</p>
@@ -1298,7 +1300,7 @@ Proyecciones
 <span id="cb83-5"><a href="#cb83-5" aria-hidden="true" tabindex="-1"></a>               <span class="at">arrow =</span> <span class="fu">arrow</span>(<span class="at">length =</span> <span class="fu">unit</span>(<span class="fl">0.3</span>,<span class="st">"cm"</span>)))  <span class="sc">+</span></span>
 <span id="cb83-6"><a href="#cb83-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">coord_equal</span>()</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
-<p><img src="15-reduccion-dim_files/figure-html/unnamed-chunk-42-1.png" class="img-fluid" width="672"></p>
+<p><img src="15-reduccion-dim_files/figure-html/unnamed-chunk-43-1.png" class="img-fluid" width="672"></p>
 </div>
 </div>
 <ul>
@@ -1335,7 +1337,7 @@ Proyecciones
 <span id="cb88-10"><a href="#cb88-10" aria-hidden="true" tabindex="-1"></a>                <span class="at">arrow =</span> <span class="fu">arrow</span>(<span class="at">length =</span> <span class="fu">unit</span>(<span class="fl">0.2</span>,<span class="st">"cm"</span>)))  <span class="sc">+</span></span>
 <span id="cb88-11"><a href="#cb88-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">coord_equal</span>()</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
-<p><img src="15-reduccion-dim_files/figure-html/unnamed-chunk-44-1.png" class="img-fluid" width="672"></p>
+<p><img src="15-reduccion-dim_files/figure-html/unnamed-chunk-45-1.png" class="img-fluid" width="672"></p>
 </div>
 </div>
 <div class="callout callout-style-default callout-tip callout-titled">
@@ -1364,7 +1366,7 @@ Tip
 <pre><code>Warning: Using size for a discrete variable is not advised.</code></pre>
 </div>
 <div class="cell-output-display">
-<p><img src="15-reduccion-dim_files/figure-html/unnamed-chunk-45-1.png" class="img-fluid" width="672"></p>
+<p><img src="15-reduccion-dim_files/figure-html/unnamed-chunk-46-1.png" class="img-fluid" width="672"></p>
 </div>
 </div>
 </section>
@@ -1471,7 +1473,7 @@ dbl (1): peli_id
 <span id="cb103-7"><a href="#cb103-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">alpha =</span> <span class="fl">0.15</span>) <span class="sc">+</span> </span>
 <span id="cb103-8"><a href="#cb103-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_text_repel</span>(<span class="at">size =</span> <span class="fl">2.0</span>, <span class="at">max.overlaps =</span> <span class="dv">12</span>) </span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
-<p><img src="15-reduccion-dim_files/figure-html/unnamed-chunk-51-1.png" class="img-fluid" width="672"></p>
+<p><img src="15-reduccion-dim_files/figure-html/unnamed-chunk-52-1.png" class="img-fluid" width="672"></p>
 </div>
 </div>
 <p>¿Qué nombres pondrías a estas dimensiones? Puedes examinar otras.</p>
@@ -1488,7 +1490,7 @@ dbl (1): peli_id
 <pre><code>`stat_bin()` using `bins = 30`. Pick better value with `binwidth`.</code></pre>
 </div>
 <div class="cell-output-display">
-<p><img src="15-reduccion-dim_files/figure-html/unnamed-chunk-52-1.png" class="img-fluid" width="672"></p>
+<p><img src="15-reduccion-dim_files/figure-html/unnamed-chunk-53-1.png" class="img-fluid" width="672"></p>
 </div>
 </div>
 <p>Que podríamos resumir, por ejemplo, con la media de errores absolutos:</p>
@@ -1536,14 +1538,20 @@ Tip
 </section>
 <section id="componentes-principales" class="level2" data-number="15.9">
 <h2 data-number="15.9" class="anchored" data-anchor-id="componentes-principales"><span class="header-section-number">15.9</span> Componentes principales</h2>
-<p>Componentes principales es la descomposición en valores singulares aplicada a una matriz de datos centrada por columna. Esta operación convierte el problema de aproximación de matrices de rango bajo en uno de aproximaciones que buscan explicar la mayoría de la <em>varianza</em> (incluyendo covarianza) de las variables de la matriz de datos <span class="math inline">\(X\)</span>. Consideremos entonces una matriz de datos <span class="math inline">\(X\)</span> de tamaño <span class="math inline">\(n\times p\)</span>. Definimos la <strong>matrix centrada</strong> por columna <span class="math inline">\(\tilde{X}\)</span> , que se calcula como <span class="math display">\[\tilde{X}_{i,j} = X_{i,j} - \mu_j\]</span> donde <span class="math inline">\(\mu_j = \frac{1}{n} \sum_j X_{i,j}\)</span>. - La diferencia en construcción entre Svd y Svd con columnas centradas (componentes principales) es que en Svd las proyecciones se hacen pasando por el origen, pero en componentes principales se hacen a partir del centroide de los datos. ### Ejemplo {-} Veamos primero el último ejemplo simulado que hicimos anterioremnte. Primero centramos los datos por columna:</p>
+<p>Componentes principales es la descomposición en valores singulares aplicada a una matriz de datos centrada por columna. Esta operación convierte el problema de aproximación de matrices de rango bajo en uno de aproximaciones que buscan explicar la mayoría de la <em>varianza</em> (incluyendo covarianza) de las variables de la matriz de datos <span class="math inline">\(X\)</span>. Consideremos entonces una matriz de datos <span class="math inline">\(X\)</span> de tamaño <span class="math inline">\(n\times p\)</span>. Definimos la <strong>matriz centrada</strong> por columna <span class="math inline">\(\tilde{X}\)</span> , que se calcula como <span class="math display">\[\tilde{X}_{i,j} = X_{i,j} - \mu_j\]</span> donde <span class="math inline">\(\mu_j = \frac{1}{n} \sum_j X_{i,j}\)</span>.</p>
+<ul>
+<li>La diferencia en construcción entre Svd y Svd con columnas centradas (componentes principales) es que en Svd las proyecciones se hacen pasando por el origen, pero en componentes principales se hacen a partir del centroide de los datos.</li>
+</ul>
+<section id="ejemplo-5" class="level3 unnumbered">
+<h3 class="unnumbered anchored" data-anchor-id="ejemplo-5">Ejemplo</h3>
+<p>Veamos primero el último ejemplo simulado que hicimos anterioremente. Primero centramos los datos por columna:</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb112"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb112-1"><a href="#cb112-1" aria-hidden="true" tabindex="-1"></a>datos_c <span class="ot">&lt;-</span> <span class="fu">scale</span>(datos <span class="sc">|&gt;</span> <span class="fu">select</span>(<span class="sc">-</span>selec), <span class="at">scale =</span> <span class="cn">FALSE</span>) <span class="sc">|&gt;</span> <span class="fu">as_tibble</span>()</span>
 <span id="cb112-2"><a href="#cb112-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(datos_c, <span class="fu">aes</span>(<span class="at">x=</span>x_1, <span class="at">y=</span>x_2)) <span class="sc">+</span> <span class="fu">geom_point</span>() <span class="sc">+</span></span>
 <span id="cb112-3"><a href="#cb112-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_vline</span>(<span class="at">xintercept =</span> <span class="dv">0</span>, <span class="at">colour=</span><span class="st">'red'</span>) <span class="sc">+</span></span>
 <span id="cb112-4"><a href="#cb112-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_hline</span>(<span class="at">yintercept =</span> <span class="dv">0</span>, <span class="at">colour=</span><span class="st">'red'</span>)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
-<p><img src="15-reduccion-dim_files/figure-html/unnamed-chunk-56-1.png" class="img-fluid" width="672"></p>
+<p><img src="15-reduccion-dim_files/figure-html/unnamed-chunk-57-1.png" class="img-fluid" width="672"></p>
 </div>
 </div>
 <p>Y ahora calculamos la descomposición en valores singulares</p>
@@ -1572,7 +1580,7 @@ Tip
 <span id="cb115-5"><a href="#cb115-5" aria-hidden="true" tabindex="-1"></a>               <span class="at">arrow =</span> <span class="fu">arrow</span>(<span class="at">length =</span> <span class="fu">unit</span>(<span class="fl">0.3</span>,<span class="st">"cm"</span>)))  <span class="sc">+</span></span>
 <span id="cb115-6"><a href="#cb115-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">coord_equal</span>()</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
-<p><img src="15-reduccion-dim_files/figure-html/unnamed-chunk-58-1.png" class="img-fluid" width="672"></p>
+<p><img src="15-reduccion-dim_files/figure-html/unnamed-chunk-59-1.png" class="img-fluid" width="672"></p>
 </div>
 </div>
 <p>Las componentes de las proyecciones de los datos sobre las direcciones principales dan las <strong>componentes principales</strong> (nótese que multiplicamos por los valores singulares):</p>
@@ -1595,7 +1603,7 @@ Tip
 <span id="cb118-3"><a href="#cb118-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_vline</span>(<span class="at">xintercept =</span> <span class="dv">0</span>, <span class="at">colour=</span><span class="st">'red'</span>) <span class="sc">+</span></span>
 <span id="cb118-4"><a href="#cb118-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_hline</span>(<span class="at">yintercept =</span> <span class="dv">0</span>, <span class="at">colour=</span><span class="st">'red'</span>)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
-<p><img src="15-reduccion-dim_files/figure-html/unnamed-chunk-60-1.png" class="img-fluid" width="672"></p>
+<p><img src="15-reduccion-dim_files/figure-html/unnamed-chunk-61-1.png" class="img-fluid" width="672"></p>
 </div>
 </div>
 <p>Este resultado lo podemos obtener directamente usando la función <em>princomp</em></p>
@@ -1617,14 +1625,15 @@ Tip
 <div class="cell" data-fig.asp="0.7">
 <div class="sourceCode cell-code" id="cb121"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb121-1"><a href="#cb121-1" aria-hidden="true" tabindex="-1"></a><span class="fu">qplot</span>(scores[,<span class="dv">1</span>], comps<span class="sc">$</span>V1)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
-<p><img src="15-reduccion-dim_files/figure-html/unnamed-chunk-62-1.png" class="img-fluid" width="384"></p>
+<p><img src="15-reduccion-dim_files/figure-html/unnamed-chunk-63-1.png" class="img-fluid" width="384"></p>
 </div>
 <div class="sourceCode cell-code" id="cb122"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb122-1"><a href="#cb122-1" aria-hidden="true" tabindex="-1"></a><span class="fu">qplot</span>(scores[,<span class="dv">2</span>], <span class="sc">-</span>comps<span class="sc">$</span>V2)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
-<p><img src="15-reduccion-dim_files/figure-html/unnamed-chunk-62-2.png" class="img-fluid" width="384"></p>
+<p><img src="15-reduccion-dim_files/figure-html/unnamed-chunk-63-2.png" class="img-fluid" width="384"></p>
 </div>
 </div>
 <hr>
+</section>
 <section id="varianza-en-componentes-principales" class="level3 unnumbered">
 <h3 class="unnumbered anchored" data-anchor-id="varianza-en-componentes-principales">Varianza en componentes principales</h3>
 <p>Cuando centramos por columna, la svd es un tipo de análisis de la matriz de varianzas y covarianzas de la matriz <span class="math inline">\(X\)</span>, dada por <span class="math display">\[C = \frac{1}{n} \tilde{X}^t \tilde{X}\]</span> (Nota: asegúrate de que entiendes por qué esta es la matriz de varianzas y covarianzas de <span class="math inline">\(X\)</span>).</p>
@@ -1638,9 +1647,14 @@ Componentes principales
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p>Nótese que las proyecciones (que se llaman <strong>componentes principales</strong>) <span class="math inline">\(\tilde{X}v_j = \sigma_j u_j = d_j\)</span> satisfacen que 1. La media de las proyecciones <span class="math inline">\(d_j\)</span> es igual a cero Pues <span class="math display">\[\sigma_j \sum_k {u_{j,k}} = \sum_k \sum_i (\tilde{X}_{k,i})v_{j,i} =
-  \sum_i v_{j,i}\sum_k (\tilde{X}_{k,i}) = 0,\]</span> pues las columnas de <span class="math inline">\(\tilde{X}\)</span> tienen media cero. 2- <span class="math inline">\(\sigma_j^2/n\)</span> es la varianza de la proyección <span class="math inline">\(d_j\)</span>, pues <span class="math display">\[Var(d_j) = \frac{\sigma_j^2}{n} \sum_k (u_{j,k} - 0)^2 = \frac{\sigma_j^2}{n},\]</span> y el vector <span class="math inline">\(u_j\)</span> tienen norma 1. 3. La ortogonalidad de los vectores <span class="math inline">\(u_j\)</span> se interpreta ahora en términos de covarianza: <span class="math display">\[Cov(d_i,d_j) = \frac{1}{n}\sum_{k=1}^n (d_{i,k}-0)(d_{j,k}-0) =
-  \frac{1}{n}\sum_{k=1}^n \sigma_j\sigma_i u_{i,k}u_{j,k} = 0\]</span></p>
+<p>Nótese que las proyecciones (que se llaman <strong>componentes principales</strong>) <span class="math inline">\(\tilde{X}v_j = \sigma_j u_j = d_j\)</span> satisfacen que</p>
+<ol type="1">
+<li><p>La media de las proyecciones <span class="math inline">\(d_j\)</span> es igual a cero Pues <span class="math display">\[\sigma_j \sum_k {u_{j,k}} = \sum_k \sum_i (\tilde{X}_{k,i})v_{j,i} =
+  \sum_i v_{j,i}\sum_k (\tilde{X}_{k,i}) = 0,\]</span> pues las columnas de <span class="math inline">\(\tilde{X}\)</span> tienen media cero.</p></li>
+<li><p><span class="math inline">\(\sigma_j^2/n\)</span> es la varianza de la proyección <span class="math inline">\(d_j\)</span>, pues <span class="math display">\[Var(d_j) = \frac{\sigma_j^2}{n} \sum_k (u_{j,k} - 0)^2 = \frac{\sigma_j^2}{n},\]</span> y el vector <span class="math inline">\(u_j\)</span> tienen norma 1.</p></li>
+<li><p>La ortogonalidad de los vectores <span class="math inline">\(u_j\)</span> se interpreta ahora en términos de covarianza: <span class="math display">\[Cov(d_i,d_j) = \frac{1}{n}\sum_{k=1}^n (d_{i,k}-0)(d_{j,k}-0) =
+  \frac{1}{n}\sum_{k=1}^n \sigma_j\sigma_i u_{i,k}u_{j,k} = 0\]</span></p></li>
+</ol>
 </div>
 </div>
 <p>Así que</p>
@@ -1789,7 +1803,7 @@ Cumulative Proportion  0.99050915 1.000000000</code></pre>
 increasing max.overlaps</code></pre>
 </div>
 <div class="cell-output-display">
-<p><img src="15-reduccion-dim_files/figure-html/unnamed-chunk-69-1.png" class="img-fluid" width="672"></p>
+<p><img src="15-reduccion-dim_files/figure-html/unnamed-chunk-70-1.png" class="img-fluid" width="672"></p>
 </div>
 </div>
 <p>¿Que pasa si usamos svd sin centrar? Vemos que la primera componente simplemente captura los distintos niveles promedio de las variables. Esta componente <em>no es muy interesante</em>, pues por las características del whisky es normal que Medicinal o Tabaco tengo una media baja, comparado con dulzor, Smoky, etc. Adicionalmente, el vector <span class="math inline">\(u\)</span> asociado a esta dimensión tiene poca variación:</p>
@@ -1813,7 +1827,7 @@ increasing max.overlaps</code></pre>
 </div>
 <div class="sourceCode cell-code" id="cb142"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb142-1"><a href="#cb142-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(svd_w<span class="sc">$</span>v[,<span class="dv">1</span>], <span class="fu">apply</span>(whisky_sabor, <span class="dv">2</span>, mean))</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
-<p><img src="15-reduccion-dim_files/figure-html/unnamed-chunk-70-1.png" class="img-fluid" width="672"></p>
+<p><img src="15-reduccion-dim_files/figure-html/unnamed-chunk-71-1.png" class="img-fluid" width="672"></p>
 </div>
 <div class="sourceCode cell-code" id="cb143"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb143-1"><a href="#cb143-1" aria-hidden="true" tabindex="-1"></a><span class="fu">mean</span>(svd_w<span class="sc">$</span>u[,<span class="dv">1</span>])</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
@@ -1900,7 +1914,7 @@ OTROS ALIMENTOS DIVERSOS          1292306.9 -1162063.49</code></pre>
 <span id="cb154-6"><a href="#cb154-6" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(tab_1, <span class="fu">aes</span>(<span class="at">x=</span>categoria, <span class="at">y=</span>gasto, <span class="at">colour=</span>decil, <span class="at">group=</span>decil)) <span class="sc">+</span></span>
 <span id="cb154-7"><a href="#cb154-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>() <span class="sc">+</span> <span class="fu">coord_flip</span>()</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
-<p><img src="15-reduccion-dim_files/figure-html/unnamed-chunk-74-1.png" class="img-fluid" width="672"></p>
+<p><img src="15-reduccion-dim_files/figure-html/unnamed-chunk-75-1.png" class="img-fluid" width="672"></p>
 </div>
 </div>
 <p>Que podemos comparar con el análisis no centrado:</p>
@@ -1914,7 +1928,7 @@ OTROS ALIMENTOS DIVERSOS          1292306.9 -1162063.49</code></pre>
 <span id="cb155-7"><a href="#cb155-7" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(tab_1, <span class="fu">aes</span>(<span class="at">x=</span>categoria, <span class="at">y=</span>gasto, <span class="at">colour=</span>decil, <span class="at">group=</span>decil)) <span class="sc">+</span></span>
 <span id="cb155-8"><a href="#cb155-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>() <span class="sc">+</span> <span class="fu">coord_flip</span>()</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
-<p><img src="15-reduccion-dim_files/figure-html/unnamed-chunk-75-1.png" class="img-fluid" width="672"></p>
+<p><img src="15-reduccion-dim_files/figure-html/unnamed-chunk-76-1.png" class="img-fluid" width="672"></p>
 </div>
 </div>
 <p>Y aunque los resultados son similares, puede ser más simple entender la primera dimensión del svd no centrado que guarda los efectos de los distintos niveles de gasto de los deciles. En el caso del análisis centrado, tenemos una primera componente que sólo se entiende bien sabiendo los niveles promedio de gasto a lo largo de las categorías. <em>Observación</em>: Quizá una solución más natural es hacer el análisis de componentes principales usando la transpuesta de esta matriz (usa la función <em>prcomp</em>), donde tiene más sentido centrar por categoría de alimento, y pensar que las observaciones son los distintos deciles (que en realidad son agrupaciones de observaciones).</p>
@@ -1926,8 +1940,8 @@ OTROS ALIMENTOS DIVERSOS          1292306.9 -1162063.49</code></pre>
 <section id="reescalando-variables" class="level3 unnumbered">
 <h3 class="unnumbered anchored" data-anchor-id="reescalando-variables">Reescalando variables</h3>
 <p>Cuando las columnas tienen distintas unidades (especialmente si las escalas son muy diferentes), conviene reescalar la matriz antes de hacer el análisis centrado o no centrado. De otra forma, parte del análisis intenta absorber la diferencia en unidades, lo cual generalmente no es de interés. - En componentes principales, podemos estandarizar las columnas. - En el análisis no centrado, podemos poner las variables en escala 0-1, por ejemplo, o dividir entre la media (si son variables positivas).</p>
-<section id="ejemplo-5" class="level4 unnumbered">
-<h4 class="unnumbered anchored" data-anchor-id="ejemplo-5">Ejemplo</h4>
+<section id="ejemplo-6" class="level4 unnumbered">
+<h4 class="unnumbered anchored" data-anchor-id="ejemplo-6">Ejemplo</h4>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb156"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb156-1"><a href="#cb156-1" aria-hidden="true" tabindex="-1"></a>comp <span class="ot">&lt;-</span> <span class="fu">princomp</span>(attenu <span class="sc">|&gt;</span> <span class="fu">select</span>(<span class="sc">-</span>station, <span class="sc">-</span>event))</span>
 <span id="cb156-2"><a href="#cb156-2" aria-hidden="true" tabindex="-1"></a>comp<span class="sc">$</span>loadings[,<span class="dv">1</span>]</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
