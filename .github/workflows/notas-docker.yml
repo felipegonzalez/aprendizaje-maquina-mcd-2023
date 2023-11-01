@@ -20,7 +20,7 @@ jobs:
       - name: install tokenizers
         run: |
           install.packages("tokenizers")
-          shell: Rscript {0}
+        shell: Rscript {0}
       - name: Install others
         run: |
           install.packages(c("discrim"))
