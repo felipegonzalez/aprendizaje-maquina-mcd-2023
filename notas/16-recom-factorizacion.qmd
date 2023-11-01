@@ -1,0 +1,1100 @@
+# Dimensiones latentes: embeddings
+
+En esta parte veremos otras maneras de hacer reducción de dimensionalidad
+para sistemas de recomendación y procesamiento de lenguaje natural. El enfoque
+de estos métodos es diferente a svd: en el primer caso utilizaremos factorizaciones
+generales de matrices, y en el segundo extraeremos información de 
+capas de redes neuronales o modelos similares para obtener representaciones densas
+de dimensión relativamente baja.
+
+
+## Sistemas de recomendación
+
+```{r, include = FALSE}
+library(tidyverse)
+library(tidymodels)
+cbbPalette <- c("#000000", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
+theme_set(theme_minimal())
+```
+
+En esta parte, consideramos la idea de utilizar reducción de dimensionalidad para
+hacer recomendaciones. Esta idea propone que hay ciertos factores latentes (no observados)
+que describen películas con "contenido implícito similar", y usuarios según su interés en esa dimensión.
+
+Otra manera de llamar estos factores latentes es **embedding**: buscamos un **embedding** (una 
+representación numérica en cierta dimensión no muy alta) que nos permita predecir el gusto
+de un usuario por una película.
+
+Este método nos permitirá también controlar mejor los resultados ruidosos que
+obtuvimos en los ejemplos anteriores (usando regularización y reducción
+de dimensión).
+
+
+
+### Ejemplo: una dimensión latente {#ejemplo}
+
+Por ejemplo: consideramos una dimensión de películas serias contra películas divertidas.
+$3$ películas podrían describirse con
+
+$$v=(-2,0,1)$$,
+
+lo que interpretamos como la película $1$ es divertida (negativa en seriedad-diversión), la película $2$ está en promedio, y la película $3$ es más seria que las dos anteriores.
+ 
+Por otro lado, tenemos descriptores de 5 usuarios:
+
+$$u=(2,3,-3,0,1)$$
+que dice que a los primeros dos usuarios les gustan las películas serias, al tercero le gustan las divertidas, y los dos últimos no tienen preferencia clara a lo largo de esta dimensión.
+
+Qusiéramos predecir el gusto usando estos dos vectores. Nuestras predicciones (considerando que $u$ y $v$ son matrices de una columna) serían simplemente
+
+$$\widetilde{X} = u v^t$$
+
+```{r}
+u <- c(2,3,-3,0,1)
+v <- c(-2,0,1)
+gustos <- u %*% t(v)
+gustos
+```
+
+
+Así que al usuario $1$ le recomndamos la película $3$, pero al usuario $3$ le recomendamos la película $1$.
+
+---
+
+La idea es entonces encontrar pesos para películas $u$ y para usuarios $v$ de forma que
+$X\approx \widetilde{X} = uv^t$: podemos reproducir las calificaciones observadas a partir de nuestro modelo de factores latentes.
+
+Nótese sin embargo que hay varias dimensiones que pueden describir a películas y usuarios:
+por ejemplo, seria-divertida, artística-hollywood, ciencia ficción, con/sin violencia, etc. 
+Podemos proponer más dimensiones latentes de la siguiente forma:
+
+
+### Ejemplo: dos dimensiones latentes {#ejemplo}
+Tenemos la dimensión anterior de seria-divertida
+```{r}
+v_1 <- c(-2,0,1)
+u_1 <- c(2,3,-3,0,1)
+```
+Y supongamos que tenemos otra dimensión con violencia - sin violencia
+```{r}
+v_2 <- c(-3,2,2)
+u_2 <- c(-3,-3,0,-2,4)
+```
+
+
+Que quiere decir que las películas $2, 3$ tienen volencia, pero la película $1$ no. Por otra parte, a los usuarios $1,2$ y $5$ no les gustan las películas con violencia, mientras que al usuario $5$ si les gustan.
+
+La idea ahora es que el gusto de una persona por una película se escribe como combinación de las dos dimensiones. Por ejemplo, para la persona $1$ tenemos, y la película $1$, empezamos haciendo
+
+```{r}
+u_1[1]*v_1[1]
+u_2[1]*v_2[1]
+```
+
+lo que quiere decir que el hecho de que la película $1$ no sea seria le resta $4$ en gusto (pues la película $1$ está del lado "divertido"), pero le suma $9$ en gusto, pues es una película sin violencia y esta persona está del lado "sin violencia".
+
+Sumamos para encontrar el gusto total
+
+```{r}
+u_1[1]*v_1[1] + u_2[1]*v_2[1]
+```
+
+Para calcular los gustos sobre todas las personas y películas, haríamos
+
+```{r}
+U <- cbind(u_1, u_2)
+V <- cbind(v_1, v_2)
+U
+V
+U %*% t(V)
+```
+
+- El renglón $j$ de $U$ son los valores en las dimensiones latentes para
+la película $i$ (descriptores de usuarios).
+- El renglón $j$ de $V$ son los valores en las dimensiones latentes para
+el usuario $j$ (descriptores de películas)
+
+
+::: callout-note
+# Factorización de matrices para recomendación
+
+Con $k$ dimensiones latentes, el modelo que proponemos es:
+
+$$\widetilde{X} = UV^t$$
+
+donde $U$ es una matrix de $n\times k$ ($n=$ número de usuarios), y $V$ es una matriz
+de $p \times k$, donde $p$ es el número de películas.
+
+Buscamos que, si $X$ son las verdaderas calificaciones, entonces
+$$X\approx \widetilde{X}.$$
+
+y nótese que esta aproximación es en el sentido de las entradas de $X$ que **son observadas**. Sin embargo, $\widetilde{X}$ nos da predicciones para **todos los pares película-persona**.
+:::
+
+
+Bajo este modelo, la predicción para el usuario $i$ y la película $j$
+es la siguiente suma sobre las dimensiones latentes:
+
+$$\widetilde{x}_{ij} =\sum_k u_{ik} v_{jk}$$
+
+que expresa el hecho de que el gusto de $i$ por $j$ depende de una combinación (suma)
+de factores latentes de películas ponderados por gusto por esos factores del usuario.
+
+
+El número de factores latentes $k$ debe ser seleccionado (por ejemplo, según el error de validación). Dado $k$, para encontrar $U$ y $V$ (un total de $k(n+p)$ parámetros) buscamos
+minimizar 
+
+$$\sum_{(i,j)\, obs} (x_{ij}-\widetilde{x}_{ij})^2,$$
+
+
+que también podemos escribir este problema (recuérdese que $u_i$ y
+$v_j$ aquí son vectores renglón) como
+
+$$\min_{U,V}\sum_{(i,j)\, obs} (x_{ij}-u_iv_j^t)^2$$
+donde $u_i$ es el renglón $i$-esimo de $U$ (gustos latentes del usuario $i$ en cada dimensión), y $v_j$ es el renglón $j$-ésimo de la matriz $V$ (calificación latente de la película en cada dimensión)
+
+
+::: callout-note
+# ¿Por qué funciona la idea de factores latentes?**
+
+- El método de factorización de matrices de grado bajo ($k$)
+funciona compartiendo información a lo largo de películas y usuarios. Como tenemos
+que ajustar los datos observados, y solo tenemos a nuestra disposición $k$
+  descriptores para cada película y usuario, una minimización exitosa
+captura regularidades en los datos.
+
+- Es importante que la representación sea de grado relativamente bajo,
+pues esta "compresión" es la que permite que las dimensiones 
+latentes capturen regularidades que están en los datos observados (que
+esperamos encontrar en el proceso de ajuste). 
+
+- Al reducir la dimensión, también funcionan mejor métricas relativamente
+simples para calcular similitud entre usuarios o películas.
+:::
+
+
+Por ejemplo, supongamos que el gusto por las películas sólo depende de
+una dimensión sería - divertida. Si ajustamos un modelo de un solo
+factor latente, un **mínimo** se alcanzaría separando con la dimensión latente
+las películas serias de las divertidas, y los usuarios que prefieren películas
+serias o divertidas. Esta sería una buena explicación de los datos observados,
+y las predicciones para películas no vistas sería buena usando simplemente
+el valor en seriedad de la película (extraída de otras personas con gustos
+divertido o serio) y el gusto por seriedad de esa persona (extraida de la 
+observación de que le gustan otras películas serias u otras divertidas).
+
+### Combinación con modelo base
+
+Podemos usar también ideas de nuestro modelo base y modelar desviaciones en lugar de calificaciones directamente:
+
+Si $X^0$ son las predicciones del modelo de referencia, y
+$$R = X-X^0$$
+son los residuales del modelo base, buscamos mejor
+$$R\approx \widetilde{X} = UV^t$$
+de manera que las predicciones finales son
+$$X^0 + \widetilde{X}$$
+
+Veremos también más adelante cómo regularizar estos sesgos como
+parte de la construcción del modelo.
+
+## Factorización de matrices
+
+Como vimos arriba, reexpresamos nuestro problema como un problema
+de factorización de matrices  (encontrar $U$ y $V$). Hay varias alternativas populares para atacarlo:
+
+- Descomposición en valores singulares (SVD).
+- Mínimos cuadrados alternados.
+- Descenso en gradiente estocástico.
+
+No vamos a ver más de este enfoque de SVD que discutimos anteriormente, pues no
+es del todo apropiado: nuestras matrices tienen muchos datos faltantes, y SVD  no está diseñado para lidiar con este problema. Se pueden hacer ciertas imputaciones (por ejemplo, insertar 0's una vez que centramos por usuario), pero los siguientes dos métodos están mejor adaptados para
+nuestro problema.
+
+## Mínimos cuadrados alternados
+
+Supongamos entonces que queremos encontrar matrices $U$ y $V$, donde $U$ es una matrix de $n \times k$ ($n=$ número de usuarios), y $V$ es una matriz
+de $p \times k$, donde $p$ es el número de películas que nos de una
+aproximación de la matrix $X$ de calificaciones
+$$
+X \approx UV^t
+$$
+Ahora supongamos que conocemos $V_1$. Si este es el caso, entonces queremos
+resolver para $U_1$:
+$$ \min_{U_1}|| X - U_1V_1^t||_{obs}^2$$
+Como $V_1^t$ están fijas, este es un problema de mínimos cuadrados usual, y puede resolverse analíticamente (o usar descenso en gradiente, que
+es simple de calcular de forma analítica) para encontrar $U_1$. Una vez que encontramos $U_1$, la fijamos, e intentamos ahora resolver para $V$:
+
+$$ \min_{V_2}|| X - U_1V_2^t||_{obs}^2$$
+Y una vez que encontramos $V_2$ resolvemos
+
+$$ \min_{U_2}|| X - U_2V_2^t||_{obs}^2$$
+
+Continuamos este proceso hasta encontrar un mínimo local o hasta cierto número de iteraciones. Para inicializar $V_1$, en [@alsreg] se recomienda tomar como primer
+renglón el promedio de las calificaciones de las películas, y el resto 
+números aleatorios chicos (por ejemplo $U(0,1)$). También pueden inicializarse con números
+aleatorios chicos las dos matrices.
+
+### Mínimos cuadrados alternados con regularización
+
+Para agregar regularización y lidiar con los datos ralos, podemos
+incluir un coeficiente adicional. Minimizamos entonces (como en
+ [@alsreg]):
+
+$$\min_{U,V}\sum_{(i,j)\, obs} (x_{ij}-u_i^tv_j)^2 + 
+\lambda \left ( \sum_i n_{i}||u_i||^2 + \sum_j m_{j} ||v_j||^2 \right)$$
+
+y modificamos de manera correspondiente cada paso de mínimos cuadrados
+mostrado arriba. $n_{i}$ es el número de evaluaciones del usuario $i$, y
+$m_j$ es el número de evaluaciones de la película $j$.
+
+**Observaciones**:
+
+- Nótese que penalizamos el tamaños de los vectores $u_i$ y $v_j$ para evitar sobreajuste (como en regresión ridge).
+- Nótese también que los pesos $n_i$ y $m_j$ en esta regularización hace comparables el término que aparece en la suma de los residuales al cuadrado
+(la primera suma),
+y el término de regularización: por ejemplo, si el usuario $i$ hizo
+$n_i$ evaluaciones, entonces habrá $n_i$ términos en la suma de la izquierda. Lo mismo podemos decir acerca de las películas.
+- Este no es el único término de regularización posible. Por ejemplo, podríamos *no* usar los pesos $n_i$ y $m_j$, y obtendríamos
+un esquema razonable también, donde hay más regularización relativa
+para usuarios/películas que tengan pocas evaluaciones.
+
+Este método está implementado en [spark](https://spark.apache.org/docs/3.0.0/mllib-collaborative-filtering.html). La implementación está basada parcialmente en [@alsreg]. La inicialización
+es diferente en spark, ver [el código](https://github.com/apache/spark/blob/v3.0.0/mllib/src/main/scala/org/apache/spark/ml/recommendation/ALS.scala), donde cada renglón se inicializa con
+un vector de $N(0,1)$ normalizado.
+
+
+## Retroalimentación implícita
+
+Esta sección está basada en [@recomendacion-implicita].
+
+En el ejemplo que vimos arriba, la retroalimentación es expícita en el 
+sentido de que los usuarios califican los artículos ($1-$ no me gustó nada,
+hasta $5-$ me gustó mucho). Sin embargo, es común encontrar casos
+donde no existe esta retroalimentación explícita, y solo tenemos medidas
+del gusto implícito, por ejemplo:
+
+- Cuántas veces un usuario ha pedido un cierto artículo.
+- Qué porcentaje del programa fue visto.
+- Cuánto tiempo pasó en la página web.
+- Cuántas veces oyó una canción.
+
+Estos datos tienen la ventaja de que describen acciones del usuario,
+en lugar de un rating que puede estar influido por sesgos de imagen
+o de la calificación que "debería" tener un artículo además 
+de la preferencia: quizá
+disfruto muchísimo *Buffy the Vampire Slayer*, pero lo califico con un $3$,
+aunque un documental de ballenas que simplemente me gustó le pongo un $5$.
+En los datos implícitos se vería de todas formas mi consumo frecuente
+de *Buffy the Vampire Slayer*, y quizá unos cuantos de documentales 
+famosos.
+
+Sea $r_{ij}$ una medida implícita como las mencionadas arriba, para el usuario
+$i$ y el artículo $j$. Ponemos $r_{i,j}=0$ cuando no se ha observado interacción
+entre este usuario y el artículo. 
+
+Una diferencia importante con los ratings explícitos es que los datos
+implícitos son en un sentido menos informativos que los explícitos:
+
+- Puede ser que el valor de $r_{ij}$ sea relativamente bajo (pocas interacciones), pero de todas formas se trate de un artículo que es muy preferido (por ejemplo, solo vi Star Wars I una vez, pero me gusta mucho, o nunca he encontrado Star Wars I en el catálogo). Esto no pasa con los ratings, pues ratings bajos indican baja preferencia.
+
+- Sin embargo, estamos seguros de que niveles altos de interacción (oyó muchas veces una canción, etc.), es indicación de preferencia alta.
+
+- Usualmente la medida $r_{ij}$ **no** tiene faltantes, o tiene un valor implícito para faltantes. Por ejemplo, si la medida es % de la película que vi, todas las películas con las que no he interactuado tienen $r_{ij}=0$.
+
+Así que en nuestro modelo no necesariamente queremos predecir directamente la variable $r_{ij}$: puede haber artículos con predicción baja de $r_{ij}$ que
+descubramos de todas formas van a ser altamente preferidos. Un modelo que haga
+una predicción de $r_{îj}$ reflejaría más los patrones de consumo actual en lugar
+de permitirnos descubrir artículos preferidos con los que no necesariamente existe interacción.
+
+### Ejemplo
+
+Consideremos los siguientes usuarios, donde medimos por ejemplo el número de minutos
+que pasó cada usuario viendo cada película:
+
+```{r}
+imp <- tibble(usuario = 1:6,
+              StarWars1 = c(0, 0, 0, 150, 300, 250),
+              StarWars2 = c(250,  200, 0, 200, 220,180), 
+              StarWars3 = c(0, 250, 300, 0, 0, 0),
+              Psycho = c(5, 1, 0, 0, 0, 2)) 
+imp
+```
+
+
+Quiséramos encontrar una manera de considerar los 0's como información más suave (es decir, alguien puede tener valores bajos de interacción con una película, pero esto no implica necesariamente que no sea preferida). Esto implica que es más importante ajustar
+los valores altos del indicador implícito de preferencia.
+
+---
+
+Una solución propuesta en [@recomendacion-implicita] (e implementada en 
+spark) es darle menos importancia al valor $r_{ij}$ en la construcción
+de los factores latentes, especialmente si tiene valores bajos. 
+
+Para hacer esto, primero definimos la variable de preferencia
+
+$$p_{ij} = 
+\begin{cases}
+1, &\mbox{si } r_{ij}>0,\\ 
+0, &\mbox{si } r_{ij}=0.\\
+\end{cases}$$
+
+Esta variable $p_{ij}$, cuando vale uno, indica algún nivel de confianza en la preferencia.
+¿Pero qué tanto valor debemos darle a esta preferencia? Definimos la confianza
+como
+$$c_{ij} = 1+ \alpha r_{ui},$$
+donde $\alpha$ es un parámetro que hay que afinar (por ejemplo $\alpha$ entre $1$ y $50$). Para predicciones de vistas de TV, en [@recomendacion-implicita] utilizan
+$\alpha = 40$, donde $r_{ij}$ es el número de veces que el usuario ha visto
+un programa (contando vistas parciales, así que es un número real).
+
+La función objetivo (sin regularización) se define como
+
+\begin{equation}
+L =  \sum_{(i,j)} c_{ij}(p_{ij}  - \sum_{l=1}^k u_{i,l}v_{j,l})^2
+(#eq:implicita)
+\end{equation}
+
+
+Nótese que :
+
+- Cuando $c_ij$ es alta (porque $r_{i,j}$ es alta), para minimizar
+esta cantidad tenemos que hacer la predicción de $p_{ij}cercana a 1, pues el error
+se multiplica por $c_{ij}$. Sin embargo, 
+- Cuando $r_{i,j}$ es bajo, no es tan
+importante ajustar esta información con precisión: si $p_{ij} = 1$, puede ser
+que $\sum_{l=1}^k u_{i,l}v_{j,l}$ sea muy bajo, y si $p_{ij}=0$, puede ser
+que $\sum_{l=1}^k u_{i,l}v_{j,l}$ sea cercano a 1 sin afectar tanto el error.
+- Esto permite que en el ajuste podamos descubrir artículos con $p_{ij}$ alta para algún usuario, aún cuando $r_{ij}$ es cero o muy chico.
+
+### Ejemplo
+
+Veamos cómo se ven soluciones de un factor
+
+```{r}
+imp_mat <- imp |> select(-usuario) |> as.matrix()
+error_explicito <- function(uv){
+  u <- matrix(uv[1:6], ncol = 1)
+  v <- matrix(uv[7:10], ncol = 1)
+  sum((imp_mat - u %*% t(v))^2)
+}
+error_implicito <- function(uv){
+  u <- matrix(uv[1:6], ncol = 1)
+  v <- matrix(uv[7:10], ncol = 1)
+  pref_mat <- as.numeric(imp_mat > 0) - u %*% t(v)
+  confianza <- 1 + 0.1 * imp_mat
+  sum((confianza * pref_mat)^2 )
+}
+```
+
+Si intentamos ajustar los ratings implícitos como si fueran explícitos, obtenemos
+los siguientes ajustados con un solo factor latente:
+
+```{r}
+uv_inicial <- runif(10)
+opt_exp <- optim(par = uv_inicial, error_explicito, method = "BFGS")
+opt_exp$par[7:10]
+t(t(opt_exp$par[1:6])) %*% t(opt_exp$par[7:10]) |> round()
+```
+
+Nótese que esta solución no es muy buena: una componente intenta capturar
+los patrones de consumo de estas cuatro películas.
+
+Si usamos preferencias y confianza, obtenemos:
+
+```{r}
+opt_imp <- optim(par = uv_inicial, error_implicito, method = "BFGS")
+opt_imp$par[7:10]
+t(t(opt_imp$par[1:6])) %*% t(opt_imp$par[7:10]) |> round(2)
+```
+
+que indica que la información en esta matriz es consistente con que todos
+los usuarios tienen preferencia alta por las tres películas de Star Wars, y
+menos por la cuarta.
+
+---
+
+Igual que en los ejemplos anteriores, usualmente se agregan términos
+de regularización para los vectores renglón $u_i$ y $v_j$. 
+
+
+### Evaluación para modelos implícitos
+
+La evaluación para modelos implícitos no es tan simple como
+en el caso explícito, pues no estamos modelando
+directamente los valores observados $r_{ij}$.  Medidas
+como RECM o MAD que usamos en el caso explícito
+no son tan apropiadas para este problema. 
+
+Una alternativa es, para cada usuario $i$, ordenar los artículos de 
+mayor a menor valor de $\hat{p}_{ij} = u_iv_j^t$ (canciones, pellículas), y calculamos:
+
+$$
+rank = \frac{\sum_{j} p_{ij}rank_{i,j}}{\sum_j p_{ij}}
+$$
+
+donde $rank_{ij}$ es el percentil del artículo $j$ en la lista ordenada
+de artículos. $rank_{ij}=0$ para el mejor artículo, y $rank_{ij}=1$ para el peor. Es 
+decir, obtenemos valores más bajos si observamos que los usuarios interactúan
+con artículos que están más arriba en el ranking.
+
+Esta suma es un promedio sobre los rankings del usuario con $p_{ij}=1$, 
+y **menores valores son mejores** (quiere decir que hubo alguna preferencia
+por los items con $rank_{ij}$ bajo, es decir, los mejores de nuestra lista predicha. Es posible también hacer un promedio ponderado
+por $r_{ij}$:
+$$
+rank = \frac{\sum_{j} r_{ij}rank_{i,j}}{\sum_j r_{ij}}
+$$
+
+que es lo mismo que la ecuación anterior pero ponderando por el interés mostrado
+en cada artículo con $p_{ij}=1$.
+
+- Menores valores de $rank$ son mejores.
+- Si escogemos al azar el ordenamiento de los artículos, el valor esperado de $rank_{ij}$ es $0.5$ (en medio de la lista), lo que implica que el valor esperado
+de $rank$ es $0.50$. Cualquier modelo con $rank\geq 0.5$ es peor que dar recomendaciones al azar.
+
+Esta cantidad la podemos evaluar en entrenamiento y en validación. Para construir
+el conjunto de validación podemos hacer:
+
+- Escogemos un número de usuarios para validación (por ejemplo $20\%$)
+- Ponemos $50\%$ de los artículos evaluados por estas personas en validación, por ejemplo.
+
+Estas cantidades dependen de cuántos datos tengamos, como siempre, para tener
+un tamaño razonable de datos de validación.
+
+# Representación de palabras y word2vec
+
+En esta parte empezamos a ver los enfoques más modernos (redes neuronales) para construir
+modelos de lenguajes y resolver tareas de NLP. Se trata de modelos de lenguaje que incluyen más 
+estructura, son más fáciles de regularizar y de ampliar si es necesario para incluir
+dependencias de mayor distancia. El método de conteo/suavizamiento de ngramas es simple y funciona 
+bien para algunas tareas, pero podemos construir mejores modelos con enfoques más estructurados, y con
+más capacidad para aprender aspectos más complejos del lenguaje natural. 
+
+Si $w=w_1w_2\cdots w_N$ es una frase, y las $w$ representan palabras, recordemos que un modelo de lenguaje con dependencia de $n$-gramas consiste de las probabilidades
+
+$$P(w_t | w_{t-1} w_{t-2} \cdots w_{t-n+1}),$$
+
+ (n=2, bigramas, n=3 trigramas, etc.)
+
+Un enfoque donde intentamos estimar directamente estas probabilidades de los
+datos observados (modelos de n-gramas) puede ser útil en algunos casos (por ejemplo
+autocorrección simple), pero en general la mayoría de las sucesiones del lenguaje
+no son observadas en ningún corpues, y es necesario considerar un
+un enfoque más estructurado pensando en representaciones "distribucionales" de palabras:
+
+1. Asociamos a cada palabra en el vocabulario un vector numérico con $d$ dimensiones, que es su *representación distribuida*.
+2. Expresamos la función de probabilidad como combinaciones de 
+las representaciones vectoriales del primer paso.
+3. Aprendemos (máxima verosimiltud posiblemente regularización) simultáneamente los vectores y la manera de combinar 
+estos vectores para producir probabilidades.
+
+ La idea de este modelo es entonces subsanar la relativa escasez de datos (comparado con todos los trigramas que pueden existir) con estructura. Sabemos que esta es una buena estrategia si la estrucutura impuesta es apropiada.
+
+::: callout-note
+# Embeddings de palabras
+
+Una de las ideas fundamentales de este enfoque es representar
+a cada palabra como un vector numérico de dimensión $d$. Esto
+se llama una *representación vectorial distribuida*, o también
+un *embedding de palabras*.
+:::
+
+El objeto es entonces abstraer características de palabras (mediante estas representaciones) 
+intentando no perder mucho de su sentido
+original, lo que nos permite conocer palabras por su contexto, aún cuando no las hayamos observado antes.
+
+
+#### Ejemplo {-}
+
+¿Cómo puede funcionar este enfoque? Por ejemplo, si vemos la frase "El gato corre en el jardín", sabemos que una frase probable debe ser también "El perro corre en el jardín", pero quizá nunca vimos en el corpus la sucesión "El perro corre". La idea es que como "perro" y "gato" son funcionalmente similares (aparecen en contextos similares en otros tipos de oraciones como el perro come, el gato come, el perro duerme, este es mi gato, etc.), un modelo como el de arriba daría vectores similares a "perro" y "gato", pues aparecen en contextos similares. Entonces el modelo daría una probabilidad alta a "El perro corre en el jardín".
+
+## Modelo de red neuronal
+
+Podemos entonces construir una red neuronal con 2 capas ocultas como sigue (segimos [@bengio], una de
+las primeras referencias en usar este enfoque). Notamos que los enfoques más efectivos
+actualmente, con conjuntos de datos más grandes, se utilizan arquitecturas más refinadas que permiten modelación 
+de dependencias de mayor distancia, comenzando con la idea de [atención](https://arxiv.org/abs/1706.03762).
+
+En este ejemplo usaremos el ejemplo de trigramas:
+
+1. **Capa de incrustación o embedding**. En la primera capa oculta, tenemos un mapeo de las entradas $w_1,\ldots, w_{n-1}$ a $x=C(w_1),\ldots, C(w_{n-1})$, donde $C$ es una función que mapea palabras a vectores de dimensión $d$. $C$ también se puede pensar como una matriz de dimensión $|V|$ por $d$. En la capa de entrada,
+
+$$w_{n-2},w_{n-1} \to x = (C(w_{n-2}), C(w_{n-1})).$$
+
+
+2. **Capa totalmente conexa**. En la siguiente capa oculta tenemos una matriz de pesos $H$ y la función logística (o tangente hiperbólica) $\sigma (z) = \frac{e^z}{1+e^z}$, como en una red neuronal usual. 
+
+En esta capa calculamos
+$$z = \sigma (a + Hx),$$
+que resulta en un vector de tamaño $h$. 
+
+3. La **capa de salida** debe ser un vector de probabilidades
+sobre todo el vocabulario $|V|$. En esta capa tenemos pesos $U$ y hacemos
+$$y = b + U\sigma (z),$$
+y finalmente usamos softmax para tener probabilidades que suman uno:
+$$p_i = \frac{\exp (y_i) }{\sum_j exp(y_j)}.$$
+
+En el ajuste maximizamos la verosimilitud:
+
+$$\sum_t \log \hat{P}(w_{t,n}|w_{t,n-2}w_{t-n-1}) $$ 
+
+
+
+La representación en la referencia [@bengio] es:
+
+![Imagen](figuras/1_neural_model.png)
+
+Esta idea original ha sido explotada con éxito, pero en arquitecturas
+más modernas (mediante el mecanismo de atención). Nótese que
+el número de parámetros es del orden de $|V|(nm+h)$, donde $|V|$ es el tamaño del vocabulario (decenas o cientos de miles), $n$ es 3 o 4 (trigramas, 4-gramas), $m$ es el tamaño de la representacion (cientos) y $h$ es el número de nodos en la segunda capa (también cientos o miles).  Esto resulta en el mejor de los casos en modelos con miles de millones de parámetros. Adicionalmente, hay algunos cálculos costosos, como el softmax (donde hay que hacer una suma sobre el vocabulario completo). En el paper original se propone **descenso estocástico**.
+
+
+### Ejemplo {-}
+Veamos un ejemplo chico de cómo se vería el paso
+feed-forward de esta red. Supondremos en este
+ejemplo que los sesgos $a,b$ son
+iguales a cero para simplificar los cálculos.
+
+Consideremos que el texto de entrenamiento es
+"El perro corre. El gato corre. El león corre. El león ruge."
+
+En este caso, nuestro vocabulario consiste de los 8 tokens
+$<s>$, el, perro, gato, león, corre, caza $</s>$. Consideremos un
+modelo con $d=2$ (representaciones de palabras en 2 dimensiones),
+y consideramos un modelo de trigramas.
+
+Nuestra primera capa es una matriz $C$ de tamaño $2\times 8$,
+es decir, un vector de tamaño 2 para cada palabra. Por ejemplo,
+podríamos tener
+```{r, message=FALSE}
+library(tidyverse)
+set.seed(63)
+C <- round(matrix(rnorm(16, 0, 0.1), 2, 8), 2)
+colnames(C) <- c("_s_", "el", "perro", "gato", "león", "corre", "caza", "_ss_")
+rownames(C) <- c("d_1", "d_2")
+C
+```
+
+En la siguiente capa consideremos que usaremos, arbitrariamente, $h=3$ unidades. Como estamos considerando bigramas, necesitamos una entrada de tamaño 4 (representación de un bigrama, que son dos vectores de la matriz $C$, para predecir la siguiente palabra).
+
+```{r}
+H <- round(matrix(rnorm(12, 0, 0.1), 3, 4), 2)
+H
+```
+
+Y la última capa es la del vocabulario. Son entonces 8 unidades,
+con 3 entradas cada una. La matriz de pesos es:
+
+```{r}
+U <- round(matrix(rnorm(24, 0, 0.1), 8, 3), 2)
+rownames(U) <- c("_s_", "el", "perro", "gato", "león", "corre", "caza", "_ss_")
+U
+```
+
+Ahora consideremos cómo se calcula el objetivo con los
+datos de entrenamiento. El primer trigrama es (\_s\_, el). La primera
+capa entonces devuelve los dos vectores correspondientes a cada
+palabra (concatenado):
+
+```{r}
+capa_1 <- c(C[, "_s_"], C[, "el"])
+capa_1
+```
+
+La siguiente capa es:
+
+```{r}
+sigma <- function(z){ 1 / (1 + exp(-z))}
+capa_2 <- sigma(H %*% capa_1)
+capa_2
+```
+
+Y la capa final da
+
+```{r}
+y <- U %*% capa_2
+y
+```
+
+Y aplicamos softmax para encontrar las probabilidades
+
+```{r}
+p <- exp(y)/sum(exp(y)) |> as.numeric()
+p
+```
+
+Y la probabilidad es entonces
+
+```{r}
+p_1 <- p["perro", 1]
+p_1
+```
+
+Cuya log probabilidad es
+
+```{r}
+log(p_1)
+```
+
+Ahora seguimos con el siguiente trigrama, que
+es "(perro, corre)". Necesitamos calcular la probabilidad
+de corre dado el contexto "el perro". Repetimos nuestro cálculo:
+
+```{r}
+capa_1 <- c(C[, "el"], C[, "perro"])
+capa_1
+capa_2 <- sigma(H %*% capa_1)
+capa_2
+y <- U %*% capa_2
+y
+p <- exp(y)/sum(exp(y)) |> as.numeric()
+p
+```
+
+Y la probabilidad es entonces
+
+```{r}
+p_2 <- p["corre", 1]
+log(p_2)
+```
+
+Sumando, la log probabilidad es:
+
+```{r}
+log(p_1) + log(p_2)
+```
+
+y continuamos con los siguientes trigramas del texto de entrenamiento.
+Creamos una función
+
+```{r}
+feed_fow_p <- function(trigrama, C, H, U){
+  trigrama <- strsplit(trigrama, " ", fixed = TRUE)[[1]]
+  capa_1 <- c(C[, trigrama[1]], C[, trigrama[2]])
+  capa_2 <- sigma(H %*% capa_1)
+  y <- U %*% capa_2
+  p <- exp(y)/sum(exp(y)) |> as.numeric()
+  p
+}
+
+feed_fow_dev <- function(trigrama, C, H, U) {
+  p <- feed_fow_p(trigrama, C, H, U)
+  trigrama_s <- strsplit(trigrama, " ", fixed = TRUE)[[1]]
+  log(p)[trigrama_s[3], 1]
+}
+```
+
+Y ahora aplicamos a todos los textos:
+
+```{r}
+texto_entrena <- c("_s_ el perro corre _ss_", " _s_ el gato corre _ss_", " _s_ el león corre _ss_",
+  "_s_ el león caza _ss_",  "_s_ el gato caza _ss_")
+entrena_trigramas <- map(texto_entrena, 
+  ~tokenizers::tokenize_ngrams(.x, n = 3)[[1]]) |> 
+  flatten() |> unlist()
+entrena_trigramas
+```
+
+```{r}
+log_p <- sapply(entrena_trigramas, function(x) feed_fow_dev(x, C, H, U))
+sum(log_p)
+```
+
+Ahora piensa como harías más grande esta verosimilitud. Observa
+que "perro", "gato" y "león"" están comunmente seguidos de "corre".
+Esto implica que nos convendría que hubiera cierta similitud
+entre los vectores de estas tres palabras, por ejemplo:
+
+```{r}
+C_1 <- C
+indices <- colnames(C) %in%  c("perro", "gato", "león")
+C_1[1, indices] <- 3.0
+C_1[1, !indices] <- -1.0
+C_1
+```
+
+La siguiente capa queremos que extraiga el concepto "animal" en la palabra anterior, o algo
+similar, así que podríamos poner en la unidad 1:
+
+```{r}
+H_1 <- H
+H_1[1, ] <- c(0, 0, 5, 0)
+H_1
+```
+
+Nótese que la unidad 1 de la segunda capa se activa 
+cuando la primera componente de la palabra anterior es alta.
+En la última capa, podríamos entonces poner
+
+```{r}
+U_1 <- U
+U_1["corre", ] <- c(4.0, -2, -2)
+U_1["caza", ] <- c(4.2, -2, -2)
+U_1
+```
+
+que captura cuando la primera unidad se activa. Ahora el cálculo
+completo es:
+
+```{r}
+log_p <- sapply(entrena_trigramas, function(x) feed_fow_dev(x, C_1, H_1, U_1))
+sum(log_p)
+```
+
+Y logramos aumentar la verosimilitud considerablemente. Compara las probabilidades:
+
+```{r}
+feed_fow_p("el perro", C, H, U)
+feed_fow_p("el perro", C_1, H_1, U_1)
+feed_fow_p("el gato", C, H, U)
+feed_fow_p("el gato", C_1, H_1, U_1)
+```
+
+
+**Observación**: a partir de este principio, es posible construir arquitecturas más 
+refinadas que tomen en cuenta, por ejemplo,  relaciones más lejanas entre
+partes de oraciones (no solo el contexto del n-grama), ver por ejemplo [el capítulo 10 del libro
+de Deep Learning de Goodfellow, Bengio y Courville](https://www.deeplearningbook.org/contents/rnn.html).
+
+Abajo exploramos una parte fundamental de estos modelos: representaciones de palabras, y modelos
+relativamente simples para obtener estas representaciones.
+
+## Representación de palabras
+
+Un aspecto interesante de el modelo de arriba es que
+nos da una representación vectorial de las palabras, en la forma
+de los parámetros ajustados de la matriz $C$. Esta se puede entender
+como una descripción numérica de cómo funciona una palabra en el contexto de su n-grama.
+
+Por ejemplo, deberíamos encontrar que palabras como "perro" y "gato" tienen representaciones similares. La razón es que cuando aparecen,
+las probabilidades sobre las palabras siguientes deberían ser similares, pues estas son dos palabras que se pueden usar en muchos contextos
+compartidos.
+
+También podríamos encontrar que palabras como perro, gato, águila, león, etc. tienen partes o entradas similares en sus vectores de representación, que es la parte que hace que funcionen como "animal mamífero" dentro de frases. 
+
+Veremos que hay más razones por las que es interesante esta representación.
+
+
+## Modelos de word2vec
+
+En estos ejemplos veremos cómo producir embeddings de palabras que son precursores
+de embeddings más refinados como los producidos por Modelos grandes de lenguajes (LLMs).
+Ver por ejemplo [aquí](https://platform.openai.com/docs/guides/embeddings/what-are-embeddings).
+
+Si lo que principalmente nos interesa es obtener una representación
+vectorial de palabras,  es posible 
+simplificar considerablemente el modelo de arriba  o LLMs para poder entrenarlos mucho más rápido, y obtener una representación que en muchas tareas se desempeña bien ([@word2vec]).
+
+Hay dos ideas básicas que se pueden usar para reducir la complejidad del entrenamiento (ver más
+en [@goodfellow] y [@word2vec]:
+
+- Eliminar la segunda capa oculta: modelo de *bag-of-words* continuo y modelo de *skip-gram*.
+- Cambiar la función objetivo (minimizar devianza/maximizar verosimilitud) por una más simple, mediante un truco que se llama *negative sampling*.
+
+Como ya no es de interés central predecir la siguiente palabra a partir
+de las anteriores, en estos modelos **intentamos predecir la palabra
+central a partir de las que están alrededor**. 
+
+### Arquitectura continuous bag-of-words {-}
+
+La entrada es igual que en el modelo completo. En primer lugar,
+simplificamos la segunda capa oculta pondiendo en $z$ el promedio de
+los vectores $C(w_{n-2}), C(w_{n-1})$.  La última capa la dejamos igual por el momento:
+
+![Imagen](figuras/cbow_fig.png)
+
+El modelo se llama bag-of-words porque todas las entradas de la primera capa oculta contribuyen de la misma manera en la salida, independientemente del orden. Aunque esto no suena como buena idea para construir un modelo de lenguaje, veremos que resulta en una representación adecuada para algunos problemas.
+
+1. En la primera capa oculta, tenemos un mapeo de las entradas $w_1,\ldots, w_{n-1}$ a $x=C(w_1),\ldots, C(w_{n-1})$, donde $C$ es una función que mapea palabras a vectores de dimensión $d$. $C$ también se puede pensar como una matriz de dimensión $|V|$ por $d$. En la capa de entrada,
+
+$$w_{n-2},w_{n-1} \to x = (C(w_{n-2}), C(w_{n-1})).$$
+
+
+2. En la siguiente "capa" oculta simplemente sumamos las entradas de $x$. Aquí nótese que realmente no hay parámetros.
+
+3. Finalmente, la capa de salida debe ser un vector de probabilidades
+sobre todo el vocabulario $|V|$. En esta capa tenemos pesos $U$ y hacemos
+$$y = b + U\sigma (z),$$
+y finalmente usamos softmax para tener probabilidades que suman uno:
+$$p_i = \frac{\exp (y_i) }{\sum_j exp(y_j)}.$$
+
+En el ajuste maximizamos la verosimilitud sobre el corpus. Por ejemplo, para una frase, su log verosimilitud es:
+
+$$\sum_t \log \hat{P}(w_{t,n}|w_{t,n+1} \cdots w_{t-n-1}) $$
+
+### Arquitectura skip-grams {-}
+
+Otro modelo simplificado, con más complejidad computacional pero
+mejores resultados (ver [@word2vec]) que
+el bag-of-words, es el modelo de skip-grams. En este caso, dada
+cada palabra que encontramos, intentamos predecir un número
+fijo de las palabras anteriores y palabras posteriores 
+(el contexto es una vecindad de la palabra).
+
+![Imagen](figuras/skipgram.png)
+
+
+La función objetivo se defina ahora (simplificando) como suma sobre $t$:
+
+$$-\sum_t \sum_{ -2\leq j \leq 2, j\neq 0} \log P(w_{t-j} | w_t)$$
+(no tomamos en cuenta dónde aparece exactamente $w_{t-j}$ en relación a $w_t$, simplemente consideramos que está en su contexto),
+donde
+
+$$\log P(w_{t-j}|w_t) =  u_{t-j}^tC(w_t) - \log\sum_k \exp{u_{k}^tC(w_t)}$$
+
+Todavía se propone una simplificación adicional que resulta ser efectiva:
+
+### Muestreo negativo {-}
+
+La siguiente simplificación consiste en cambiar la función objetivo. En word2vec puede usarse "muestreo negativo".
+
+Para empezar, la función objetivo original (para contexto de una sola palabra) es
+
+
+$$E = -\log \hat{P}(w_{a}|w_{n}) = -y_{w_a} + \log\sum_j \exp(y_j),$$
+
+donde las $y_i$ son las salidas de la penúltima capa. La dificultad está en el segundo término, que es sobre todo el vocabulario en incluye todos los parámetros del modelo (hay que calcular las parciales de $y_j$'s
+sobre cada una de las palabras del vocabulario).
+
+
+La idea del muestreo negativo es que si $w_a$ 
+está en el contexto de $w_{n}$, tomamos una muestra de $k$ palabras
+$v_1,\ldots v_k$ al azar
+(2-50, dependiendo del tamaño de la colección), y creamos $k$
+"contextos falsos" $v_j w_{n}$, $j=1\ldots,k$. Minimizamos
+en lugar de la observación de arriba
+
+$$E = -\log\sigma(y_{w_a}) + \sum_{j=1}^k \log\sigma(y_j),$$
+en donde queremos maximizar la probabilidad de que ocurra
+$w_a$ vs. la probabilidad de que ocurra alguna de las $v_j$.
+Es decir, solo buscamos optimizar parámetros para separar lo mejor
+que podamos la observación de $k$ observaciones falsas, lo cual implica que tenemos que mover un número relativamente chico de
+parámetros (en lugar de todos los parámetros de todas las palabras del vocabulario). 
+
+Las palabras "falsas" se escogen según una probabilidad ajustada
+de unigramas (se observó empíricamente mejor desempeño cuando escogemos cada palabra con probabilidad proporcional a $P(w)^{3/4}$, en lugar de $P(w)$, ver [@word2vec]).
+
+
+### Ejemplo {-}
+
+```{r, message=FALSE, warning = FALSE}
+if(!require(wordVectors)){
+  devtools::install_github("bmschmidt/wordVectors", 
+                           dependencies = TRUE)
+}
+library(wordVectors)
+```
+
+
+```{r}
+library(tidyverse)
+ruta <- "../datos/noticias/ES_Newspapers.txt"
+if(!file.exists(ruta)){
+    periodico <- 
+      read_lines(file= "https://es-noticias.s3.amazonaws.com/Es_Newspapers.txt",
+                        progress = FALSE)
+    write_lines(periodico, ruta)
+} else {
+    periodico <- read_lines(file= ruta,
+                        progress = FALSE)
+}
+normalizar <- function(texto, vocab = NULL){
+  # minúsculas
+  texto <- tolower(texto)
+  # varios ajustes
+  texto <- gsub("\\s+", " ", texto)
+  texto <- gsub("\\.[^0-9]", " _punto_ ", texto)
+  texto <- gsub(" _s_ $", "", texto)
+  texto <- gsub("\\.", " _punto_ ", texto)
+  texto <- gsub("[«»¡!¿?-]", "", texto) 
+  texto <- gsub(";", " _punto_coma_ ", texto) 
+  texto <- gsub("\\:", " _dos_puntos_ ", texto) 
+  texto <- gsub("\\,[^0-9]", " _coma_ ", texto)
+  texto <- gsub("\\s+", " ", texto)
+  texto
+}
+periodico_df <- tibble(txt = periodico) |>
+                mutate(id = row_number()) |>
+                mutate(txt = normalizar(txt))
+```
+
+
+Construimos un modelo con vectores de palabras de tamaño 100,
+skip-grams de tamaño 4, y ajustamos con muestreo negativo
+de tamaño 20:
+
+```{r prepw2v}
+if(!file.exists('./cache/noticias_w2v.txt')){
+  tmp <- tempfile()
+  # tokenización
+  write_lines(periodico_df$txt,  tmp)
+  prep <- prep_word2vec(tmp, 
+          destination = './cache/noticias_w2v.txt', bundle_ngrams = 2)
+  } 
+```
+
+```{r modelow2v, message = FALSE, warning = FALSE, results=FALSE}
+if (!file.exists("./cache/noticias_vectors.bin")) {
+  modelo <- train_word2vec("./cache/noticias_w2v.txt", 
+          "./cache/noticias_vectors.bin",
+          vectors = 100, threads = 8, window = 4, cbow = 0,  
+          iter = 20, negative_samples = 20, min_count = 10) 
+} else {
+  modelo <- read.vectors("./cache/noticias_vectors.bin")
+}
+```
+
+El resultado son los vectores aprendidos de las palabras, por ejemplo
+
+```{r}
+vector_gol <- modelo[["gol"]] |> as.numeric()
+vector_gol
+```
+
+## Espacio de representación de palabras {#esprep}
+
+Como discutimos arriba, palabras que se usan en contextos
+similares por su significado o por su función (por ejemplo, "perro" y "gato"") deben tener representaciones similares, pues su contexto tiende a ser similar. **La similitud que usamos el similitud coseno**.
+
+Podemos verificar con nuestro ejemplo:
+
+
+```{r sim2}
+ejemplos <- modelo |>  closest_to("gol", n = 5)
+ejemplos
+```
+También podríamos calcular manualmente:
+
+Que también podemos calcular como:
+
+```{r}
+vector_penalti <- modelo[["penalti"]] |> as.numeric()
+cosineSimilarity(modelo[["gol"]], modelo[["penalti"]])
+```
+
+O directamente:
+
+```{r}
+norma <- function(x) sqrt(sum(x^2))
+sum(vector_gol * vector_penalti) / (norma(vector_gol) * norma(vector_penalti))
+```
+
+
+### Geometría en el espacio de representaciones {-}
+
+Ahora consideremos cómo se distribuyen las palabras en este
+espacio, y si existe estructura geométrica en este espacio que tenga
+información acerca del lenguaje.
+
+Consideremos primero el caso de plurales de sustantivos.
+
+- Como el contexto de los plurales es distinto de los singulares,
+nuestro modelo debería poder capturar en los vectores su diferencia.
+- Examinamos entonces cómo son geométricamente
+diferentes las representaciones de plurales vs singulares
+- Si encontramos un patrón reconocible, podemos utilizar este patrón, por ejemplo,
+para encontrar la versión plural de una palabra singular, *sin usar ninguna
+regla del lenguaje*.
+
+Una de las relaciones geométricas más simples es la adición de vectores. Por ejemplo,
+extraemos la diferencia entre gol y goles:
+
+
+```{r sim3}
+ejemplos <- modelo |>  closest_to("dos", n = 15)
+ejemplos
+```
+
+
+```{r sim4}
+ejemplos <- modelo |>  closest_to(c("lluvioso"), n = 5)
+ejemplos
+```
+
+```{r}
+ejemplos <- modelo |>  closest_to("presidente", n = 5)
+ejemplos
+```
+
+```{r}
+ejemplos <- modelo |>  closest_to("parís", n = 5)
+ejemplos
+```
+
+Y vemos, por ejemplo, que el modelo puede capturar conceptos relacionados
+con el estado del clima, capitales de países y números - aún cuando no hemos
+anotado estas funciones en el corpus original. Estos vectores son similares
+porque tienden a ocurrir en contextos similares.
+
+### Geometría en el espacio de representaciones {-}
+
+Ahora consideremos cómo se distribuyen las palabras en este
+espacio, y si existe estructura geométrica en este espacio que tenga
+información acerca del lenguaje.
+
+Consideremos primero el caso de plurales de sustantivos.
+
+- Como el contexto de los plurales es distinto de los singulares,
+nuestro modelo debería poder capturar en los vectores su diferencia.
+- Examinamos entonces cómo son geométricamente
+diferentes las representaciones de plurales vs singulares
+- Si encontramos un patrón reconocible, podemos utilizar este patrón, por ejemplo,
+para encontrar la versión plural de una palabra singular, *sin usar ninguna
+regla del lenguaje*.
+
+Una de las relaciones geométricas más simples es la adición de vectores. Por ejemplo,
+extraemos la diferencia entre gol y goles:
+
+```{r}
+plural_1 <- modelo[["goles"]] - modelo[["gol"]]
+plural_1
+```
+
+que es un vector en el espacio de representación de palabras. Ahora sumamos este vector
+a un sustantivo en singular, y vemos qué palabras están cercas de esta "palabra sintética":
+
+```{r}
+closest_to(modelo, ~ "partido" + "goles" - "gol", n = 5)
+```
+
+Nótese que la más cercana es justamente el plural correcto, o otros plurales con relación
+al que buscábamos (como *encuentros*)
+
+Otro ejemplo:
+
+```{r}
+closest_to(modelo, ~ "mes" + "días" - "día", n = 20) 
+```
+
+
+
+
+
+Veremos ahora cómo funciona para el género de sustantivos:
+
+```{r}
+fem_1 <- modelo[["presidenta"]] - modelo[["presidente"]]
+closest_to(modelo, ~ "rey" + "presidenta" - "presidente", n = 5) |> filter(word != "rey")
+```
+
+```{r}
+closest_to(modelo, ~ "tío" + "presidenta" - "presidente", n = 5) |> filter(word != "tío")
+```
+
+### Evaluación de calidad de modelos {-}
+
+La evaluación de estas aplicaciones puede hacerse por ejemplo, con tareas de analogía,
+con listas de singular/plurales, de adjetivos/adverbios, masculino/femenino, etc (ver [@word2vec]),
+(ver por ejemplo https://github.com/tmikolov/word2vec/blob/master/questions-words.txt). Adicionalmente,
+si se utilizan en alguna tarea *downstream*, pueden evaluarse en el desempeño de esa
+tarea particular.
+
+
+
+**Ejercicio**: ¿cómo usarías esta geometría para encontrar el país en el que está una capital dada?
+
+**Observación**: falta afinar los parámetros en este modelo.
+Puedes probar cambiando negative sampling (por ejemplo, incrementa a 40), el número de vectores (50-200, por ejemplo), e incrementando *window* y el número de iteraciones.
+
+Considera también un modelo preentrenado mucho más grande como [este](https://github.com/uchile-nlp/spanish-word-embeddings). Puedes bajar los vectores de palabras
+y repetir las tareas mostradas (el formato bin es estándar para la implementación que usamos de word2vec).
+ 

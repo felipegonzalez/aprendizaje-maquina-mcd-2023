@@ -17,6 +17,9 @@ jobs:
         run: |
           remotes::install_github("https://github.com/tidymodels/probably/", upgrade = "always", force = TRUE)
         shell: Rscript {0}
+      - name: install wordvectors
+        run: |
+          remotes::install_github("bmschmidt/wordVectors", dependencies = TRUE, upgrade = "always", force = TRUE)
       - name: Install others
         run: |
           install.packages(c("discrim"))

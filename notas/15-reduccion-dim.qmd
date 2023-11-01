@@ -1,5 +1,12 @@
 # Aprendizaje no supervisado: reducción de dimensionalidad
 
+```{r, include = FALSE}
+library(tidyverse)
+library(tidymodels)
+cbbPalette <- c("#000000", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
+theme_set(theme_minimal())
+```
+
 En esta parte veremos técnicas de reducción de dimensionalidad  que buscan preservar la mayor parte de la información contenida en los datos originales en una
 representación más compacta que sea útil para hacer análisis o construir modelos.
 
