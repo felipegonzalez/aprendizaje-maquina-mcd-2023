@@ -249,6 +249,12 @@ div.csl-indent {
  <span class="menu-text"><span class="chapter-number">15</span>&nbsp; <span class="chapter-title">Aprendizaje no supervisado: reducción de dimensionalidad</span></span></a>
   </div>
 </li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./16-recom-factorizacion.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">16</span>&nbsp; <span class="chapter-title">Dimensiones latentes: embeddings</span></span></a>
+  </div>
+</li>
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-expanded="true">
@@ -804,13 +810,13 @@ Descenso estocástico con momento
 <div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="fu">get_weights</span>(modelo)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>[[1]]
-           [,1]
-[1,] -2.4810979
-[2,] -0.1156603
-[3,]  0.1871299
+            [,1]
+[1,] -2.38866043
+[2,] -0.04025515
+[3,]  0.20173742
 
 [[2]]
-[1] -0.3928188</code></pre>
+[1] -0.4526068</code></pre>
 </div>
 </div>
 <p>Y verificamos que concuerda con la salida de <em>lm</em>:</p>

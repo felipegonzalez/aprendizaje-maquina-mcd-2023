@@ -1,0 +1,2117 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="es" xml:lang="es"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.3.353">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Aprendizaje Máquina - 16&nbsp; Dimensiones latentes: embeddings</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./81-apendice-descenso.html" rel="next">
+<link href="./15-reduccion-dim.html" rel="prev">
+<script src="site_libs/quarto-html/quarto.js"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 20,
+  "language": {
+    "search-no-results-text": "Sin resultados",
+    "search-matching-documents-text": "documentos encontrados",
+    "search-copy-link-title": "Copiar el enlace en la búsqueda",
+    "search-hide-matches-text": "Ocultar resultados adicionales",
+    "search-more-match-text": "resultado adicional en este documento",
+    "search-more-matches-text": "resultados adicionales en este documento",
+    "search-clear-button-title": "Borrar",
+    "search-detached-cancel-button-title": "Cancelar",
+    "search-submit-button-title": "Enviar"
+  }
+}</script>
+
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+</head>
+
+<body class="nav-sidebar floating">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Alternar barra lateral" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+      <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./16-recom-factorizacion.html"><span class="chapter-number">16</span>&nbsp; <span class="chapter-title">Dimensiones latentes: embeddings</span></a></li></ol></nav>
+      <a class="flex-grow-1" role="button" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Alternar barra lateral" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+      </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Buscar" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./">Aprendizaje Máquina</a> 
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Buscar"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Temario y referencias</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./01-introduccion.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Introducción</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./02-principios-supervisado.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Principios de aprendizaje supervisado</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./03-metodos-locales.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Métodos locales no estructurados</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./04-lineales-ingenieria.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Métodos lineales e ingenería de entradas</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./05-regularizacion-1.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Regularización y variabilidad</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./06-redes-neuronales-1.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Redes neuronales (intro)</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./07-intervalos-predictivos.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Incertidumbre en las predicciones</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./08-clasificacion-1.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Clasificación y probabilidad</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./09-clasificacion-2.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Decisiones de clasificación</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./10-clasificacion-calibracion.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Calibración de probabilidades</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./11-val-cruzada.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Entrenamiento, Validación y Prueba</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./12-arboles.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Métodos basados en árboles</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./13-arboles-boosting.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Métodos basados en árboles: boosting</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./14-interpretacion.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Interpretación de modelos</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./15-reduccion-dim.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">15</span>&nbsp; <span class="chapter-title">Aprendizaje no supervisado: reducción de dimensionalidad</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./16-recom-factorizacion.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">16</span>&nbsp; <span class="chapter-title">Dimensiones latentes: embeddings</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-expanded="true">
+ <span class="menu-text">Appendices</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-expanded="true" aria-label="Alternar sección">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./81-apendice-descenso.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">A</span>&nbsp; <span class="chapter-title">Apéndice 1: descenso en gradiente</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./82-apendice-descenso-estocastico.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">B</span>&nbsp; <span class="chapter-title">Apéndice 2: Descenso estocástico</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./99-referencias.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Referencias</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Tabla de contenidos</h2>
+   
+  <ul>
+  <li><a href="#sistemas-de-recomendación" id="toc-sistemas-de-recomendación" class="nav-link active" data-scroll-target="#sistemas-de-recomendación"><span class="header-section-number">16.1</span> Sistemas de recomendación</a>
+  <ul class="collapse">
+  <li><a href="#ejemplo" id="toc-ejemplo" class="nav-link" data-scroll-target="#ejemplo"><span class="header-section-number">16.1.1</span> Ejemplo: una dimensión latente</a></li>
+  <li><a href="#ejemplo" id="toc-ejemplo" class="nav-link" data-scroll-target="#ejemplo"><span class="header-section-number">16.1.2</span> Ejemplo: dos dimensiones latentes</a></li>
+  <li><a href="#combinación-con-modelo-base" id="toc-combinación-con-modelo-base" class="nav-link" data-scroll-target="#combinación-con-modelo-base"><span class="header-section-number">16.1.3</span> Combinación con modelo base</a></li>
+  </ul></li>
+  <li><a href="#factorización-de-matrices" id="toc-factorización-de-matrices" class="nav-link" data-scroll-target="#factorización-de-matrices"><span class="header-section-number">16.2</span> Factorización de matrices</a></li>
+  <li><a href="#mínimos-cuadrados-alternados" id="toc-mínimos-cuadrados-alternados" class="nav-link" data-scroll-target="#mínimos-cuadrados-alternados"><span class="header-section-number">16.3</span> Mínimos cuadrados alternados</a>
+  <ul class="collapse">
+  <li><a href="#mínimos-cuadrados-alternados-con-regularización" id="toc-mínimos-cuadrados-alternados-con-regularización" class="nav-link" data-scroll-target="#mínimos-cuadrados-alternados-con-regularización"><span class="header-section-number">16.3.1</span> Mínimos cuadrados alternados con regularización</a></li>
+  </ul></li>
+  <li><a href="#retroalimentación-implícita" id="toc-retroalimentación-implícita" class="nav-link" data-scroll-target="#retroalimentación-implícita"><span class="header-section-number">16.4</span> Retroalimentación implícita</a>
+  <ul class="collapse">
+  <li><a href="#ejemplo-1" id="toc-ejemplo-1" class="nav-link" data-scroll-target="#ejemplo-1"><span class="header-section-number">16.4.1</span> Ejemplo</a></li>
+  <li><a href="#ejemplo-2" id="toc-ejemplo-2" class="nav-link" data-scroll-target="#ejemplo-2"><span class="header-section-number">16.4.2</span> Ejemplo</a></li>
+  <li><a href="#evaluación-para-modelos-implícitos" id="toc-evaluación-para-modelos-implícitos" class="nav-link" data-scroll-target="#evaluación-para-modelos-implícitos"><span class="header-section-number">16.4.3</span> Evaluación para modelos implícitos</a></li>
+  </ul></li>
+  <li><a href="#representación-de-palabras-y-word2vec" id="toc-representación-de-palabras-y-word2vec" class="nav-link" data-scroll-target="#representación-de-palabras-y-word2vec"><span class="header-section-number">17</span> Representación de palabras y word2vec</a>
+  <ul class="collapse">
+  <li><a href="#modelo-de-red-neuronal" id="toc-modelo-de-red-neuronal" class="nav-link" data-scroll-target="#modelo-de-red-neuronal"><span class="header-section-number">17.1</span> Modelo de red neuronal</a>
+  <ul class="collapse">
+  <li><a href="#ejemplo-4" id="toc-ejemplo-4" class="nav-link" data-scroll-target="#ejemplo-4">Ejemplo</a></li>
+  </ul></li>
+  <li><a href="#representación-de-palabras" id="toc-representación-de-palabras" class="nav-link" data-scroll-target="#representación-de-palabras"><span class="header-section-number">17.2</span> Representación de palabras</a></li>
+  <li><a href="#modelos-de-word2vec" id="toc-modelos-de-word2vec" class="nav-link" data-scroll-target="#modelos-de-word2vec"><span class="header-section-number">17.3</span> Modelos de word2vec</a>
+  <ul class="collapse">
+  <li><a href="#arquitectura-continuous-bag-of-words" id="toc-arquitectura-continuous-bag-of-words" class="nav-link" data-scroll-target="#arquitectura-continuous-bag-of-words">Arquitectura continuous bag-of-words</a></li>
+  <li><a href="#arquitectura-skip-grams" id="toc-arquitectura-skip-grams" class="nav-link" data-scroll-target="#arquitectura-skip-grams">Arquitectura skip-grams</a></li>
+  <li><a href="#muestreo-negativo" id="toc-muestreo-negativo" class="nav-link" data-scroll-target="#muestreo-negativo">Muestreo negativo</a></li>
+  <li><a href="#ejemplo-5" id="toc-ejemplo-5" class="nav-link" data-scroll-target="#ejemplo-5">Ejemplo</a></li>
+  </ul></li>
+  <li><a href="#esprep" id="toc-esprep" class="nav-link" data-scroll-target="#esprep"><span class="header-section-number">17.4</span> Espacio de representación de palabras</a>
+  <ul class="collapse">
+  <li><a href="#geometría-en-el-espacio-de-representaciones" id="toc-geometría-en-el-espacio-de-representaciones" class="nav-link" data-scroll-target="#geometría-en-el-espacio-de-representaciones">Geometría en el espacio de representaciones</a></li>
+  <li><a href="#geometría-en-el-espacio-de-representaciones-1" id="toc-geometría-en-el-espacio-de-representaciones-1" class="nav-link" data-scroll-target="#geometría-en-el-espacio-de-representaciones-1">Geometría en el espacio de representaciones</a></li>
+  <li><a href="#evaluación-de-calidad-de-modelos" id="toc-evaluación-de-calidad-de-modelos" class="nav-link" data-scroll-target="#evaluación-de-calidad-de-modelos">Evaluación de calidad de modelos</a></li>
+  </ul></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title"><span class="chapter-number">16</span>&nbsp; <span class="chapter-title">Dimensiones latentes: embeddings</span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+</header>
+
+<p>En esta parte veremos otras maneras de hacer reducción de dimensionalidad para sistemas de recomendación y procesamiento de lenguaje natural. El enfoque de estos métodos es diferente a svd: en el primer caso utilizaremos factorizaciones generales de matrices, y en el segundo extraeremos información de capas de redes neuronales o modelos similares para obtener representaciones densas de dimensión relativamente baja.</p>
+<section id="sistemas-de-recomendación" class="level2" data-number="16.1">
+<h2 data-number="16.1" class="anchored" data-anchor-id="sistemas-de-recomendación"><span class="header-section-number">16.1</span> Sistemas de recomendación</h2>
+<p>En esta parte, consideramos la idea de utilizar reducción de dimensionalidad para hacer recomendaciones. Esta idea propone que hay ciertos factores latentes (no observados) que describen películas con “contenido implícito similar”, y usuarios según su interés en esa dimensión.</p>
+<p>Otra manera de llamar estos factores latentes es <strong>embedding</strong>: buscamos un <strong>embedding</strong> (una representación numérica en cierta dimensión no muy alta) que nos permita predecir el gusto de un usuario por una película.</p>
+<p>Este método nos permitirá también controlar mejor los resultados ruidosos que obtuvimos en los ejemplos anteriores (usando regularización y reducción de dimensión).</p>
+<section id="ejemplo" class="level3" data-number="16.1.1">
+<h3 data-number="16.1.1" class="anchored" data-anchor-id="ejemplo"><span class="header-section-number">16.1.1</span> Ejemplo: una dimensión latente</h3>
+<p>Por ejemplo: consideramos una dimensión de películas serias contra películas divertidas. <span class="math inline">\(3\)</span> películas podrían describirse con</p>
+<p><span class="math display">\[v=(-2,0,1)\]</span>,</p>
+<p>lo que interpretamos como la película <span class="math inline">\(1\)</span> es divertida (negativa en seriedad-diversión), la película <span class="math inline">\(2\)</span> está en promedio, y la película <span class="math inline">\(3\)</span> es más seria que las dos anteriores.</p>
+<p>Por otro lado, tenemos descriptores de 5 usuarios:</p>
+<p><span class="math display">\[u=(2,3,-3,0,1)\]</span> que dice que a los primeros dos usuarios les gustan las películas serias, al tercero le gustan las divertidas, y los dos últimos no tienen preferencia clara a lo largo de esta dimensión.</p>
+<p>Qusiéramos predecir el gusto usando estos dos vectores. Nuestras predicciones (considerando que <span class="math inline">\(u\)</span> y <span class="math inline">\(v\)</span> son matrices de una columna) serían simplemente</p>
+<p><span class="math display">\[\widetilde{X} = u v^t\]</span></p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>u <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="dv">2</span>,<span class="dv">3</span>,<span class="sc">-</span><span class="dv">3</span>,<span class="dv">0</span>,<span class="dv">1</span>)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>v <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="sc">-</span><span class="dv">2</span>,<span class="dv">0</span>,<span class="dv">1</span>)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>gustos <span class="ot">&lt;-</span> u <span class="sc">%*%</span> <span class="fu">t</span>(v)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>gustos</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>     [,1] [,2] [,3]
+[1,]   -4    0    2
+[2,]   -6    0    3
+[3,]    6    0   -3
+[4,]    0    0    0
+[5,]   -2    0    1</code></pre>
+</div>
+</div>
+<p>Así que al usuario <span class="math inline">\(1\)</span> le recomndamos la película <span class="math inline">\(3\)</span>, pero al usuario <span class="math inline">\(3\)</span> le recomendamos la película <span class="math inline">\(1\)</span>.</p>
+<hr>
+<p>La idea es entonces encontrar pesos para películas <span class="math inline">\(u\)</span> y para usuarios <span class="math inline">\(v\)</span> de forma que <span class="math inline">\(X\approx \widetilde{X} = uv^t\)</span>: podemos reproducir las calificaciones observadas a partir de nuestro modelo de factores latentes.</p>
+<p>Nótese sin embargo que hay varias dimensiones que pueden describir a películas y usuarios: por ejemplo, seria-divertida, artística-hollywood, ciencia ficción, con/sin violencia, etc. Podemos proponer más dimensiones latentes de la siguiente forma:</p>
+</section>
+<section id="ejemplo" class="level3" data-number="16.1.2">
+<h3 data-number="16.1.2" class="anchored" data-anchor-id="ejemplo"><span class="header-section-number">16.1.2</span> Ejemplo: dos dimensiones latentes</h3>
+<p>Tenemos la dimensión anterior de seria-divertida</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>v_1 <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="sc">-</span><span class="dv">2</span>,<span class="dv">0</span>,<span class="dv">1</span>)</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>u_1 <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="dv">2</span>,<span class="dv">3</span>,<span class="sc">-</span><span class="dv">3</span>,<span class="dv">0</span>,<span class="dv">1</span>)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Y supongamos que tenemos otra dimensión con violencia - sin violencia</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>v_2 <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="sc">-</span><span class="dv">3</span>,<span class="dv">2</span>,<span class="dv">2</span>)</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>u_2 <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="sc">-</span><span class="dv">3</span>,<span class="sc">-</span><span class="dv">3</span>,<span class="dv">0</span>,<span class="sc">-</span><span class="dv">2</span>,<span class="dv">4</span>)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Que quiere decir que las películas <span class="math inline">\(2, 3\)</span> tienen volencia, pero la película <span class="math inline">\(1\)</span> no. Por otra parte, a los usuarios <span class="math inline">\(1,2\)</span> y <span class="math inline">\(5\)</span> no les gustan las películas con violencia, mientras que al usuario <span class="math inline">\(5\)</span> si les gustan.</p>
+<p>La idea ahora es que el gusto de una persona por una película se escribe como combinación de las dos dimensiones. Por ejemplo, para la persona <span class="math inline">\(1\)</span> tenemos, y la película <span class="math inline">\(1\)</span>, empezamos haciendo</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>u_1[<span class="dv">1</span>]<span class="sc">*</span>v_1[<span class="dv">1</span>]</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] -4</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>u_2[<span class="dv">1</span>]<span class="sc">*</span>v_2[<span class="dv">1</span>]</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 9</code></pre>
+</div>
+</div>
+<p>lo que quiere decir que el hecho de que la película <span class="math inline">\(1\)</span> no sea seria le resta <span class="math inline">\(4\)</span> en gusto (pues la película <span class="math inline">\(1\)</span> está del lado “divertido”), pero le suma <span class="math inline">\(9\)</span> en gusto, pues es una película sin violencia y esta persona está del lado “sin violencia”.</p>
+<p>Sumamos para encontrar el gusto total</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>u_1[<span class="dv">1</span>]<span class="sc">*</span>v_1[<span class="dv">1</span>] <span class="sc">+</span> u_2[<span class="dv">1</span>]<span class="sc">*</span>v_2[<span class="dv">1</span>]</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 5</code></pre>
+</div>
+</div>
+<p>Para calcular los gustos sobre todas las personas y películas, haríamos</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>U <span class="ot">&lt;-</span> <span class="fu">cbind</span>(u_1, u_2)</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>V <span class="ot">&lt;-</span> <span class="fu">cbind</span>(v_1, v_2)</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>U</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>     u_1 u_2
+[1,]   2  -3
+[2,]   3  -3
+[3,]  -3   0
+[4,]   0  -2
+[5,]   1   4</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>V</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>     v_1 v_2
+[1,]  -2  -3
+[2,]   0   2
+[3,]   1   2</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>U <span class="sc">%*%</span> <span class="fu">t</span>(V)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>     [,1] [,2] [,3]
+[1,]    5   -6   -4
+[2,]    3   -6   -3
+[3,]    6    0   -3
+[4,]    6   -4   -4
+[5,]  -14    8    9</code></pre>
+</div>
+</div>
+<ul>
+<li>El renglón <span class="math inline">\(j\)</span> de <span class="math inline">\(U\)</span> son los valores en las dimensiones latentes para la película <span class="math inline">\(i\)</span> (descriptores de usuarios).</li>
+<li>El renglón <span class="math inline">\(j\)</span> de <span class="math inline">\(V\)</span> son los valores en las dimensiones latentes para el usuario <span class="math inline">\(j\)</span> (descriptores de películas)</li>
+</ul>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Factorización de matrices para recomendación
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Con <span class="math inline">\(k\)</span> dimensiones latentes, el modelo que proponemos es:</p>
+<p><span class="math display">\[\widetilde{X} = UV^t\]</span></p>
+<p>donde <span class="math inline">\(U\)</span> es una matrix de <span class="math inline">\(n\times k\)</span> (<span class="math inline">\(n=\)</span> número de usuarios), y <span class="math inline">\(V\)</span> es una matriz de <span class="math inline">\(p \times k\)</span>, donde <span class="math inline">\(p\)</span> es el número de películas.</p>
+<p>Buscamos que, si <span class="math inline">\(X\)</span> son las verdaderas calificaciones, entonces <span class="math display">\[X\approx \widetilde{X}.\]</span></p>
+<p>y nótese que esta aproximación es en el sentido de las entradas de <span class="math inline">\(X\)</span> que <strong>son observadas</strong>. Sin embargo, <span class="math inline">\(\widetilde{X}\)</span> nos da predicciones para <strong>todos los pares película-persona</strong>.</p>
+</div>
+</div>
+<p>Bajo este modelo, la predicción para el usuario <span class="math inline">\(i\)</span> y la película <span class="math inline">\(j\)</span> es la siguiente suma sobre las dimensiones latentes:</p>
+<p><span class="math display">\[\widetilde{x}_{ij} =\sum_k u_{ik} v_{jk}\]</span></p>
+<p>que expresa el hecho de que el gusto de <span class="math inline">\(i\)</span> por <span class="math inline">\(j\)</span> depende de una combinación (suma) de factores latentes de películas ponderados por gusto por esos factores del usuario.</p>
+<p>El número de factores latentes <span class="math inline">\(k\)</span> debe ser seleccionado (por ejemplo, según el error de validación). Dado <span class="math inline">\(k\)</span>, para encontrar <span class="math inline">\(U\)</span> y <span class="math inline">\(V\)</span> (un total de <span class="math inline">\(k(n+p)\)</span> parámetros) buscamos minimizar</p>
+<p><span class="math display">\[\sum_{(i,j)\, obs} (x_{ij}-\widetilde{x}_{ij})^2,\]</span></p>
+<p>que también podemos escribir este problema (recuérdese que <span class="math inline">\(u_i\)</span> y <span class="math inline">\(v_j\)</span> aquí son vectores renglón) como</p>
+<p><span class="math display">\[\min_{U,V}\sum_{(i,j)\, obs} (x_{ij}-u_iv_j^t)^2\]</span> donde <span class="math inline">\(u_i\)</span> es el renglón <span class="math inline">\(i\)</span>-esimo de <span class="math inline">\(U\)</span> (gustos latentes del usuario <span class="math inline">\(i\)</span> en cada dimensión), y <span class="math inline">\(v_j\)</span> es el renglón <span class="math inline">\(j\)</span>-ésimo de la matriz <span class="math inline">\(V\)</span> (calificación latente de la película en cada dimensión)</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+¿Por qué funciona la idea de factores latentes?**
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<ul>
+<li><p>El método de factorización de matrices de grado bajo (<span class="math inline">\(k\)</span>) funciona compartiendo información a lo largo de películas y usuarios. Como tenemos que ajustar los datos observados, y solo tenemos a nuestra disposición <span class="math inline">\(k\)</span> descriptores para cada película y usuario, una minimización exitosa captura regularidades en los datos.</p></li>
+<li><p>Es importante que la representación sea de grado relativamente bajo, pues esta “compresión” es la que permite que las dimensiones latentes capturen regularidades que están en los datos observados (que esperamos encontrar en el proceso de ajuste).</p></li>
+<li><p>Al reducir la dimensión, también funcionan mejor métricas relativamente simples para calcular similitud entre usuarios o películas.</p></li>
+</ul>
+</div>
+</div>
+<p>Por ejemplo, supongamos que el gusto por las películas sólo depende de una dimensión sería - divertida. Si ajustamos un modelo de un solo factor latente, un <strong>mínimo</strong> se alcanzaría separando con la dimensión latente las películas serias de las divertidas, y los usuarios que prefieren películas serias o divertidas. Esta sería una buena explicación de los datos observados, y las predicciones para películas no vistas sería buena usando simplemente el valor en seriedad de la película (extraída de otras personas con gustos divertido o serio) y el gusto por seriedad de esa persona (extraida de la observación de que le gustan otras películas serias u otras divertidas).</p>
+</section>
+<section id="combinación-con-modelo-base" class="level3" data-number="16.1.3">
+<h3 data-number="16.1.3" class="anchored" data-anchor-id="combinación-con-modelo-base"><span class="header-section-number">16.1.3</span> Combinación con modelo base</h3>
+<p>Podemos usar también ideas de nuestro modelo base y modelar desviaciones en lugar de calificaciones directamente:</p>
+<p>Si <span class="math inline">\(X^0\)</span> son las predicciones del modelo de referencia, y <span class="math display">\[R = X-X^0\]</span> son los residuales del modelo base, buscamos mejor <span class="math display">\[R\approx \widetilde{X} = UV^t\]</span> de manera que las predicciones finales son <span class="math display">\[X^0 + \widetilde{X}\]</span></p>
+<p>Veremos también más adelante cómo regularizar estos sesgos como parte de la construcción del modelo.</p>
+</section>
+</section>
+<section id="factorización-de-matrices" class="level2" data-number="16.2">
+<h2 data-number="16.2" class="anchored" data-anchor-id="factorización-de-matrices"><span class="header-section-number">16.2</span> Factorización de matrices</h2>
+<p>Como vimos arriba, reexpresamos nuestro problema como un problema de factorización de matrices (encontrar <span class="math inline">\(U\)</span> y <span class="math inline">\(V\)</span>). Hay varias alternativas populares para atacarlo:</p>
+<ul>
+<li>Descomposición en valores singulares (SVD).</li>
+<li>Mínimos cuadrados alternados.</li>
+<li>Descenso en gradiente estocástico.</li>
+</ul>
+<p>No vamos a ver más de este enfoque de SVD que discutimos anteriormente, pues no es del todo apropiado: nuestras matrices tienen muchos datos faltantes, y SVD no está diseñado para lidiar con este problema. Se pueden hacer ciertas imputaciones (por ejemplo, insertar 0’s una vez que centramos por usuario), pero los siguientes dos métodos están mejor adaptados para nuestro problema.</p>
+</section>
+<section id="mínimos-cuadrados-alternados" class="level2" data-number="16.3">
+<h2 data-number="16.3" class="anchored" data-anchor-id="mínimos-cuadrados-alternados"><span class="header-section-number">16.3</span> Mínimos cuadrados alternados</h2>
+<p>Supongamos entonces que queremos encontrar matrices <span class="math inline">\(U\)</span> y <span class="math inline">\(V\)</span>, donde <span class="math inline">\(U\)</span> es una matrix de <span class="math inline">\(n \times k\)</span> (<span class="math inline">\(n=\)</span> número de usuarios), y <span class="math inline">\(V\)</span> es una matriz de <span class="math inline">\(p \times k\)</span>, donde <span class="math inline">\(p\)</span> es el número de películas que nos de una aproximación de la matrix <span class="math inline">\(X\)</span> de calificaciones <span class="math display">\[
+X \approx UV^t
+\]</span> Ahora supongamos que conocemos <span class="math inline">\(V_1\)</span>. Si este es el caso, entonces queremos resolver para <span class="math inline">\(U_1\)</span>: <span class="math display">\[ \min_{U_1}|| X - U_1V_1^t||_{obs}^2\]</span> Como <span class="math inline">\(V_1^t\)</span> están fijas, este es un problema de mínimos cuadrados usual, y puede resolverse analíticamente (o usar descenso en gradiente, que es simple de calcular de forma analítica) para encontrar <span class="math inline">\(U_1\)</span>. Una vez que encontramos <span class="math inline">\(U_1\)</span>, la fijamos, e intentamos ahora resolver para <span class="math inline">\(V\)</span>:</p>
+<p><span class="math display">\[ \min_{V_2}|| X - U_1V_2^t||_{obs}^2\]</span> Y una vez que encontramos <span class="math inline">\(V_2\)</span> resolvemos</p>
+<p><span class="math display">\[ \min_{U_2}|| X - U_2V_2^t||_{obs}^2\]</span></p>
+<p>Continuamos este proceso hasta encontrar un mínimo local o hasta cierto número de iteraciones. Para inicializar <span class="math inline">\(V_1\)</span>, en <span class="citation" data-cites="alsreg">(<a href="99-referencias.html#ref-alsreg" role="doc-biblioref"><strong>alsreg?</strong></a>)</span> se recomienda tomar como primer renglón el promedio de las calificaciones de las películas, y el resto números aleatorios chicos (por ejemplo <span class="math inline">\(U(0,1)\)</span>). También pueden inicializarse con números aleatorios chicos las dos matrices.</p>
+<section id="mínimos-cuadrados-alternados-con-regularización" class="level3" data-number="16.3.1">
+<h3 data-number="16.3.1" class="anchored" data-anchor-id="mínimos-cuadrados-alternados-con-regularización"><span class="header-section-number">16.3.1</span> Mínimos cuadrados alternados con regularización</h3>
+<p>Para agregar regularización y lidiar con los datos ralos, podemos incluir un coeficiente adicional. Minimizamos entonces (como en <span class="citation" data-cites="alsreg">(<a href="99-referencias.html#ref-alsreg" role="doc-biblioref"><strong>alsreg?</strong></a>)</span>):</p>
+<p><span class="math display">\[\min_{U,V}\sum_{(i,j)\, obs} (x_{ij}-u_i^tv_j)^2 +
+\lambda \left ( \sum_i n_{i}||u_i||^2 + \sum_j m_{j} ||v_j||^2 \right)\]</span></p>
+<p>y modificamos de manera correspondiente cada paso de mínimos cuadrados mostrado arriba. <span class="math inline">\(n_{i}\)</span> es el número de evaluaciones del usuario <span class="math inline">\(i\)</span>, y <span class="math inline">\(m_j\)</span> es el número de evaluaciones de la película <span class="math inline">\(j\)</span>.</p>
+<p><strong>Observaciones</strong>:</p>
+<ul>
+<li>Nótese que penalizamos el tamaños de los vectores <span class="math inline">\(u_i\)</span> y <span class="math inline">\(v_j\)</span> para evitar sobreajuste (como en regresión ridge).</li>
+<li>Nótese también que los pesos <span class="math inline">\(n_i\)</span> y <span class="math inline">\(m_j\)</span> en esta regularización hace comparables el término que aparece en la suma de los residuales al cuadrado (la primera suma), y el término de regularización: por ejemplo, si el usuario <span class="math inline">\(i\)</span> hizo <span class="math inline">\(n_i\)</span> evaluaciones, entonces habrá <span class="math inline">\(n_i\)</span> términos en la suma de la izquierda. Lo mismo podemos decir acerca de las películas.</li>
+<li>Este no es el único término de regularización posible. Por ejemplo, podríamos <em>no</em> usar los pesos <span class="math inline">\(n_i\)</span> y <span class="math inline">\(m_j\)</span>, y obtendríamos un esquema razonable también, donde hay más regularización relativa para usuarios/películas que tengan pocas evaluaciones.</li>
+</ul>
+<p>Este método está implementado en <a href="https://spark.apache.org/docs/3.0.0/mllib-collaborative-filtering.html">spark</a>. La implementación está basada parcialmente en <span class="citation" data-cites="alsreg">(<a href="99-referencias.html#ref-alsreg" role="doc-biblioref"><strong>alsreg?</strong></a>)</span>. La inicialización es diferente en spark, ver <a href="https://github.com/apache/spark/blob/v3.0.0/mllib/src/main/scala/org/apache/spark/ml/recommendation/ALS.scala">el código</a>, donde cada renglón se inicializa con un vector de <span class="math inline">\(N(0,1)\)</span> normalizado.</p>
+</section>
+</section>
+<section id="retroalimentación-implícita" class="level2" data-number="16.4">
+<h2 data-number="16.4" class="anchored" data-anchor-id="retroalimentación-implícita"><span class="header-section-number">16.4</span> Retroalimentación implícita</h2>
+<p>Esta sección está basada en <span class="citation" data-cites="recomendacion-implicita">(<a href="99-referencias.html#ref-recomendacion-implicita" role="doc-biblioref"><strong>recomendacion-implicita?</strong></a>)</span>.</p>
+<p>En el ejemplo que vimos arriba, la retroalimentación es expícita en el sentido de que los usuarios califican los artículos (<span class="math inline">\(1-\)</span> no me gustó nada, hasta <span class="math inline">\(5-\)</span> me gustó mucho). Sin embargo, es común encontrar casos donde no existe esta retroalimentación explícita, y solo tenemos medidas del gusto implícito, por ejemplo:</p>
+<ul>
+<li>Cuántas veces un usuario ha pedido un cierto artículo.</li>
+<li>Qué porcentaje del programa fue visto.</li>
+<li>Cuánto tiempo pasó en la página web.</li>
+<li>Cuántas veces oyó una canción.</li>
+</ul>
+<p>Estos datos tienen la ventaja de que describen acciones del usuario, en lugar de un rating que puede estar influido por sesgos de imagen o de la calificación que “debería” tener un artículo además de la preferencia: quizá disfruto muchísimo <em>Buffy the Vampire Slayer</em>, pero lo califico con un <span class="math inline">\(3\)</span>, aunque un documental de ballenas que simplemente me gustó le pongo un <span class="math inline">\(5\)</span>. En los datos implícitos se vería de todas formas mi consumo frecuente de <em>Buffy the Vampire Slayer</em>, y quizá unos cuantos de documentales famosos.</p>
+<p>Sea <span class="math inline">\(r_{ij}\)</span> una medida implícita como las mencionadas arriba, para el usuario <span class="math inline">\(i\)</span> y el artículo <span class="math inline">\(j\)</span>. Ponemos <span class="math inline">\(r_{i,j}=0\)</span> cuando no se ha observado interacción entre este usuario y el artículo.</p>
+<p>Una diferencia importante con los ratings explícitos es que los datos implícitos son en un sentido menos informativos que los explícitos:</p>
+<ul>
+<li><p>Puede ser que el valor de <span class="math inline">\(r_{ij}\)</span> sea relativamente bajo (pocas interacciones), pero de todas formas se trate de un artículo que es muy preferido (por ejemplo, solo vi Star Wars I una vez, pero me gusta mucho, o nunca he encontrado Star Wars I en el catálogo). Esto no pasa con los ratings, pues ratings bajos indican baja preferencia.</p></li>
+<li><p>Sin embargo, estamos seguros de que niveles altos de interacción (oyó muchas veces una canción, etc.), es indicación de preferencia alta.</p></li>
+<li><p>Usualmente la medida <span class="math inline">\(r_{ij}\)</span> <strong>no</strong> tiene faltantes, o tiene un valor implícito para faltantes. Por ejemplo, si la medida es % de la película que vi, todas las películas con las que no he interactuado tienen <span class="math inline">\(r_{ij}=0\)</span>.</p></li>
+</ul>
+<p>Así que en nuestro modelo no necesariamente queremos predecir directamente la variable <span class="math inline">\(r_{ij}\)</span>: puede haber artículos con predicción baja de <span class="math inline">\(r_{ij}\)</span> que descubramos de todas formas van a ser altamente preferidos. Un modelo que haga una predicción de <span class="math inline">\(r_{îj}\)</span> reflejaría más los patrones de consumo actual en lugar de permitirnos descubrir artículos preferidos con los que no necesariamente existe interacción.</p>
+<section id="ejemplo-1" class="level3" data-number="16.4.1">
+<h3 data-number="16.4.1" class="anchored" data-anchor-id="ejemplo-1"><span class="header-section-number">16.4.1</span> Ejemplo</h3>
+<p>Consideremos los siguientes usuarios, donde medimos por ejemplo el número de minutos que pasó cada usuario viendo cada película:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>imp <span class="ot">&lt;-</span> <span class="fu">tibble</span>(<span class="at">usuario =</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">6</span>,</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>              <span class="at">StarWars1 =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">150</span>, <span class="dv">300</span>, <span class="dv">250</span>),</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>              <span class="at">StarWars2 =</span> <span class="fu">c</span>(<span class="dv">250</span>,  <span class="dv">200</span>, <span class="dv">0</span>, <span class="dv">200</span>, <span class="dv">220</span>,<span class="dv">180</span>), </span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>              <span class="at">StarWars3 =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">250</span>, <span class="dv">300</span>, <span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">0</span>),</span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>              <span class="at">Psycho =</span> <span class="fu">c</span>(<span class="dv">5</span>, <span class="dv">1</span>, <span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">2</span>)) </span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>imp</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 6 × 5
+  usuario StarWars1 StarWars2 StarWars3 Psycho
+    &lt;int&gt;     &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;  &lt;dbl&gt;
+1       1         0       250         0      5
+2       2         0       200       250      1
+3       3         0         0       300      0
+4       4       150       200         0      0
+5       5       300       220         0      0
+6       6       250       180         0      2</code></pre>
+</div>
+</div>
+<p>Quiséramos encontrar una manera de considerar los 0’s como información más suave (es decir, alguien puede tener valores bajos de interacción con una película, pero esto no implica necesariamente que no sea preferida). Esto implica que es más importante ajustar los valores altos del indicador implícito de preferencia.</p>
+<hr>
+<p>Una solución propuesta en <span class="citation" data-cites="recomendacion-implicita">(<a href="99-referencias.html#ref-recomendacion-implicita" role="doc-biblioref"><strong>recomendacion-implicita?</strong></a>)</span> (e implementada en spark) es darle menos importancia al valor <span class="math inline">\(r_{ij}\)</span> en la construcción de los factores latentes, especialmente si tiene valores bajos.</p>
+<p>Para hacer esto, primero definimos la variable de preferencia</p>
+<p><span class="math display">\[p_{ij} =
+\begin{cases}
+1, &amp;\mbox{si } r_{ij}&gt;0,\\
+0, &amp;\mbox{si } r_{ij}=0.\\
+\end{cases}\]</span></p>
+<p>Esta variable <span class="math inline">\(p_{ij}\)</span>, cuando vale uno, indica algún nivel de confianza en la preferencia. ¿Pero qué tanto valor debemos darle a esta preferencia? Definimos la confianza como <span class="math display">\[c_{ij} = 1+ \alpha r_{ui},\]</span> donde <span class="math inline">\(\alpha\)</span> es un parámetro que hay que afinar (por ejemplo <span class="math inline">\(\alpha\)</span> entre <span class="math inline">\(1\)</span> y <span class="math inline">\(50\)</span>). Para predicciones de vistas de TV, en <span class="citation" data-cites="recomendacion-implicita">(<a href="99-referencias.html#ref-recomendacion-implicita" role="doc-biblioref"><strong>recomendacion-implicita?</strong></a>)</span> utilizan <span class="math inline">\(\alpha = 40\)</span>, donde <span class="math inline">\(r_{ij}\)</span> es el número de veces que el usuario ha visto un programa (contando vistas parciales, así que es un número real).</p>
+<p>La función objetivo (sin regularización) se define como</p>
+<p><span class="math display">\[\begin{equation}
+L =  \sum_{(i,j)} c_{ij}(p_{ij}  - \sum_{l=1}^k u_{i,l}v_{j,l})^2
+(#eq:implicita)
+\end{equation}\]</span></p>
+<p>Nótese que :</p>
+<ul>
+<li>Cuando <span class="math inline">\(c_ij\)</span> es alta (porque <span class="math inline">\(r_{i,j}\)</span> es alta), para minimizar esta cantidad tenemos que hacer la predicción de $p_{ij}cercana a 1, pues el error se multiplica por <span class="math inline">\(c_{ij}\)</span>. Sin embargo,</li>
+<li>Cuando <span class="math inline">\(r_{i,j}\)</span> es bajo, no es tan importante ajustar esta información con precisión: si <span class="math inline">\(p_{ij} = 1\)</span>, puede ser que <span class="math inline">\(\sum_{l=1}^k u_{i,l}v_{j,l}\)</span> sea muy bajo, y si <span class="math inline">\(p_{ij}=0\)</span>, puede ser que <span class="math inline">\(\sum_{l=1}^k u_{i,l}v_{j,l}\)</span> sea cercano a 1 sin afectar tanto el error.</li>
+<li>Esto permite que en el ajuste podamos descubrir artículos con <span class="math inline">\(p_{ij}\)</span> alta para algún usuario, aún cuando <span class="math inline">\(r_{ij}\)</span> es cero o muy chico.</li>
+</ul>
+</section>
+<section id="ejemplo-2" class="level3" data-number="16.4.2">
+<h3 data-number="16.4.2" class="anchored" data-anchor-id="ejemplo-2"><span class="header-section-number">16.4.2</span> Ejemplo</h3>
+<p>Veamos cómo se ven soluciones de un factor</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>imp_mat <span class="ot">&lt;-</span> imp <span class="sc">|&gt;</span> <span class="fu">select</span>(<span class="sc">-</span>usuario) <span class="sc">|&gt;</span> <span class="fu">as.matrix</span>()</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>error_explicito <span class="ot">&lt;-</span> <span class="cf">function</span>(uv){</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>  u <span class="ot">&lt;-</span> <span class="fu">matrix</span>(uv[<span class="dv">1</span><span class="sc">:</span><span class="dv">6</span>], <span class="at">ncol =</span> <span class="dv">1</span>)</span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>  v <span class="ot">&lt;-</span> <span class="fu">matrix</span>(uv[<span class="dv">7</span><span class="sc">:</span><span class="dv">10</span>], <span class="at">ncol =</span> <span class="dv">1</span>)</span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">sum</span>((imp_mat <span class="sc">-</span> u <span class="sc">%*%</span> <span class="fu">t</span>(v))<span class="sc">^</span><span class="dv">2</span>)</span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>error_implicito <span class="ot">&lt;-</span> <span class="cf">function</span>(uv){</span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>  u <span class="ot">&lt;-</span> <span class="fu">matrix</span>(uv[<span class="dv">1</span><span class="sc">:</span><span class="dv">6</span>], <span class="at">ncol =</span> <span class="dv">1</span>)</span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a>  v <span class="ot">&lt;-</span> <span class="fu">matrix</span>(uv[<span class="dv">7</span><span class="sc">:</span><span class="dv">10</span>], <span class="at">ncol =</span> <span class="dv">1</span>)</span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a>  pref_mat <span class="ot">&lt;-</span> <span class="fu">as.numeric</span>(imp_mat <span class="sc">&gt;</span> <span class="dv">0</span>) <span class="sc">-</span> u <span class="sc">%*%</span> <span class="fu">t</span>(v)</span>
+<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a>  confianza <span class="ot">&lt;-</span> <span class="dv">1</span> <span class="sc">+</span> <span class="fl">0.1</span> <span class="sc">*</span> imp_mat</span>
+<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">sum</span>((confianza <span class="sc">*</span> pref_mat)<span class="sc">^</span><span class="dv">2</span> )</span>
+<span id="cb19-13"><a href="#cb19-13" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Si intentamos ajustar los ratings implícitos como si fueran explícitos, obtenemos los siguientes ajustados con un solo factor latente:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>uv_inicial <span class="ot">&lt;-</span> <span class="fu">runif</span>(<span class="dv">10</span>)</span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>opt_exp <span class="ot">&lt;-</span> <span class="fu">optim</span>(<span class="at">par =</span> uv_inicial, error_explicito, <span class="at">method =</span> <span class="st">"BFGS"</span>)</span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>opt_exp<span class="sc">$</span>par[<span class="dv">7</span><span class="sc">:</span><span class="dv">10</span>]</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 11.61039230 14.38951022  3.64758323  0.09367983</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="fu">t</span>(<span class="fu">t</span>(opt_exp<span class="sc">$</span>par[<span class="dv">1</span><span class="sc">:</span><span class="dv">6</span>])) <span class="sc">%*%</span> <span class="fu">t</span>(opt_exp<span class="sc">$</span>par[<span class="dv">7</span><span class="sc">:</span><span class="dv">10</span>]) <span class="sc">|&gt;</span> <span class="fu">round</span>()</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>     [,1] [,2] [,3] [,4]
+[1,]  118  146   37    1
+[2,]  124  154   39    1
+[3,]   36   44   11    0
+[4,]  151  187   47    1
+[5,]  217  269   68    2
+[6,]  180  223   56    1</code></pre>
+</div>
+</div>
+<p>Nótese que esta solución no es muy buena: una componente intenta capturar los patrones de consumo de estas cuatro películas.</p>
+<p>Si usamos preferencias y confianza, obtenemos:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>opt_imp <span class="ot">&lt;-</span> <span class="fu">optim</span>(<span class="at">par =</span> uv_inicial, error_implicito, <span class="at">method =</span> <span class="st">"BFGS"</span>)</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>opt_imp<span class="sc">$</span>par[<span class="dv">7</span><span class="sc">:</span><span class="dv">10</span>]</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 1.319968 1.322077 1.316455 0.819997</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="fu">t</span>(<span class="fu">t</span>(opt_imp<span class="sc">$</span>par[<span class="dv">1</span><span class="sc">:</span><span class="dv">6</span>])) <span class="sc">%*%</span> <span class="fu">t</span>(opt_imp<span class="sc">$</span>par[<span class="dv">7</span><span class="sc">:</span><span class="dv">10</span>]) <span class="sc">|&gt;</span> <span class="fu">round</span>(<span class="dv">2</span>)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>     [,1] [,2] [,3] [,4]
+[1,]    1    1 0.99 0.62
+[2,]    1    1 1.00 0.62
+[3,]    1    1 1.00 0.62
+[4,]    1    1 0.99 0.62
+[5,]    1    1 1.00 0.62
+[6,]    1    1 1.00 0.62</code></pre>
+</div>
+</div>
+<p>que indica que la información en esta matriz es consistente con que todos los usuarios tienen preferencia alta por las tres películas de Star Wars, y menos por la cuarta.</p>
+<hr>
+<p>Igual que en los ejemplos anteriores, usualmente se agregan términos de regularización para los vectores renglón <span class="math inline">\(u_i\)</span> y <span class="math inline">\(v_j\)</span>.</p>
+</section>
+<section id="evaluación-para-modelos-implícitos" class="level3" data-number="16.4.3">
+<h3 data-number="16.4.3" class="anchored" data-anchor-id="evaluación-para-modelos-implícitos"><span class="header-section-number">16.4.3</span> Evaluación para modelos implícitos</h3>
+<p>La evaluación para modelos implícitos no es tan simple como en el caso explícito, pues no estamos modelando directamente los valores observados <span class="math inline">\(r_{ij}\)</span>. Medidas como RECM o MAD que usamos en el caso explícito no son tan apropiadas para este problema.</p>
+<p>Una alternativa es, para cada usuario <span class="math inline">\(i\)</span>, ordenar los artículos de mayor a menor valor de <span class="math inline">\(\hat{p}_{ij} = u_iv_j^t\)</span> (canciones, pellículas), y calculamos:</p>
+<p><span class="math display">\[
+rank = \frac{\sum_{j} p_{ij}rank_{i,j}}{\sum_j p_{ij}}
+\]</span></p>
+<p>donde <span class="math inline">\(rank_{ij}\)</span> es el percentil del artículo <span class="math inline">\(j\)</span> en la lista ordenada de artículos. <span class="math inline">\(rank_{ij}=0\)</span> para el mejor artículo, y <span class="math inline">\(rank_{ij}=1\)</span> para el peor. Es decir, obtenemos valores más bajos si observamos que los usuarios interactúan con artículos que están más arriba en el ranking.</p>
+<p>Esta suma es un promedio sobre los rankings del usuario con <span class="math inline">\(p_{ij}=1\)</span>, y <strong>menores valores son mejores</strong> (quiere decir que hubo alguna preferencia por los items con <span class="math inline">\(rank_{ij}\)</span> bajo, es decir, los mejores de nuestra lista predicha. Es posible también hacer un promedio ponderado por <span class="math inline">\(r_{ij}\)</span>: <span class="math display">\[
+rank = \frac{\sum_{j} r_{ij}rank_{i,j}}{\sum_j r_{ij}}
+\]</span></p>
+<p>que es lo mismo que la ecuación anterior pero ponderando por el interés mostrado en cada artículo con <span class="math inline">\(p_{ij}=1\)</span>.</p>
+<ul>
+<li>Menores valores de <span class="math inline">\(rank\)</span> son mejores.</li>
+<li>Si escogemos al azar el ordenamiento de los artículos, el valor esperado de <span class="math inline">\(rank_{ij}\)</span> es <span class="math inline">\(0.5\)</span> (en medio de la lista), lo que implica que el valor esperado de <span class="math inline">\(rank\)</span> es <span class="math inline">\(0.50\)</span>. Cualquier modelo con <span class="math inline">\(rank\geq 0.5\)</span> es peor que dar recomendaciones al azar.</li>
+</ul>
+<p>Esta cantidad la podemos evaluar en entrenamiento y en validación. Para construir el conjunto de validación podemos hacer:</p>
+<ul>
+<li>Escogemos un número de usuarios para validación (por ejemplo <span class="math inline">\(20\%\)</span>)</li>
+<li>Ponemos <span class="math inline">\(50\%\)</span> de los artículos evaluados por estas personas en validación, por ejemplo.</li>
+</ul>
+<p>Estas cantidades dependen de cuántos datos tengamos, como siempre, para tener un tamaño razonable de datos de validación.</p>
+</section>
+</section>
+<section id="representación-de-palabras-y-word2vec" class="level1" data-number="17">
+<h1 data-number="17"><span class="header-section-number">17</span> Representación de palabras y word2vec</h1>
+<p>En esta parte empezamos a ver los enfoques más modernos (redes neuronales) para construir modelos de lenguajes y resolver tareas de NLP. Se trata de modelos de lenguaje que incluyen más estructura, son más fáciles de regularizar y de ampliar si es necesario para incluir dependencias de mayor distancia. El método de conteo/suavizamiento de ngramas es simple y funciona bien para algunas tareas, pero podemos construir mejores modelos con enfoques más estructurados, y con más capacidad para aprender aspectos más complejos del lenguaje natural.</p>
+<p>Si <span class="math inline">\(w=w_1w_2\cdots w_N\)</span> es una frase, y las <span class="math inline">\(w\)</span> representan palabras, recordemos que un modelo de lenguaje con dependencia de <span class="math inline">\(n\)</span>-gramas consiste de las probabilidades</p>
+<p><span class="math display">\[P(w_t | w_{t-1} w_{t-2} \cdots w_{t-n+1}),\]</span></p>
+<p>(n=2, bigramas, n=3 trigramas, etc.)</p>
+<p>Un enfoque donde intentamos estimar directamente estas probabilidades de los datos observados (modelos de n-gramas) puede ser útil en algunos casos (por ejemplo autocorrección simple), pero en general la mayoría de las sucesiones del lenguaje no son observadas en ningún corpues, y es necesario considerar un un enfoque más estructurado pensando en representaciones “distribucionales” de palabras:</p>
+<ol type="1">
+<li>Asociamos a cada palabra en el vocabulario un vector numérico con <span class="math inline">\(d\)</span> dimensiones, que es su <em>representación distribuida</em>.</li>
+<li>Expresamos la función de probabilidad como combinaciones de las representaciones vectoriales del primer paso.</li>
+<li>Aprendemos (máxima verosimiltud posiblemente regularización) simultáneamente los vectores y la manera de combinar estos vectores para producir probabilidades.</li>
+</ol>
+<p>La idea de este modelo es entonces subsanar la relativa escasez de datos (comparado con todos los trigramas que pueden existir) con estructura. Sabemos que esta es una buena estrategia si la estrucutura impuesta es apropiada.</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Embeddings de palabras
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Una de las ideas fundamentales de este enfoque es representar a cada palabra como un vector numérico de dimensión <span class="math inline">\(d\)</span>. Esto se llama una <em>representación vectorial distribuida</em>, o también un <em>embedding de palabras</em>.</p>
+</div>
+</div>
+<p>El objeto es entonces abstraer características de palabras (mediante estas representaciones) intentando no perder mucho de su sentido original, lo que nos permite conocer palabras por su contexto, aún cuando no las hayamos observado antes.</p>
+<section id="ejemplo-3" class="level4 unnumbered">
+<h4 class="unnumbered anchored" data-anchor-id="ejemplo-3">Ejemplo</h4>
+<p>¿Cómo puede funcionar este enfoque? Por ejemplo, si vemos la frase “El gato corre en el jardín”, sabemos que una frase probable debe ser también “El perro corre en el jardín”, pero quizá nunca vimos en el corpus la sucesión “El perro corre”. La idea es que como “perro” y “gato” son funcionalmente similares (aparecen en contextos similares en otros tipos de oraciones como el perro come, el gato come, el perro duerme, este es mi gato, etc.), un modelo como el de arriba daría vectores similares a “perro” y “gato”, pues aparecen en contextos similares. Entonces el modelo daría una probabilidad alta a “El perro corre en el jardín”.</p>
+</section>
+<section id="modelo-de-red-neuronal" class="level2" data-number="17.1">
+<h2 data-number="17.1" class="anchored" data-anchor-id="modelo-de-red-neuronal"><span class="header-section-number">17.1</span> Modelo de red neuronal</h2>
+<p>Podemos entonces construir una red neuronal con 2 capas ocultas como sigue (segimos <span class="citation" data-cites="bengio">(<a href="99-referencias.html#ref-bengio" role="doc-biblioref">Bengio et&nbsp;al. 2003</a>)</span>, una de las primeras referencias en usar este enfoque). Notamos que los enfoques más efectivos actualmente, con conjuntos de datos más grandes, se utilizan arquitecturas más refinadas que permiten modelación de dependencias de mayor distancia, comenzando con la idea de <a href="https://arxiv.org/abs/1706.03762">atención</a>.</p>
+<p>En este ejemplo usaremos el ejemplo de trigramas:</p>
+<ol type="1">
+<li><strong>Capa de incrustación o embedding</strong>. En la primera capa oculta, tenemos un mapeo de las entradas <span class="math inline">\(w_1,\ldots, w_{n-1}\)</span> a <span class="math inline">\(x=C(w_1),\ldots, C(w_{n-1})\)</span>, donde <span class="math inline">\(C\)</span> es una función que mapea palabras a vectores de dimensión <span class="math inline">\(d\)</span>. <span class="math inline">\(C\)</span> también se puede pensar como una matriz de dimensión <span class="math inline">\(|V|\)</span> por <span class="math inline">\(d\)</span>. En la capa de entrada,</li>
+</ol>
+<p><span class="math display">\[w_{n-2},w_{n-1} \to x = (C(w_{n-2}), C(w_{n-1})).\]</span></p>
+<ol start="2" type="1">
+<li><strong>Capa totalmente conexa</strong>. En la siguiente capa oculta tenemos una matriz de pesos <span class="math inline">\(H\)</span> y la función logística (o tangente hiperbólica) <span class="math inline">\(\sigma (z) = \frac{e^z}{1+e^z}\)</span>, como en una red neuronal usual.</li>
+</ol>
+<p>En esta capa calculamos <span class="math display">\[z = \sigma (a + Hx),\]</span> que resulta en un vector de tamaño <span class="math inline">\(h\)</span>.</p>
+<ol start="3" type="1">
+<li>La <strong>capa de salida</strong> debe ser un vector de probabilidades sobre todo el vocabulario <span class="math inline">\(|V|\)</span>. En esta capa tenemos pesos <span class="math inline">\(U\)</span> y hacemos <span class="math display">\[y = b + U\sigma (z),\]</span> y finalmente usamos softmax para tener probabilidades que suman uno: <span class="math display">\[p_i = \frac{\exp (y_i) }{\sum_j exp(y_j)}.\]</span></li>
+</ol>
+<p>En el ajuste maximizamos la verosimilitud:</p>
+<p><span class="math display">\[\sum_t \log \hat{P}(w_{t,n}|w_{t,n-2}w_{t-n-1}) \]</span></p>
+<p>La representación en la referencia <span class="citation" data-cites="bengio">(<a href="99-referencias.html#ref-bengio" role="doc-biblioref">Bengio et&nbsp;al. 2003</a>)</span> es:</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="figuras/1_neural_model.png" class="img-fluid figure-img"></p>
+<figcaption class="figure-caption">Imagen</figcaption>
+</figure>
+</div>
+<p>Esta idea original ha sido explotada con éxito, pero en arquitecturas más modernas (mediante el mecanismo de atención). Nótese que el número de parámetros es del orden de <span class="math inline">\(|V|(nm+h)\)</span>, donde <span class="math inline">\(|V|\)</span> es el tamaño del vocabulario (decenas o cientos de miles), <span class="math inline">\(n\)</span> es 3 o 4 (trigramas, 4-gramas), <span class="math inline">\(m\)</span> es el tamaño de la representacion (cientos) y <span class="math inline">\(h\)</span> es el número de nodos en la segunda capa (también cientos o miles). Esto resulta en el mejor de los casos en modelos con miles de millones de parámetros. Adicionalmente, hay algunos cálculos costosos, como el softmax (donde hay que hacer una suma sobre el vocabulario completo). En el paper original se propone <strong>descenso estocástico</strong>.</p>
+<section id="ejemplo-4" class="level3 unnumbered">
+<h3 class="unnumbered anchored" data-anchor-id="ejemplo-4">Ejemplo</h3>
+<p>Veamos un ejemplo chico de cómo se vería el paso feed-forward de esta red. Supondremos en este ejemplo que los sesgos <span class="math inline">\(a,b\)</span> son iguales a cero para simplificar los cálculos.</p>
+<p>Consideremos que el texto de entrenamiento es “El perro corre. El gato corre. El león corre. El león ruge.”</p>
+<p>En este caso, nuestro vocabulario consiste de los 8 tokens <span class="math inline">\(&lt;s&gt;\)</span>, el, perro, gato, león, corre, caza <span class="math inline">\(&lt;/s&gt;\)</span>. Consideremos un modelo con <span class="math inline">\(d=2\)</span> (representaciones de palabras en 2 dimensiones), y consideramos un modelo de trigramas.</p>
+<p>Nuestra primera capa es una matriz <span class="math inline">\(C\)</span> de tamaño <span class="math inline">\(2\times 8\)</span>, es decir, un vector de tamaño 2 para cada palabra. Por ejemplo, podríamos tener</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">63</span>)</span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>C <span class="ot">&lt;-</span> <span class="fu">round</span>(<span class="fu">matrix</span>(<span class="fu">rnorm</span>(<span class="dv">16</span>, <span class="dv">0</span>, <span class="fl">0.1</span>), <span class="dv">2</span>, <span class="dv">8</span>), <span class="dv">2</span>)</span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a><span class="fu">colnames</span>(C) <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"_s_"</span>, <span class="st">"el"</span>, <span class="st">"perro"</span>, <span class="st">"gato"</span>, <span class="st">"león"</span>, <span class="st">"corre"</span>, <span class="st">"caza"</span>, <span class="st">"_ss_"</span>)</span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a><span class="fu">rownames</span>(C) <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"d_1"</span>, <span class="st">"d_2"</span>)</span>
+<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a>C</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>      _s_    el perro gato  león corre caza  _ss_
+d_1  0.13  0.05  0.05 0.04 -0.17  0.04 0.03 -0.02
+d_2 -0.19 -0.19 -0.11 0.01  0.04 -0.01 0.02  0.02</code></pre>
+</div>
+</div>
+<p>En la siguiente capa consideremos que usaremos, arbitrariamente, <span class="math inline">\(h=3\)</span> unidades. Como estamos considerando bigramas, necesitamos una entrada de tamaño 4 (representación de un bigrama, que son dos vectores de la matriz <span class="math inline">\(C\)</span>, para predecir la siguiente palabra).</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>H <span class="ot">&lt;-</span> <span class="fu">round</span>(<span class="fu">matrix</span>(<span class="fu">rnorm</span>(<span class="dv">12</span>, <span class="dv">0</span>, <span class="fl">0.1</span>), <span class="dv">3</span>, <span class="dv">4</span>), <span class="dv">2</span>)</span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>H</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>      [,1]  [,2]  [,3]  [,4]
+[1,] -0.04  0.12 -0.09  0.18
+[2,]  0.09  0.10  0.06  0.08
+[3,]  0.10 -0.08 -0.07 -0.13</code></pre>
+</div>
+</div>
+<p>Y la última capa es la del vocabulario. Son entonces 8 unidades, con 3 entradas cada una. La matriz de pesos es:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb32"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a>U <span class="ot">&lt;-</span> <span class="fu">round</span>(<span class="fu">matrix</span>(<span class="fu">rnorm</span>(<span class="dv">24</span>, <span class="dv">0</span>, <span class="fl">0.1</span>), <span class="dv">8</span>, <span class="dv">3</span>), <span class="dv">2</span>)</span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a><span class="fu">rownames</span>(U) <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"_s_"</span>, <span class="st">"el"</span>, <span class="st">"perro"</span>, <span class="st">"gato"</span>, <span class="st">"león"</span>, <span class="st">"corre"</span>, <span class="st">"caza"</span>, <span class="st">"_ss_"</span>)</span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>U</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>       [,1]  [,2]  [,3]
+_s_    0.05 -0.15 -0.30
+el     0.01  0.16  0.15
+perro -0.14  0.10  0.05
+gato   0.04  0.09  0.12
+león   0.06 -0.03  0.02
+corre -0.01  0.00 -0.02
+caza   0.10  0.00  0.06
+_ss_   0.07 -0.10  0.01</code></pre>
+</div>
+</div>
+<p>Ahora consideremos cómo se calcula el objetivo con los datos de entrenamiento. El primer trigrama es (_s_, el). La primera capa entonces devuelve los dos vectores correspondientes a cada palabra (concatenado):</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb34"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a>capa_1 <span class="ot">&lt;-</span> <span class="fu">c</span>(C[, <span class="st">"_s_"</span>], C[, <span class="st">"el"</span>])</span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>capa_1</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  d_1   d_2   d_1   d_2 
+ 0.13 -0.19  0.05 -0.19 </code></pre>
+</div>
+</div>
+<p>La siguiente capa es:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb36"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a>sigma <span class="ot">&lt;-</span> <span class="cf">function</span>(z){ <span class="dv">1</span> <span class="sc">/</span> (<span class="dv">1</span> <span class="sc">+</span> <span class="fu">exp</span>(<span class="sc">-</span>z))}</span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a>capa_2 <span class="ot">&lt;-</span> <span class="fu">sigma</span>(H <span class="sc">%*%</span> capa_1)</span>
+<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a>capa_2</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>          [,1]
+[1,] 0.4833312
+[2,] 0.4951252
+[3,] 0.5123475</code></pre>
+</div>
+</div>
+<p>Y la capa final da</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb38"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a>y <span class="ot">&lt;-</span> U <span class="sc">%*%</span> capa_2</span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a>y</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>              [,1]
+_s_   -0.203806461
+el     0.160905460
+perro  0.007463525
+gato   0.125376210
+león   0.024393066
+corre -0.015080262
+caza   0.079073967
+_ss_  -0.010555858</code></pre>
+</div>
+</div>
+<p>Y aplicamos softmax para encontrar las probabilidades</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb40"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a>p <span class="ot">&lt;-</span> <span class="fu">exp</span>(y)<span class="sc">/</span><span class="fu">sum</span>(<span class="fu">exp</span>(y)) <span class="sc">|&gt;</span> <span class="fu">as.numeric</span>()</span>
+<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a>p</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>            [,1]
+_s_   0.09931122
+el    0.14301799
+perro 0.12267376
+gato  0.13802588
+león  0.12476825
+corre 0.11993917
+caza  0.13178067
+_ss_  0.12048306</code></pre>
+</div>
+</div>
+<p>Y la probabilidad es entonces</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb42"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a>p_1 <span class="ot">&lt;-</span> p[<span class="st">"perro"</span>, <span class="dv">1</span>]</span>
+<span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a>p_1</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>    perro 
+0.1226738 </code></pre>
+</div>
+</div>
+<p>Cuya log probabilidad es</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb44"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a><span class="fu">log</span>(p_1)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>    perro 
+-2.098227 </code></pre>
+</div>
+</div>
+<p>Ahora seguimos con el siguiente trigrama, que es “(perro, corre)”. Necesitamos calcular la probabilidad de corre dado el contexto “el perro”. Repetimos nuestro cálculo:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb46"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a>capa_1 <span class="ot">&lt;-</span> <span class="fu">c</span>(C[, <span class="st">"el"</span>], C[, <span class="st">"perro"</span>])</span>
+<span id="cb46-2"><a href="#cb46-2" aria-hidden="true" tabindex="-1"></a>capa_1</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  d_1   d_2   d_1   d_2 
+ 0.05 -0.19  0.05 -0.11 </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb48"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a>capa_2 <span class="ot">&lt;-</span> <span class="fu">sigma</span>(H <span class="sc">%*%</span> capa_1)</span>
+<span id="cb48-2"><a href="#cb48-2" aria-hidden="true" tabindex="-1"></a>capa_2</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>          [,1]
+[1,] 0.4877275
+[2,] 0.4949252
+[3,] 0.5077494</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb50"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a>y <span class="ot">&lt;-</span> U <span class="sc">%*%</span> capa_2</span>
+<span id="cb50-2"><a href="#cb50-2" aria-hidden="true" tabindex="-1"></a>y</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>              [,1]
+_s_   -0.202177217
+el     0.160227709
+perro  0.006598141
+gato   0.124982290
+león   0.024570880
+corre -0.015032262
+caza   0.079237709
+_ss_  -0.010274101</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb52"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a>p <span class="ot">&lt;-</span> <span class="fu">exp</span>(y)<span class="sc">/</span><span class="fu">sum</span>(<span class="fu">exp</span>(y)) <span class="sc">|&gt;</span> <span class="fu">as.numeric</span>()</span>
+<span id="cb52-2"><a href="#cb52-2" aria-hidden="true" tabindex="-1"></a>p</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>            [,1]
+_s_   0.09947434
+el    0.14292280
+perro 0.12256912
+gato  0.13797317
+león  0.12479193
+corre 0.11994636
+caza  0.13180383
+_ss_  0.12051845</code></pre>
+</div>
+</div>
+<p>Y la probabilidad es entonces</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb54"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a>p_2 <span class="ot">&lt;-</span> p[<span class="st">"corre"</span>, <span class="dv">1</span>]</span>
+<span id="cb54-2"><a href="#cb54-2" aria-hidden="true" tabindex="-1"></a><span class="fu">log</span>(p_2)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>    corre 
+-2.120711 </code></pre>
+</div>
+</div>
+<p>Sumando, la log probabilidad es:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb56"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a><span class="fu">log</span>(p_1) <span class="sc">+</span> <span class="fu">log</span>(p_2)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>    perro 
+-4.218937 </code></pre>
+</div>
+</div>
+<p>y continuamos con los siguientes trigramas del texto de entrenamiento. Creamos una función</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb58"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a>feed_fow_p <span class="ot">&lt;-</span> <span class="cf">function</span>(trigrama, C, H, U){</span>
+<span id="cb58-2"><a href="#cb58-2" aria-hidden="true" tabindex="-1"></a>  trigrama <span class="ot">&lt;-</span> <span class="fu">strsplit</span>(trigrama, <span class="st">" "</span>, <span class="at">fixed =</span> <span class="cn">TRUE</span>)[[<span class="dv">1</span>]]</span>
+<span id="cb58-3"><a href="#cb58-3" aria-hidden="true" tabindex="-1"></a>  capa_1 <span class="ot">&lt;-</span> <span class="fu">c</span>(C[, trigrama[<span class="dv">1</span>]], C[, trigrama[<span class="dv">2</span>]])</span>
+<span id="cb58-4"><a href="#cb58-4" aria-hidden="true" tabindex="-1"></a>  capa_2 <span class="ot">&lt;-</span> <span class="fu">sigma</span>(H <span class="sc">%*%</span> capa_1)</span>
+<span id="cb58-5"><a href="#cb58-5" aria-hidden="true" tabindex="-1"></a>  y <span class="ot">&lt;-</span> U <span class="sc">%*%</span> capa_2</span>
+<span id="cb58-6"><a href="#cb58-6" aria-hidden="true" tabindex="-1"></a>  p <span class="ot">&lt;-</span> <span class="fu">exp</span>(y)<span class="sc">/</span><span class="fu">sum</span>(<span class="fu">exp</span>(y)) <span class="sc">|&gt;</span> <span class="fu">as.numeric</span>()</span>
+<span id="cb58-7"><a href="#cb58-7" aria-hidden="true" tabindex="-1"></a>  p</span>
+<span id="cb58-8"><a href="#cb58-8" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb58-9"><a href="#cb58-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb58-10"><a href="#cb58-10" aria-hidden="true" tabindex="-1"></a>feed_fow_dev <span class="ot">&lt;-</span> <span class="cf">function</span>(trigrama, C, H, U) {</span>
+<span id="cb58-11"><a href="#cb58-11" aria-hidden="true" tabindex="-1"></a>  p <span class="ot">&lt;-</span> <span class="fu">feed_fow_p</span>(trigrama, C, H, U)</span>
+<span id="cb58-12"><a href="#cb58-12" aria-hidden="true" tabindex="-1"></a>  trigrama_s <span class="ot">&lt;-</span> <span class="fu">strsplit</span>(trigrama, <span class="st">" "</span>, <span class="at">fixed =</span> <span class="cn">TRUE</span>)[[<span class="dv">1</span>]]</span>
+<span id="cb58-13"><a href="#cb58-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">log</span>(p)[trigrama_s[<span class="dv">3</span>], <span class="dv">1</span>]</span>
+<span id="cb58-14"><a href="#cb58-14" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Y ahora aplicamos a todos los textos:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb59"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb59-1"><a href="#cb59-1" aria-hidden="true" tabindex="-1"></a>texto_entrena <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"_s_ el perro corre _ss_"</span>, <span class="st">" _s_ el gato corre _ss_"</span>, <span class="st">" _s_ el león corre _ss_"</span>,</span>
+<span id="cb59-2"><a href="#cb59-2" aria-hidden="true" tabindex="-1"></a>  <span class="st">"_s_ el león caza _ss_"</span>,  <span class="st">"_s_ el gato caza _ss_"</span>)</span>
+<span id="cb59-3"><a href="#cb59-3" aria-hidden="true" tabindex="-1"></a>entrena_trigramas <span class="ot">&lt;-</span> <span class="fu">map</span>(texto_entrena, </span>
+<span id="cb59-4"><a href="#cb59-4" aria-hidden="true" tabindex="-1"></a>  <span class="sc">~</span>tokenizers<span class="sc">::</span><span class="fu">tokenize_ngrams</span>(.x, <span class="at">n =</span> <span class="dv">3</span>)[[<span class="dv">1</span>]]) <span class="sc">|&gt;</span> </span>
+<span id="cb59-5"><a href="#cb59-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">flatten</span>() <span class="sc">|&gt;</span> <span class="fu">unlist</span>()</span>
+<span id="cb59-6"><a href="#cb59-6" aria-hidden="true" tabindex="-1"></a>entrena_trigramas</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> [1] "_s_ el perro"     "el perro corre"   "perro corre _ss_" "_s_ el gato"     
+ [5] "el gato corre"    "gato corre _ss_"  "_s_ el león"      "el león corre"   
+ [9] "león corre _ss_"  "_s_ el león"      "el león caza"     "león caza _ss_"  
+[13] "_s_ el gato"      "el gato caza"     "gato caza _ss_"  </code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb61"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb61-1"><a href="#cb61-1" aria-hidden="true" tabindex="-1"></a>log_p <span class="ot">&lt;-</span> <span class="fu">sapply</span>(entrena_trigramas, <span class="cf">function</span>(x) <span class="fu">feed_fow_dev</span>(x, C, H, U))</span>
+<span id="cb61-2"><a href="#cb61-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sum</span>(log_p)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] -31.21475</code></pre>
+</div>
+</div>
+<p>Ahora piensa como harías más grande esta verosimilitud. Observa que “perro”, “gato” y “león”” están comunmente seguidos de “corre”. Esto implica que nos convendría que hubiera cierta similitud entre los vectores de estas tres palabras, por ejemplo:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb63"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb63-1"><a href="#cb63-1" aria-hidden="true" tabindex="-1"></a>C_1 <span class="ot">&lt;-</span> C</span>
+<span id="cb63-2"><a href="#cb63-2" aria-hidden="true" tabindex="-1"></a>indices <span class="ot">&lt;-</span> <span class="fu">colnames</span>(C) <span class="sc">%in%</span>  <span class="fu">c</span>(<span class="st">"perro"</span>, <span class="st">"gato"</span>, <span class="st">"león"</span>)</span>
+<span id="cb63-3"><a href="#cb63-3" aria-hidden="true" tabindex="-1"></a>C_1[<span class="dv">1</span>, indices] <span class="ot">&lt;-</span> <span class="fl">3.0</span></span>
+<span id="cb63-4"><a href="#cb63-4" aria-hidden="true" tabindex="-1"></a>C_1[<span class="dv">1</span>, <span class="sc">!</span>indices] <span class="ot">&lt;-</span> <span class="sc">-</span><span class="fl">1.0</span></span>
+<span id="cb63-5"><a href="#cb63-5" aria-hidden="true" tabindex="-1"></a>C_1</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>      _s_    el perro gato león corre  caza  _ss_
+d_1 -1.00 -1.00  3.00 3.00 3.00 -1.00 -1.00 -1.00
+d_2 -0.19 -0.19 -0.11 0.01 0.04 -0.01  0.02  0.02</code></pre>
+</div>
+</div>
+<p>La siguiente capa queremos que extraiga el concepto “animal” en la palabra anterior, o algo similar, así que podríamos poner en la unidad 1:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb65"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb65-1"><a href="#cb65-1" aria-hidden="true" tabindex="-1"></a>H_1 <span class="ot">&lt;-</span> H</span>
+<span id="cb65-2"><a href="#cb65-2" aria-hidden="true" tabindex="-1"></a>H_1[<span class="dv">1</span>, ] <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">5</span>, <span class="dv">0</span>)</span>
+<span id="cb65-3"><a href="#cb65-3" aria-hidden="true" tabindex="-1"></a>H_1</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>     [,1]  [,2]  [,3]  [,4]
+[1,] 0.00  0.00  5.00  0.00
+[2,] 0.09  0.10  0.06  0.08
+[3,] 0.10 -0.08 -0.07 -0.13</code></pre>
+</div>
+</div>
+<p>Nótese que la unidad 1 de la segunda capa se activa cuando la primera componente de la palabra anterior es alta. En la última capa, podríamos entonces poner</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb67"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb67-1"><a href="#cb67-1" aria-hidden="true" tabindex="-1"></a>U_1 <span class="ot">&lt;-</span> U</span>
+<span id="cb67-2"><a href="#cb67-2" aria-hidden="true" tabindex="-1"></a>U_1[<span class="st">"corre"</span>, ] <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="fl">4.0</span>, <span class="sc">-</span><span class="dv">2</span>, <span class="sc">-</span><span class="dv">2</span>)</span>
+<span id="cb67-3"><a href="#cb67-3" aria-hidden="true" tabindex="-1"></a>U_1[<span class="st">"caza"</span>, ] <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="fl">4.2</span>, <span class="sc">-</span><span class="dv">2</span>, <span class="sc">-</span><span class="dv">2</span>)</span>
+<span id="cb67-4"><a href="#cb67-4" aria-hidden="true" tabindex="-1"></a>U_1</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>       [,1]  [,2]  [,3]
+_s_    0.05 -0.15 -0.30
+el     0.01  0.16  0.15
+perro -0.14  0.10  0.05
+gato   0.04  0.09  0.12
+león   0.06 -0.03  0.02
+corre  4.00 -2.00 -2.00
+caza   4.20 -2.00 -2.00
+_ss_   0.07 -0.10  0.01</code></pre>
+</div>
+</div>
+<p>que captura cuando la primera unidad se activa. Ahora el cálculo completo es:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb69"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb69-1"><a href="#cb69-1" aria-hidden="true" tabindex="-1"></a>log_p <span class="ot">&lt;-</span> <span class="fu">sapply</span>(entrena_trigramas, <span class="cf">function</span>(x) <span class="fu">feed_fow_dev</span>(x, C_1, H_1, U_1))</span>
+<span id="cb69-2"><a href="#cb69-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sum</span>(log_p)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] -23.53883</code></pre>
+</div>
+</div>
+<p>Y logramos aumentar la verosimilitud considerablemente. Compara las probabilidades:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb71"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb71-1"><a href="#cb71-1" aria-hidden="true" tabindex="-1"></a><span class="fu">feed_fow_p</span>(<span class="st">"el perro"</span>, C, H, U)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>            [,1]
+_s_   0.09947434
+el    0.14292280
+perro 0.12256912
+gato  0.13797317
+león  0.12479193
+corre 0.11994636
+caza  0.13180383
+_ss_  0.12051845</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb73"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb73-1"><a href="#cb73-1" aria-hidden="true" tabindex="-1"></a><span class="fu">feed_fow_p</span>(<span class="st">"el perro"</span>, C_1, H_1, U_1)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>            [,1]
+_s_   0.03493901
+el    0.04780222
+perro 0.03821035
+gato  0.04690264
+león  0.04308502
+corre 0.33639351
+caza  0.41087194
+_ss_  0.04179531</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb75"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb75-1"><a href="#cb75-1" aria-hidden="true" tabindex="-1"></a><span class="fu">feed_fow_p</span>(<span class="st">"el gato"</span>, C, H, U)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>            [,1]
+_s_   0.09957218
+el    0.14289131
+perro 0.12246787
+gato  0.13795972
+león  0.12480659
+corre 0.11993921
+caza  0.13183822
+_ss_  0.12052489</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb77"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb77-1"><a href="#cb77-1" aria-hidden="true" tabindex="-1"></a><span class="fu">feed_fow_p</span>(<span class="st">"el gato"</span>, C_1, H_1, U_1)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>            [,1]
+_s_   0.03489252
+el    0.04769205
+perro 0.03813136
+gato  0.04679205
+león  0.04298749
+corre 0.33663831
+caza  0.41117094
+_ss_  0.04169529</code></pre>
+</div>
+</div>
+<p><strong>Observación</strong>: a partir de este principio, es posible construir arquitecturas más refinadas que tomen en cuenta, por ejemplo, relaciones más lejanas entre partes de oraciones (no solo el contexto del n-grama), ver por ejemplo <a href="https://www.deeplearningbook.org/contents/rnn.html">el capítulo 10 del libro de Deep Learning de Goodfellow, Bengio y Courville</a>.</p>
+<p>Abajo exploramos una parte fundamental de estos modelos: representaciones de palabras, y modelos relativamente simples para obtener estas representaciones.</p>
+</section>
+</section>
+<section id="representación-de-palabras" class="level2" data-number="17.2">
+<h2 data-number="17.2" class="anchored" data-anchor-id="representación-de-palabras"><span class="header-section-number">17.2</span> Representación de palabras</h2>
+<p>Un aspecto interesante de el modelo de arriba es que nos da una representación vectorial de las palabras, en la forma de los parámetros ajustados de la matriz <span class="math inline">\(C\)</span>. Esta se puede entender como una descripción numérica de cómo funciona una palabra en el contexto de su n-grama.</p>
+<p>Por ejemplo, deberíamos encontrar que palabras como “perro” y “gato” tienen representaciones similares. La razón es que cuando aparecen, las probabilidades sobre las palabras siguientes deberían ser similares, pues estas son dos palabras que se pueden usar en muchos contextos compartidos.</p>
+<p>También podríamos encontrar que palabras como perro, gato, águila, león, etc. tienen partes o entradas similares en sus vectores de representación, que es la parte que hace que funcionen como “animal mamífero” dentro de frases.</p>
+<p>Veremos que hay más razones por las que es interesante esta representación.</p>
+</section>
+<section id="modelos-de-word2vec" class="level2" data-number="17.3">
+<h2 data-number="17.3" class="anchored" data-anchor-id="modelos-de-word2vec"><span class="header-section-number">17.3</span> Modelos de word2vec</h2>
+<p>En estos ejemplos veremos cómo producir embeddings de palabras que son precursores de embeddings más refinados como los producidos por Modelos grandes de lenguajes (LLMs). Ver por ejemplo <a href="https://platform.openai.com/docs/guides/embeddings/what-are-embeddings">aquí</a>.</p>
+<p>Si lo que principalmente nos interesa es obtener una representación vectorial de palabras, es posible simplificar considerablemente el modelo de arriba o LLMs para poder entrenarlos mucho más rápido, y obtener una representación que en muchas tareas se desempeña bien (<span class="citation" data-cites="word2vec">(<a href="99-referencias.html#ref-word2vec" role="doc-biblioref">Mikolov et&nbsp;al. 2013</a>)</span>).</p>
+<p>Hay dos ideas básicas que se pueden usar para reducir la complejidad del entrenamiento (ver más en <span class="citation" data-cites="goodfellow">(<a href="99-referencias.html#ref-goodfellow" role="doc-biblioref"><strong>goodfellow?</strong></a>)</span> y <span class="citation" data-cites="word2vec">(<a href="99-referencias.html#ref-word2vec" role="doc-biblioref">Mikolov et&nbsp;al. 2013</a>)</span>:</p>
+<ul>
+<li>Eliminar la segunda capa oculta: modelo de <em>bag-of-words</em> continuo y modelo de <em>skip-gram</em>.</li>
+<li>Cambiar la función objetivo (minimizar devianza/maximizar verosimilitud) por una más simple, mediante un truco que se llama <em>negative sampling</em>.</li>
+</ul>
+<p>Como ya no es de interés central predecir la siguiente palabra a partir de las anteriores, en estos modelos <strong>intentamos predecir la palabra central a partir de las que están alrededor</strong>.</p>
+<section id="arquitectura-continuous-bag-of-words" class="level3 unnumbered">
+<h3 class="unnumbered anchored" data-anchor-id="arquitectura-continuous-bag-of-words">Arquitectura continuous bag-of-words</h3>
+<p>La entrada es igual que en el modelo completo. En primer lugar, simplificamos la segunda capa oculta pondiendo en <span class="math inline">\(z\)</span> el promedio de los vectores <span class="math inline">\(C(w_{n-2}), C(w_{n-1})\)</span>. La última capa la dejamos igual por el momento:</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="figuras/cbow_fig.png" class="img-fluid figure-img"></p>
+<figcaption class="figure-caption">Imagen</figcaption>
+</figure>
+</div>
+<p>El modelo se llama bag-of-words porque todas las entradas de la primera capa oculta contribuyen de la misma manera en la salida, independientemente del orden. Aunque esto no suena como buena idea para construir un modelo de lenguaje, veremos que resulta en una representación adecuada para algunos problemas.</p>
+<ol type="1">
+<li>En la primera capa oculta, tenemos un mapeo de las entradas <span class="math inline">\(w_1,\ldots, w_{n-1}\)</span> a <span class="math inline">\(x=C(w_1),\ldots, C(w_{n-1})\)</span>, donde <span class="math inline">\(C\)</span> es una función que mapea palabras a vectores de dimensión <span class="math inline">\(d\)</span>. <span class="math inline">\(C\)</span> también se puede pensar como una matriz de dimensión <span class="math inline">\(|V|\)</span> por <span class="math inline">\(d\)</span>. En la capa de entrada,</li>
+</ol>
+<p><span class="math display">\[w_{n-2},w_{n-1} \to x = (C(w_{n-2}), C(w_{n-1})).\]</span></p>
+<ol start="2" type="1">
+<li><p>En la siguiente “capa” oculta simplemente sumamos las entradas de <span class="math inline">\(x\)</span>. Aquí nótese que realmente no hay parámetros.</p></li>
+<li><p>Finalmente, la capa de salida debe ser un vector de probabilidades sobre todo el vocabulario <span class="math inline">\(|V|\)</span>. En esta capa tenemos pesos <span class="math inline">\(U\)</span> y hacemos <span class="math display">\[y = b + U\sigma (z),\]</span> y finalmente usamos softmax para tener probabilidades que suman uno: <span class="math display">\[p_i = \frac{\exp (y_i) }{\sum_j exp(y_j)}.\]</span></p></li>
+</ol>
+<p>En el ajuste maximizamos la verosimilitud sobre el corpus. Por ejemplo, para una frase, su log verosimilitud es:</p>
+<p><span class="math display">\[\sum_t \log \hat{P}(w_{t,n}|w_{t,n+1} \cdots w_{t-n-1}) \]</span></p>
+</section>
+<section id="arquitectura-skip-grams" class="level3 unnumbered">
+<h3 class="unnumbered anchored" data-anchor-id="arquitectura-skip-grams">Arquitectura skip-grams</h3>
+<p>Otro modelo simplificado, con más complejidad computacional pero mejores resultados (ver <span class="citation" data-cites="word2vec">(<a href="99-referencias.html#ref-word2vec" role="doc-biblioref">Mikolov et&nbsp;al. 2013</a>)</span>) que el bag-of-words, es el modelo de skip-grams. En este caso, dada cada palabra que encontramos, intentamos predecir un número fijo de las palabras anteriores y palabras posteriores (el contexto es una vecindad de la palabra).</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="figuras/skipgram.png" class="img-fluid figure-img"></p>
+<figcaption class="figure-caption">Imagen</figcaption>
+</figure>
+</div>
+<p>La función objetivo se defina ahora (simplificando) como suma sobre <span class="math inline">\(t\)</span>:</p>
+<p><span class="math display">\[-\sum_t \sum_{ -2\leq j \leq 2, j\neq 0} \log P(w_{t-j} | w_t)\]</span> (no tomamos en cuenta dónde aparece exactamente <span class="math inline">\(w_{t-j}\)</span> en relación a <span class="math inline">\(w_t\)</span>, simplemente consideramos que está en su contexto), donde</p>
+<p><span class="math display">\[\log P(w_{t-j}|w_t) =  u_{t-j}^tC(w_t) - \log\sum_k \exp{u_{k}^tC(w_t)}\]</span></p>
+<p>Todavía se propone una simplificación adicional que resulta ser efectiva:</p>
+</section>
+<section id="muestreo-negativo" class="level3 unnumbered">
+<h3 class="unnumbered anchored" data-anchor-id="muestreo-negativo">Muestreo negativo</h3>
+<p>La siguiente simplificación consiste en cambiar la función objetivo. En word2vec puede usarse “muestreo negativo”.</p>
+<p>Para empezar, la función objetivo original (para contexto de una sola palabra) es</p>
+<p><span class="math display">\[E = -\log \hat{P}(w_{a}|w_{n}) = -y_{w_a} + \log\sum_j \exp(y_j),\]</span></p>
+<p>donde las <span class="math inline">\(y_i\)</span> son las salidas de la penúltima capa. La dificultad está en el segundo término, que es sobre todo el vocabulario en incluye todos los parámetros del modelo (hay que calcular las parciales de <span class="math inline">\(y_j\)</span>’s sobre cada una de las palabras del vocabulario).</p>
+<p>La idea del muestreo negativo es que si <span class="math inline">\(w_a\)</span> está en el contexto de <span class="math inline">\(w_{n}\)</span>, tomamos una muestra de <span class="math inline">\(k\)</span> palabras <span class="math inline">\(v_1,\ldots v_k\)</span> al azar (2-50, dependiendo del tamaño de la colección), y creamos <span class="math inline">\(k\)</span> “contextos falsos” <span class="math inline">\(v_j w_{n}\)</span>, <span class="math inline">\(j=1\ldots,k\)</span>. Minimizamos en lugar de la observación de arriba</p>
+<p><span class="math display">\[E = -\log\sigma(y_{w_a}) + \sum_{j=1}^k \log\sigma(y_j),\]</span> en donde queremos maximizar la probabilidad de que ocurra <span class="math inline">\(w_a\)</span> vs.&nbsp;la probabilidad de que ocurra alguna de las <span class="math inline">\(v_j\)</span>. Es decir, solo buscamos optimizar parámetros para separar lo mejor que podamos la observación de <span class="math inline">\(k\)</span> observaciones falsas, lo cual implica que tenemos que mover un número relativamente chico de parámetros (en lugar de todos los parámetros de todas las palabras del vocabulario).</p>
+<p>Las palabras “falsas” se escogen según una probabilidad ajustada de unigramas (se observó empíricamente mejor desempeño cuando escogemos cada palabra con probabilidad proporcional a <span class="math inline">\(P(w)^{3/4}\)</span>, en lugar de <span class="math inline">\(P(w)\)</span>, ver <span class="citation" data-cites="word2vec">(<a href="99-referencias.html#ref-word2vec" role="doc-biblioref">Mikolov et&nbsp;al. 2013</a>)</span>).</p>
+</section>
+<section id="ejemplo-5" class="level3 unnumbered">
+<h3 class="unnumbered anchored" data-anchor-id="ejemplo-5">Ejemplo</h3>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb79"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb79-1"><a href="#cb79-1" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span>(<span class="sc">!</span><span class="fu">require</span>(wordVectors)){</span>
+<span id="cb79-2"><a href="#cb79-2" aria-hidden="true" tabindex="-1"></a>  devtools<span class="sc">::</span><span class="fu">install_github</span>(<span class="st">"bmschmidt/wordVectors"</span>, </span>
+<span id="cb79-3"><a href="#cb79-3" aria-hidden="true" tabindex="-1"></a>                           <span class="at">dependencies =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb79-4"><a href="#cb79-4" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+── R CMD build ─────────────────────────────────────────────────────────────────
+* checking for file ‘/tmp/RtmpnxvROi/remotes65625bacaea4/bmschmidt-wordVectors-ad127c1/DESCRIPTION’ ... OK
+* preparing ‘wordVectors’:
+* checking DESCRIPTION meta-information ... OK
+* cleaning src
+* checking for LF line-endings in source and make files and shell scripts
+* checking for empty or unneeded directories
+* building ‘wordVectors_2.0.tar.gz’</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb81"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb81-1"><a href="#cb81-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(wordVectors)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb82"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb82-1"><a href="#cb82-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
+<span id="cb82-2"><a href="#cb82-2" aria-hidden="true" tabindex="-1"></a>ruta <span class="ot">&lt;-</span> <span class="st">"../datos/noticias/ES_Newspapers.txt"</span></span>
+<span id="cb82-3"><a href="#cb82-3" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span>(<span class="sc">!</span><span class="fu">file.exists</span>(ruta)){</span>
+<span id="cb82-4"><a href="#cb82-4" aria-hidden="true" tabindex="-1"></a>    periodico <span class="ot">&lt;-</span> </span>
+<span id="cb82-5"><a href="#cb82-5" aria-hidden="true" tabindex="-1"></a>      <span class="fu">read_lines</span>(<span class="at">file=</span> <span class="st">"https://es-noticias.s3.amazonaws.com/Es_Newspapers.txt"</span>,</span>
+<span id="cb82-6"><a href="#cb82-6" aria-hidden="true" tabindex="-1"></a>                        <span class="at">progress =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb82-7"><a href="#cb82-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">write_lines</span>(periodico, ruta)</span>
+<span id="cb82-8"><a href="#cb82-8" aria-hidden="true" tabindex="-1"></a>} <span class="cf">else</span> {</span>
+<span id="cb82-9"><a href="#cb82-9" aria-hidden="true" tabindex="-1"></a>    periodico <span class="ot">&lt;-</span> <span class="fu">read_lines</span>(<span class="at">file=</span> ruta,</span>
+<span id="cb82-10"><a href="#cb82-10" aria-hidden="true" tabindex="-1"></a>                        <span class="at">progress =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb82-11"><a href="#cb82-11" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb82-12"><a href="#cb82-12" aria-hidden="true" tabindex="-1"></a>normalizar <span class="ot">&lt;-</span> <span class="cf">function</span>(texto, <span class="at">vocab =</span> <span class="cn">NULL</span>){</span>
+<span id="cb82-13"><a href="#cb82-13" aria-hidden="true" tabindex="-1"></a>  <span class="co"># minúsculas</span></span>
+<span id="cb82-14"><a href="#cb82-14" aria-hidden="true" tabindex="-1"></a>  texto <span class="ot">&lt;-</span> <span class="fu">tolower</span>(texto)</span>
+<span id="cb82-15"><a href="#cb82-15" aria-hidden="true" tabindex="-1"></a>  <span class="co"># varios ajustes</span></span>
+<span id="cb82-16"><a href="#cb82-16" aria-hidden="true" tabindex="-1"></a>  texto <span class="ot">&lt;-</span> <span class="fu">gsub</span>(<span class="st">"</span><span class="sc">\\</span><span class="st">s+"</span>, <span class="st">" "</span>, texto)</span>
+<span id="cb82-17"><a href="#cb82-17" aria-hidden="true" tabindex="-1"></a>  texto <span class="ot">&lt;-</span> <span class="fu">gsub</span>(<span class="st">"</span><span class="sc">\\</span><span class="st">.[^0-9]"</span>, <span class="st">" _punto_ "</span>, texto)</span>
+<span id="cb82-18"><a href="#cb82-18" aria-hidden="true" tabindex="-1"></a>  texto <span class="ot">&lt;-</span> <span class="fu">gsub</span>(<span class="st">" _s_ $"</span>, <span class="st">""</span>, texto)</span>
+<span id="cb82-19"><a href="#cb82-19" aria-hidden="true" tabindex="-1"></a>  texto <span class="ot">&lt;-</span> <span class="fu">gsub</span>(<span class="st">"</span><span class="sc">\\</span><span class="st">."</span>, <span class="st">" _punto_ "</span>, texto)</span>
+<span id="cb82-20"><a href="#cb82-20" aria-hidden="true" tabindex="-1"></a>  texto <span class="ot">&lt;-</span> <span class="fu">gsub</span>(<span class="st">"[«»¡!¿?-]"</span>, <span class="st">""</span>, texto) </span>
+<span id="cb82-21"><a href="#cb82-21" aria-hidden="true" tabindex="-1"></a>  texto <span class="ot">&lt;-</span> <span class="fu">gsub</span>(<span class="st">";"</span>, <span class="st">" _punto_coma_ "</span>, texto) </span>
+<span id="cb82-22"><a href="#cb82-22" aria-hidden="true" tabindex="-1"></a>  texto <span class="ot">&lt;-</span> <span class="fu">gsub</span>(<span class="st">"</span><span class="sc">\\</span><span class="st">:"</span>, <span class="st">" _dos_puntos_ "</span>, texto) </span>
+<span id="cb82-23"><a href="#cb82-23" aria-hidden="true" tabindex="-1"></a>  texto <span class="ot">&lt;-</span> <span class="fu">gsub</span>(<span class="st">"</span><span class="sc">\\</span><span class="st">,[^0-9]"</span>, <span class="st">" _coma_ "</span>, texto)</span>
+<span id="cb82-24"><a href="#cb82-24" aria-hidden="true" tabindex="-1"></a>  texto <span class="ot">&lt;-</span> <span class="fu">gsub</span>(<span class="st">"</span><span class="sc">\\</span><span class="st">s+"</span>, <span class="st">" "</span>, texto)</span>
+<span id="cb82-25"><a href="#cb82-25" aria-hidden="true" tabindex="-1"></a>  texto</span>
+<span id="cb82-26"><a href="#cb82-26" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb82-27"><a href="#cb82-27" aria-hidden="true" tabindex="-1"></a>periodico_df <span class="ot">&lt;-</span> <span class="fu">tibble</span>(<span class="at">txt =</span> periodico) <span class="sc">|&gt;</span></span>
+<span id="cb82-28"><a href="#cb82-28" aria-hidden="true" tabindex="-1"></a>                <span class="fu">mutate</span>(<span class="at">id =</span> <span class="fu">row_number</span>()) <span class="sc">|&gt;</span></span>
+<span id="cb82-29"><a href="#cb82-29" aria-hidden="true" tabindex="-1"></a>                <span class="fu">mutate</span>(<span class="at">txt =</span> <span class="fu">normalizar</span>(txt))</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Construimos un modelo con vectores de palabras de tamaño 100, skip-grams de tamaño 4, y ajustamos con muestreo negativo de tamaño 20:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb83"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb83-1"><a href="#cb83-1" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span>(<span class="sc">!</span><span class="fu">file.exists</span>(<span class="st">'./cache/noticias_w2v.txt'</span>)){</span>
+<span id="cb83-2"><a href="#cb83-2" aria-hidden="true" tabindex="-1"></a>  tmp <span class="ot">&lt;-</span> <span class="fu">tempfile</span>()</span>
+<span id="cb83-3"><a href="#cb83-3" aria-hidden="true" tabindex="-1"></a>  <span class="co"># tokenización</span></span>
+<span id="cb83-4"><a href="#cb83-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">write_lines</span>(periodico_df<span class="sc">$</span>txt,  tmp)</span>
+<span id="cb83-5"><a href="#cb83-5" aria-hidden="true" tabindex="-1"></a>  prep <span class="ot">&lt;-</span> <span class="fu">prep_word2vec</span>(tmp, </span>
+<span id="cb83-6"><a href="#cb83-6" aria-hidden="true" tabindex="-1"></a>          <span class="at">destination =</span> <span class="st">'./cache/noticias_w2v.txt'</span>, <span class="at">bundle_ngrams =</span> <span class="dv">2</span>)</span>
+<span id="cb83-7"><a href="#cb83-7" aria-hidden="true" tabindex="-1"></a>  } </span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Beginning tokenization to text file at ./cache/noticias_w2v.txt</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Prepping /tmp/RtmpnxvROi/file65625735b8ec</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Starting training using file ./cache/noticias_w2v.txt
+Words processed: 100K     Vocab size: 73K  
+Words processed: 200K     Vocab size: 124K  
+Words processed: 300K     Vocab size: 168K  
+Words processed: 400K     Vocab size: 209K  
+Words processed: 500K     Vocab size: 247K  
+Words processed: 600K     Vocab size: 281K  
+Words processed: 700K     Vocab size: 314K  
+Words processed: 800K     Vocab size: 346K  
+Words processed: 900K     Vocab size: 376K  
+Words processed: 1000K     Vocab size: 406K  
+Words processed: 1100K     Vocab size: 434K  
+Words processed: 1200K     Vocab size: 462K  
+Words processed: 1300K     Vocab size: 489K  
+Words processed: 1400K     Vocab size: 515K  
+Words processed: 1500K     Vocab size: 540K  
+Words processed: 1600K     Vocab size: 565K  
+Words processed: 1700K     Vocab size: 590K  
+Words processed: 1800K     Vocab size: 613K  
+Words processed: 1900K     Vocab size: 637K  
+Words processed: 2000K     Vocab size: 661K  
+Words processed: 2100K     Vocab size: 684K  
+Words processed: 2200K     Vocab size: 706K  
+Words processed: 2300K     Vocab size: 729K  
+Words processed: 2400K     Vocab size: 750K  
+Words processed: 2500K     Vocab size: 771K  
+Words processed: 2600K     Vocab size: 792K  
+Words processed: 2700K     Vocab size: 813K  
+Words processed: 2800K     Vocab size: 834K  
+Words processed: 2900K     Vocab size: 854K  
+Words processed: 3000K     Vocab size: 873K  
+Words processed: 3100K     Vocab size: 893K  
+Words processed: 3200K     Vocab size: 913K  
+Words processed: 3300K     Vocab size: 932K  
+Words processed: 3400K     Vocab size: 951K  
+Words processed: 3500K     Vocab size: 970K  
+Words processed: 3600K     Vocab size: 989K  
+Words processed: 3700K     Vocab size: 1007K  
+Words processed: 3800K     Vocab size: 1026K  
+Words processed: 3900K     Vocab size: 1044K  
+Words processed: 4000K     Vocab size: 1062K  
+Words processed: 4100K     Vocab size: 1080K  
+Words processed: 4200K     Vocab size: 1098K  
+Words processed: 4300K     Vocab size: 1115K  
+Words processed: 4400K     Vocab size: 1132K  
+Words processed: 4500K     Vocab size: 1150K  
+Words processed: 4600K     Vocab size: 1167K  
+Words processed: 4700K     Vocab size: 1184K  
+Words processed: 4800K     Vocab size: 1201K  
+Words processed: 4900K     Vocab size: 1218K  
+Words processed: 5000K     Vocab size: 1235K  
+Words processed: 5100K     Vocab size: 1252K  
+Words processed: 5200K     Vocab size: 1268K  
+Words processed: 5300K     Vocab size: 1285K  
+Words processed: 5400K     Vocab size: 1301K  
+Words processed: 5500K     Vocab size: 1317K  
+Words processed: 5600K     Vocab size: 1333K  
+Words processed: 5700K     Vocab size: 1349K  
+Words processed: 5800K     Vocab size: 1364K  
+Words processed: 5900K     Vocab size: 1380K  
+Words processed: 6000K     Vocab size: 1395K  
+Words processed: 6100K     Vocab size: 1411K  
+Words processed: 6200K     Vocab size: 1426K  
+Words processed: 6300K     Vocab size: 1441K  
+Words processed: 6400K     Vocab size: 1456K  
+Words processed: 6500K     Vocab size: 1471K  
+Words processed: 6600K     Vocab size: 1486K  
+Words processed: 6700K     Vocab size: 1501K  
+Words processed: 6800K     Vocab size: 1516K  
+Words processed: 6900K     Vocab size: 1530K  
+Words processed: 7000K     Vocab size: 1545K  
+Words processed: 7100K     Vocab size: 1560K  
+Words processed: 7200K     Vocab size: 1575K  
+Words processed: 7300K     Vocab size: 1589K  
+Words processed: 7400K     Vocab size: 1604K  
+Words processed: 7500K     Vocab size: 1618K  
+Words processed: 7600K     Vocab size: 1632K  
+Words processed: 7700K     Vocab size: 1646K  
+Words processed: 7800K     Vocab size: 1661K  
+Words processed: 7900K     Vocab size: 1675K  
+Words processed: 8000K     Vocab size: 1689K  
+Words processed: 8100K     Vocab size: 1703K  
+Words processed: 8200K     Vocab size: 1717K  
+Words processed: 8300K     Vocab size: 1731K  
+Words processed: 8400K     Vocab size: 1744K  
+Words processed: 8500K     Vocab size: 1758K  
+Words processed: 8600K     Vocab size: 1771K  
+Words processed: 8700K     Vocab size: 1785K  
+Words processed: 8800K     Vocab size: 1798K  
+Words processed: 8900K     Vocab size: 1812K  
+Words processed: 9000K     Vocab size: 1825K  
+Words processed: 9100K     Vocab size: 1839K  
+Words processed: 9200K     Vocab size: 1852K  
+Words processed: 9300K     Vocab size: 1865K  
+Words processed: 9400K     Vocab size: 1878K  
+Words processed: 9500K     Vocab size: 1892K  
+Words processed: 9600K     Vocab size: 1905K  
+Words processed: 9700K     Vocab size: 1918K  
+Words processed: 9800K     Vocab size: 1931K  
+Words processed: 9900K     Vocab size: 1943K  
+Words processed: 10000K     Vocab size: 1956K  
+Words processed: 10100K     Vocab size: 1969K  
+Words processed: 10200K     Vocab size: 1982K  
+Words processed: 10300K     Vocab size: 1995K  
+Words processed: 10400K     Vocab size: 2008K  
+Words processed: 10500K     Vocab size: 2020K  
+Words processed: 10600K     Vocab size: 2033K  
+Words processed: 10700K     Vocab size: 2045K  
+Words processed: 10800K     Vocab size: 2057K  
+Words processed: 10900K     Vocab size: 2070K  
+Words processed: 11000K     Vocab size: 2082K  
+Words processed: 11100K     Vocab size: 2094K  
+Words processed: 11200K     Vocab size: 2107K  
+Words processed: 11300K     Vocab size: 2119K  
+Words processed: 11400K     Vocab size: 2131K  
+Words processed: 11500K     Vocab size: 2143K  
+Words processed: 11600K     Vocab size: 2156K  
+Words processed: 11700K     Vocab size: 2168K  
+Words processed: 11800K     Vocab size: 2180K  
+Words processed: 11900K     Vocab size: 2192K  
+Words processed: 12000K     Vocab size: 2204K  
+Words processed: 12100K     Vocab size: 2216K  
+Words processed: 12200K     Vocab size: 2227K  
+Words processed: 12300K     Vocab size: 2239K  
+Words processed: 12400K     Vocab size: 2251K  
+Words processed: 12500K     Vocab size: 2263K  
+Words processed: 12600K     Vocab size: 2274K  
+Words processed: 12700K     Vocab size: 2286K  
+Words processed: 12800K     Vocab size: 2298K  
+Words processed: 12900K     Vocab size: 2310K  
+Words processed: 13000K     Vocab size: 2321K  
+Words processed: 13100K     Vocab size: 2333K  
+Words processed: 13200K     Vocab size: 2344K  
+Words processed: 13300K     Vocab size: 2355K  
+Words processed: 13400K     Vocab size: 2367K  
+Words processed: 13500K     Vocab size: 2378K  
+Words processed: 13600K     Vocab size: 2390K  
+Words processed: 13700K     Vocab size: 2401K  
+Words processed: 13800K     Vocab size: 2412K  
+Words processed: 13900K     Vocab size: 2424K  
+Words processed: 14000K     Vocab size: 2435K  
+Words processed: 14100K     Vocab size: 2446K  
+Words processed: 14200K     Vocab size: 2457K  
+Words processed: 14300K     Vocab size: 2469K  
+Words processed: 14400K     Vocab size: 2479K  
+Words processed: 14500K     Vocab size: 2490K  
+Words processed: 14600K     Vocab size: 2502K  
+Words processed: 14700K     Vocab size: 2513K  
+Words processed: 14800K     Vocab size: 2524K  
+Words processed: 14900K     Vocab size: 2535K  
+Words processed: 15000K     Vocab size: 2546K  
+Words processed: 15100K     Vocab size: 2557K  
+Words processed: 15200K     Vocab size: 2568K  
+Words processed: 15300K     Vocab size: 2579K  
+Words processed: 15400K     Vocab size: 2590K  
+Words processed: 15500K     Vocab size: 2600K  
+Words processed: 15600K     Vocab size: 2611K  
+Words processed: 15700K     Vocab size: 2622K  
+Words processed: 15800K     Vocab size: 2633K  
+Words processed: 15900K     Vocab size: 2644K  
+Words processed: 16000K     Vocab size: 2654K  
+Words processed: 16100K     Vocab size: 2665K  
+Words processed: 16200K     Vocab size: 2676K  
+Words processed: 16300K     Vocab size: 2687K  
+Words processed: 16400K     Vocab size: 2697K  
+Words processed: 16500K     Vocab size: 2708K  
+Words processed: 16600K     Vocab size: 2719K  
+Words processed: 16700K     Vocab size: 2729K  
+Words processed: 16800K     Vocab size: 2739K  
+Words processed: 16900K     Vocab size: 2750K  
+Words processed: 17000K     Vocab size: 2760K  
+Words processed: 17100K     Vocab size: 2771K  
+Words processed: 17200K     Vocab size: 2781K  
+Words processed: 17300K     Vocab size: 2792K  
+Words processed: 17400K     Vocab size: 2802K  
+Words processed: 17500K     Vocab size: 2813K  
+Words processed: 17600K     Vocab size: 2823K  
+Words processed: 17700K     Vocab size: 2833K  
+Words processed: 17800K     Vocab size: 2844K  
+Words processed: 17900K     Vocab size: 2854K  
+Words processed: 18000K     Vocab size: 2864K  
+Words processed: 18100K     Vocab size: 2875K  
+Words processed: 18200K     Vocab size: 2885K  
+Words processed: 18300K     Vocab size: 2896K  
+Words processed: 18400K     Vocab size: 2906K  
+Words processed: 18500K     Vocab size: 2916K  
+Words processed: 18600K     Vocab size: 2926K  
+Words processed: 18700K     Vocab size: 2936K  
+Words processed: 18800K     Vocab size: 2946K  
+Words processed: 18900K     Vocab size: 2956K  
+Words processed: 19000K     Vocab size: 2966K  
+Words processed: 19100K     Vocab size: 2975K  
+Words processed: 19200K     Vocab size: 2986K  
+Words processed: 19300K     Vocab size: 2995K  
+Words processed: 19400K     Vocab size: 3005K  
+Words processed: 19500K     Vocab size: 3015K  
+Words processed: 19600K     Vocab size: 3025K  
+Words processed: 19700K     Vocab size: 3035K  
+Words processed: 19800K     Vocab size: 3045K  
+Words processed: 19900K     Vocab size: 3055K  
+Words processed: 20000K     Vocab size: 3065K  
+Words processed: 20100K     Vocab size: 3075K  
+Words processed: 20200K     Vocab size: 3085K  
+Words processed: 20300K     Vocab size: 3095K  
+Words processed: 20400K     Vocab size: 3104K  
+Words processed: 20500K     Vocab size: 3114K  
+Words processed: 20600K     Vocab size: 3124K  
+Words processed: 20700K     Vocab size: 3133K  
+Words processed: 20800K     Vocab size: 3143K  
+Words processed: 20900K     Vocab size: 3153K  
+Words processed: 21000K     Vocab size: 3162K  
+Vocab size (unigrams + bigrams): 1814048
+Words in train file: 21011278
+Words written: 100K
+Words written: 200K
+Words written: 300K
+Words written: 400K
+Words written: 500K
+Words written: 600K
+Words written: 700K
+Words written: 800K
+Words written: 900K
+Words written: 1000K
+Words written: 1100K
+Words written: 1200K
+Words written: 1300K
+Words written: 1400K
+Words written: 1500K
+Words written: 1600K
+Words written: 1700K
+Words written: 1800K
+Words written: 1900K
+Words written: 2000K
+Words written: 2100K
+Words written: 2200K
+Words written: 2300K
+Words written: 2400K
+Words written: 2500K
+Words written: 2600K
+Words written: 2700K
+Words written: 2800K
+Words written: 2900K
+Words written: 3000K
+Words written: 3100K
+Words written: 3200K
+Words written: 3300K
+Words written: 3400K
+Words written: 3500K
+Words written: 3600K
+Words written: 3700K
+Words written: 3800K
+Words written: 3900K
+Words written: 4000K
+Words written: 4100K
+Words written: 4200K
+Words written: 4300K
+Words written: 4400K
+Words written: 4500K
+Words written: 4600K
+Words written: 4700K
+Words written: 4800K
+Words written: 4900K
+Words written: 5000K
+Words written: 5100K
+Words written: 5200K
+Words written: 5300K
+Words written: 5400K
+Words written: 5500K
+Words written: 5600K
+Words written: 5700K
+Words written: 5800K
+Words written: 5900K
+Words written: 6000K
+Words written: 6100K
+Words written: 6200K
+Words written: 6300K
+Words written: 6400K
+Words written: 6500K
+Words written: 6600K
+Words written: 6700K
+Words written: 6800K
+Words written: 6900K
+Words written: 7000K
+Words written: 7100K
+Words written: 7200K
+Words written: 7300K
+Words written: 7400K
+Words written: 7500K
+Words written: 7600K
+Words written: 7700K
+Words written: 7800K
+Words written: 7900K
+Words written: 8000K
+Words written: 8100K
+Words written: 8200K
+Words written: 8300K
+Words written: 8400K
+Words written: 8500K
+Words written: 8600K
+Words written: 8700K
+Words written: 8800K
+Words written: 8900K
+Words written: 9000K
+Words written: 9100K
+Words written: 9200K
+Words written: 9300K
+Words written: 9400K
+Words written: 9500K
+Words written: 9600K
+Words written: 9700K
+Words written: 9800K
+Words written: 9900K
+Words written: 10000K
+Words written: 10100K
+Words written: 10200K
+Words written: 10300K
+Words written: 10400K
+Words written: 10500K
+Words written: 10600K
+Words written: 10700K
+Words written: 10800K
+Words written: 10900K
+Words written: 11000K
+Words written: 11100K
+Words written: 11200K
+Words written: 11300K
+Words written: 11400K
+Words written: 11500K
+Words written: 11600K
+Words written: 11700K
+Words written: 11800K
+Words written: 11900K
+Words written: 12000K
+Words written: 12100K
+Words written: 12200K
+Words written: 12300K
+Words written: 12400K
+Words written: 12500K
+Words written: 12600K
+Words written: 12700K
+Words written: 12800K
+Words written: 12900K
+Words written: 13000K
+Words written: 13100K
+Words written: 13200K
+Words written: 13300K
+Words written: 13400K
+Words written: 13500K
+Words written: 13600K
+Words written: 13700K
+Words written: 13800K
+Words written: 13900K
+Words written: 14000K
+Words written: 14100K
+Words written: 14200K
+Words written: 14300K
+Words written: 14400K
+Words written: 14500K
+Words written: 14600K
+Words written: 14700K
+Words written: 14800K
+Words written: 14900K
+Words written: 15000K
+Words written: 15100K
+Words written: 15200K
+Words written: 15300K
+Words written: 15400K
+Words written: 15500K
+Words written: 15600K
+Words written: 15700K
+Words written: 15800K
+Words written: 15900K
+Words written: 16000K
+Words written: 16100K
+Words written: 16200K
+Words written: 16300K
+Words written: 16400K
+Words written: 16500K
+Words written: 16600K
+Words written: 16700K
+Words written: 16800K
+Words written: 16900K
+Words written: 17000K
+Words written: 17100K
+Words written: 17200K
+Words written: 17300K
+Words written: 17400K
+Words written: 17500K
+Words written: 17600K
+Words written: 17700K
+Words written: 17800K
+Words written: 17900K
+Words written: 18000K
+Words written: 18100K
+Words written: 18200K
+Words written: 18300K
+Words written: 18400K
+Words written: 18500K
+Words written: 18600K
+Words written: 18700K
+Words written: 18800K
+Words written: 18900K
+Words written: 19000K
+Words written: 19100K
+Words written: 19200K
+Words written: 19300K
+Words written: 19400K
+Words written: 19500K
+Words written: 19600K
+Words written: 19700K
+Words written: 19800K
+Words written: 19900K
+Words written: 20000K
+Words written: 20100K
+Words written: 20200K
+Words written: 20300K
+Words written: 20400K
+Words written: 20500K
+Words written: 20600K
+Words written: 20700K
+Words written: 20800K
+Words written: 20900K
+Words written: 21000K</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb87"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb87-1"><a href="#cb87-1" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="sc">!</span><span class="fu">file.exists</span>(<span class="st">"./cache/noticias_vectors.bin"</span>)) {</span>
+<span id="cb87-2"><a href="#cb87-2" aria-hidden="true" tabindex="-1"></a>  modelo <span class="ot">&lt;-</span> <span class="fu">train_word2vec</span>(<span class="st">"./cache/noticias_w2v.txt"</span>, </span>
+<span id="cb87-3"><a href="#cb87-3" aria-hidden="true" tabindex="-1"></a>          <span class="st">"./cache/noticias_vectors.bin"</span>,</span>
+<span id="cb87-4"><a href="#cb87-4" aria-hidden="true" tabindex="-1"></a>          <span class="at">vectors =</span> <span class="dv">100</span>, <span class="at">threads =</span> <span class="dv">8</span>, <span class="at">window =</span> <span class="dv">4</span>, <span class="at">cbow =</span> <span class="dv">0</span>,  </span>
+<span id="cb87-5"><a href="#cb87-5" aria-hidden="true" tabindex="-1"></a>          <span class="at">iter =</span> <span class="dv">20</span>, <span class="at">negative_samples =</span> <span class="dv">20</span>, <span class="at">min_count =</span> <span class="dv">10</span>) </span>
+<span id="cb87-6"><a href="#cb87-6" aria-hidden="true" tabindex="-1"></a>} <span class="cf">else</span> {</span>
+<span id="cb87-7"><a href="#cb87-7" aria-hidden="true" tabindex="-1"></a>  modelo <span class="ot">&lt;-</span> <span class="fu">read.vectors</span>(<span class="st">"./cache/noticias_vectors.bin"</span>)</span>
+<span id="cb87-8"><a href="#cb87-8" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>El resultado son los vectores aprendidos de las palabras, por ejemplo</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb88"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb88-1"><a href="#cb88-1" aria-hidden="true" tabindex="-1"></a>vector_gol <span class="ot">&lt;-</span> modelo[[<span class="st">"gol"</span>]] <span class="sc">|&gt;</span> <span class="fu">as.numeric</span>()</span>
+<span id="cb88-2"><a href="#cb88-2" aria-hidden="true" tabindex="-1"></a>vector_gol</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  [1] -0.389627248  0.048135430  0.501164794 -0.035961468  0.291238993
+  [6]  0.642733335 -0.386596769  0.281559557 -0.199183896 -0.554564893
+ [11]  0.451201737  0.495587140 -0.525584400  0.166191801 -0.180947676
+ [16]  0.034590811  0.731496751  0.259901792 -0.201457486 -0.308042079
+ [21] -0.177875623 -0.220428273  0.408699900  0.001920983  0.011449666
+ [26] -0.718980432  0.153631359 -0.049470965  0.981541216  0.082757361
+ [31] -0.331263602  0.458369821 -0.429754555  0.128275126 -0.421742797
+ [36]  0.596242130 -0.093633644  0.066455603 -0.016802812 -0.301688135
+ [41]  0.079358041  0.446704596 -0.244078919 -0.137954682  0.695054173
+ [46]  0.335903019  0.216709450  0.604890466 -0.538004100 -0.291783333
+ [51] -0.579949379 -0.048889056  0.324184030 -0.055591993 -0.012452535
+ [56] -0.200338170  0.254620761  0.082836255  0.389545202 -0.185363784
+ [61] -0.021011911  0.307440221  0.415608138  0.248776823 -0.139897019
+ [66]  0.008641024  0.235776618  0.324411124 -0.171800703  0.131596789
+ [71] -0.163520932  0.370538741 -0.134094939 -0.193797469 -0.543500543
+ [76]  0.312639445 -0.172534481 -0.115350038 -0.293528855 -0.534602344
+ [81]  0.515545666  0.708557248  0.444676250 -0.054800753  0.388787180
+ [86]  0.483029991  0.281573176  0.434132993  0.441057146 -0.347387016
+ [91] -0.174339339  0.060069371 -0.034651209  0.407196820  0.661161661
+ [96]  0.261399239 -0.089392163 -0.043052837 -0.539683878  0.105241157</code></pre>
+</div>
+</div>
+</section>
+</section>
+<section id="esprep" class="level2" data-number="17.4">
+<h2 data-number="17.4" class="anchored" data-anchor-id="esprep"><span class="header-section-number">17.4</span> Espacio de representación de palabras</h2>
+<p>Como discutimos arriba, palabras que se usan en contextos similares por su significado o por su función (por ejemplo, “perro” y “gato”“) deben tener representaciones similares, pues su contexto tiende a ser similar. <strong>La similitud que usamos el similitud coseno</strong>.</p>
+<p>Podemos verificar con nuestro ejemplo:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb90"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb90-1"><a href="#cb90-1" aria-hidden="true" tabindex="-1"></a>ejemplos <span class="ot">&lt;-</span> modelo <span class="sc">|&gt;</span>  <span class="fu">closest_to</span>(<span class="st">"gol"</span>, <span class="at">n =</span> <span class="dv">5</span>)</span>
+<span id="cb90-2"><a href="#cb90-2" aria-hidden="true" tabindex="-1"></a>ejemplos</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>             word similarity to "gol"
+1             gol           1.0000000
+2          golazo           0.8252912
+3     segundo_gol           0.7978025
+4         penalti           0.7764458
+5 potente_disparo           0.7755037</code></pre>
+</div>
+</div>
+<p>También podríamos calcular manualmente:</p>
+<p>Que también podemos calcular como:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb92"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb92-1"><a href="#cb92-1" aria-hidden="true" tabindex="-1"></a>vector_penalti <span class="ot">&lt;-</span> modelo[[<span class="st">"penalti"</span>]] <span class="sc">|&gt;</span> <span class="fu">as.numeric</span>()</span>
+<span id="cb92-2"><a href="#cb92-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cosineSimilarity</span>(modelo[[<span class="st">"gol"</span>]], modelo[[<span class="st">"penalti"</span>]])</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>          [,1]
+[1,] 0.7764458</code></pre>
+</div>
+</div>
+<p>O directamente:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb94"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb94-1"><a href="#cb94-1" aria-hidden="true" tabindex="-1"></a>norma <span class="ot">&lt;-</span> <span class="cf">function</span>(x) <span class="fu">sqrt</span>(<span class="fu">sum</span>(x<span class="sc">^</span><span class="dv">2</span>))</span>
+<span id="cb94-2"><a href="#cb94-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sum</span>(vector_gol <span class="sc">*</span> vector_penalti) <span class="sc">/</span> (<span class="fu">norma</span>(vector_gol) <span class="sc">*</span> <span class="fu">norma</span>(vector_penalti))</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0.7764458</code></pre>
+</div>
+</div>
+<section id="geometría-en-el-espacio-de-representaciones" class="level3 unnumbered">
+<h3 class="unnumbered anchored" data-anchor-id="geometría-en-el-espacio-de-representaciones">Geometría en el espacio de representaciones</h3>
+<p>Ahora consideremos cómo se distribuyen las palabras en este espacio, y si existe estructura geométrica en este espacio que tenga información acerca del lenguaje.</p>
+<p>Consideremos primero el caso de plurales de sustantivos.</p>
+<ul>
+<li>Como el contexto de los plurales es distinto de los singulares, nuestro modelo debería poder capturar en los vectores su diferencia.</li>
+<li>Examinamos entonces cómo son geométricamente diferentes las representaciones de plurales vs singulares</li>
+<li>Si encontramos un patrón reconocible, podemos utilizar este patrón, por ejemplo, para encontrar la versión plural de una palabra singular, <em>sin usar ninguna regla del lenguaje</em>.</li>
+</ul>
+<p>Una de las relaciones geométricas más simples es la adición de vectores. Por ejemplo, extraemos la diferencia entre gol y goles:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb96"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb96-1"><a href="#cb96-1" aria-hidden="true" tabindex="-1"></a>ejemplos <span class="ot">&lt;-</span> modelo <span class="sc">|&gt;</span>  <span class="fu">closest_to</span>(<span class="st">"dos"</span>, <span class="at">n =</span> <span class="dv">15</span>)</span>
+<span id="cb96-2"><a href="#cb96-2" aria-hidden="true" tabindex="-1"></a>ejemplos</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>      word similarity to "dos"
+1      dos           1.0000000
+2     tres           0.9666800
+3   cuatro           0.9527403
+4    cinco           0.9205234
+5    siete           0.9024807
+6     seis           0.8977667
+7     ocho           0.8879153
+8    nueve           0.8550580
+9    trece           0.8514542
+10 catorce           0.8321762
+11    diez           0.8133345
+12  quince           0.8102052
+13    doce           0.8085939
+14    once           0.8033385
+15  veinte           0.7814970</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb98"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb98-1"><a href="#cb98-1" aria-hidden="true" tabindex="-1"></a>ejemplos <span class="ot">&lt;-</span> modelo <span class="sc">|&gt;</span>  <span class="fu">closest_to</span>(<span class="fu">c</span>(<span class="st">"lluvioso"</span>), <span class="at">n =</span> <span class="dv">5</span>)</span>
+<span id="cb98-2"><a href="#cb98-2" aria-hidden="true" tabindex="-1"></a>ejemplos</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>      word similarity to c("lluvioso")
+1 lluvioso                   1.0000000
+2 caluroso                   0.8041209
+3   cálido                   0.6896448
+4   húmedo                   0.6866749
+5   gélido                   0.6660152</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb100"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb100-1"><a href="#cb100-1" aria-hidden="true" tabindex="-1"></a>ejemplos <span class="ot">&lt;-</span> modelo <span class="sc">|&gt;</span>  <span class="fu">closest_to</span>(<span class="st">"presidente"</span>, <span class="at">n =</span> <span class="dv">5</span>)</span>
+<span id="cb100-2"><a href="#cb100-2" aria-hidden="true" tabindex="-1"></a>ejemplos</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>                  word similarity to "presidente"
+1           presidente                  1.0000000
+2       vicepresidente                  0.8412900
+3        ex_presidente                  0.8321029
+4 máximo_representante                  0.7781001
+5     máximo_dirigente                  0.7629962</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb102"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb102-1"><a href="#cb102-1" aria-hidden="true" tabindex="-1"></a>ejemplos <span class="ot">&lt;-</span> modelo <span class="sc">|&gt;</span>  <span class="fu">closest_to</span>(<span class="st">"parís"</span>, <span class="at">n =</span> <span class="dv">5</span>)</span>
+<span id="cb102-2"><a href="#cb102-2" aria-hidden="true" tabindex="-1"></a>ejemplos</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>        word similarity to "parís"
+1      parís             1.0000000
+2    londres             0.9232452
+3 nueva_york             0.8464673
+4       roma             0.8443222
+5     berlín             0.8081766</code></pre>
+</div>
+</div>
+<p>Y vemos, por ejemplo, que el modelo puede capturar conceptos relacionados con el estado del clima, capitales de países y números - aún cuando no hemos anotado estas funciones en el corpus original. Estos vectores son similares porque tienden a ocurrir en contextos similares.</p>
+</section>
+<section id="geometría-en-el-espacio-de-representaciones-1" class="level3 unnumbered">
+<h3 class="unnumbered anchored" data-anchor-id="geometría-en-el-espacio-de-representaciones-1">Geometría en el espacio de representaciones</h3>
+<p>Ahora consideremos cómo se distribuyen las palabras en este espacio, y si existe estructura geométrica en este espacio que tenga información acerca del lenguaje.</p>
+<p>Consideremos primero el caso de plurales de sustantivos.</p>
+<ul>
+<li>Como el contexto de los plurales es distinto de los singulares, nuestro modelo debería poder capturar en los vectores su diferencia.</li>
+<li>Examinamos entonces cómo son geométricamente diferentes las representaciones de plurales vs singulares</li>
+<li>Si encontramos un patrón reconocible, podemos utilizar este patrón, por ejemplo, para encontrar la versión plural de una palabra singular, <em>sin usar ninguna regla del lenguaje</em>.</li>
+</ul>
+<p>Una de las relaciones geométricas más simples es la adición de vectores. Por ejemplo, extraemos la diferencia entre gol y goles:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb104"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb104-1"><a href="#cb104-1" aria-hidden="true" tabindex="-1"></a>plural_1 <span class="ot">&lt;-</span> modelo[[<span class="st">"goles"</span>]] <span class="sc">-</span> modelo[[<span class="st">"gol"</span>]]</span>
+<span id="cb104-2"><a href="#cb104-2" aria-hidden="true" tabindex="-1"></a>plural_1</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>A VectorSpaceModel object of  1  words and  100  vectors
+           [,1]       [,2]        [,3]       [,4]        [,5]       [,6]
+[1,] -0.2301596 -0.2543171 -0.04071745 -0.2292878 0.004059255 -0.2283908
+attr(,".cache")
+&lt;environment: 0x5595ea1d3598&gt;</code></pre>
+</div>
+</div>
+<p>que es un vector en el espacio de representación de palabras. Ahora sumamos este vector a un sustantivo en singular, y vemos qué palabras están cercas de esta “palabra sintética”:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb106"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb106-1"><a href="#cb106-1" aria-hidden="true" tabindex="-1"></a><span class="fu">closest_to</span>(modelo, <span class="sc">~</span> <span class="st">"partido"</span> <span class="sc">+</span> <span class="st">"goles"</span> <span class="sc">-</span> <span class="st">"gol"</span>, <span class="at">n =</span> <span class="dv">5</span>)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>                 word similarity to "partido" + "goles" - "gol"
+1            partidos                                 0.7961097
+2               goles                                 0.7589920
+3 partidos_disputados                                 0.6937101
+4  últimos_encuentros                                 0.6788752
+5          encuentros                                 0.6697611</code></pre>
+</div>
+</div>
+<p>Nótese que la más cercana es justamente el plural correcto, o otros plurales con relación al que buscábamos (como <em>encuentros</em>)</p>
+<p>Otro ejemplo:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb108"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb108-1"><a href="#cb108-1" aria-hidden="true" tabindex="-1"></a><span class="fu">closest_to</span>(modelo, <span class="sc">~</span> <span class="st">"mes"</span> <span class="sc">+</span> <span class="st">"días"</span> <span class="sc">-</span> <span class="st">"día"</span>, <span class="at">n =</span> <span class="dv">20</span>) </span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>               word similarity to "mes" + "días" - "día"
+1        tres_meses                            0.7858109
+2              días                            0.7708776
+3             meses                            0.7655628
+4         diez_días                            0.7199002
+5        seis_meses                            0.7110105
+6       quince_días                            0.7092209
+7       nueve_meses                            0.6903626
+8        doce_meses                            0.6887811
+9               mes                            0.6785786
+10         18_meses                            0.6483637
+11         48_horas                            0.6392776
+12        diez_años                            0.6365554
+13             años                            0.6339559
+14          semanas                            0.6284049
+15      quince_años                            0.6281021
+16      dos_semanas                            0.6147185
+17       trimestres                            0.6012591
+18     días_hábiles                            0.5972889
+19 veinticinco_años                            0.5955164
+20     nueves_meses                            0.5947687</code></pre>
+</div>
+</div>
+<p>Veremos ahora cómo funciona para el género de sustantivos:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb110"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb110-1"><a href="#cb110-1" aria-hidden="true" tabindex="-1"></a>fem_1 <span class="ot">&lt;-</span> modelo[[<span class="st">"presidenta"</span>]] <span class="sc">-</span> modelo[[<span class="st">"presidente"</span>]]</span>
+<span id="cb110-2"><a href="#cb110-2" aria-hidden="true" tabindex="-1"></a><span class="fu">closest_to</span>(modelo, <span class="sc">~</span> <span class="st">"rey"</span> <span class="sc">+</span> <span class="st">"presidenta"</span> <span class="sc">-</span> <span class="st">"presidente"</span>, <span class="at">n =</span> <span class="dv">5</span>) <span class="sc">|&gt;</span> <span class="fu">filter</span>(word <span class="sc">!=</span> <span class="st">"rey"</span>)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>      word similarity to "rey" + "presidenta" - "presidente"
+1    reina                                         0.7402226
+2 princesa                                         0.6662326
+3      pía                                         0.6249812
+4    perla                                         0.6189366</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb112"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb112-1"><a href="#cb112-1" aria-hidden="true" tabindex="-1"></a><span class="fu">closest_to</span>(modelo, <span class="sc">~</span> <span class="st">"tío"</span> <span class="sc">+</span> <span class="st">"presidenta"</span> <span class="sc">-</span> <span class="st">"presidente"</span>, <span class="at">n =</span> <span class="dv">5</span>) <span class="sc">|&gt;</span> <span class="fu">filter</span>(word <span class="sc">!=</span> <span class="st">"tío"</span>)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>     word similarity to "tío" + "presidenta" - "presidente"
+1   dueña                                         0.7036596
+2 hermana                                         0.6947787
+3  abuela                                         0.6871846
+4     tía                                         0.6850960</code></pre>
+</div>
+</div>
+</section>
+<section id="evaluación-de-calidad-de-modelos" class="level3 unnumbered">
+<h3 class="unnumbered anchored" data-anchor-id="evaluación-de-calidad-de-modelos">Evaluación de calidad de modelos</h3>
+<p>La evaluación de estas aplicaciones puede hacerse por ejemplo, con tareas de analogía, con listas de singular/plurales, de adjetivos/adverbios, masculino/femenino, etc (ver <span class="citation" data-cites="word2vec">(<a href="99-referencias.html#ref-word2vec" role="doc-biblioref">Mikolov et&nbsp;al. 2013</a>)</span>), (ver por ejemplo https://github.com/tmikolov/word2vec/blob/master/questions-words.txt). Adicionalmente, si se utilizan en alguna tarea <em>downstream</em>, pueden evaluarse en el desempeño de esa tarea particular.</p>
+<p><strong>Ejercicio</strong>: ¿cómo usarías esta geometría para encontrar el país en el que está una capital dada?</p>
+<p><strong>Observación</strong>: falta afinar los parámetros en este modelo. Puedes probar cambiando negative sampling (por ejemplo, incrementa a 40), el número de vectores (50-200, por ejemplo), e incrementando <em>window</em> y el número de iteraciones.</p>
+<p>Considera también un modelo preentrenado mucho más grande como <a href="https://github.com/uchile-nlp/spanish-word-embeddings">este</a>. Puedes bajar los vectores de palabras y repetir las tareas mostradas (el formato bin es estándar para la implementación que usamos de word2vec).</p>
+
+
+<div id="refs" class="references csl-bib-body hanging-indent" role="list" style="display: none">
+<div id="ref-bengio" class="csl-entry" role="listitem">
+Bengio, Yoshua, Réjean Ducharme, Pascal Vincent, y Christian Janvin. 2003. <span>«A Neural Probabilistic Language Model»</span>. <em>J. Mach. Learn. Res.</em> 3 (marzo): 1137-55. <a href="http://dl.acm.org/citation.cfm?id=944919.944966">http://dl.acm.org/citation.cfm?id=944919.944966</a>.
+</div>
+<div id="ref-word2vec" class="csl-entry" role="listitem">
+Mikolov, Tomas, Kai Chen, Greg Corrado, y Jeffrey Dean. 2013. <span>«Efficient Estimation of Word Representations in Vector Space»</span>. <em>CoRR</em> abs/1301.3781. <a href="http://arxiv.org/abs/1301.3781">http://arxiv.org/abs/1301.3781</a>.
+</div>
+</div>
+</section>
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copiado");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copiado");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="./15-reduccion-dim.html" class="pagination-link">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">15</span>&nbsp; <span class="chapter-title">Aprendizaje no supervisado: reducción de dimensionalidad</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./81-apendice-descenso.html" class="pagination-link">
+        <span class="nav-page-text"><span class="chapter-number">A</span>&nbsp; <span class="chapter-title">Apéndice 1: descenso en gradiente</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+</body></html>
