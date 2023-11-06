@@ -624,7 +624,7 @@ L =  \sum_{(i,j)} c_{ij}(p_{ij}  - \sum_{l=1}^k u_{i,l}v_{j,l})^2
 <span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>opt_exp <span class="ot">&lt;-</span> <span class="fu">optim</span>(<span class="at">par =</span> uv_inicial, error_explicito, <span class="at">method =</span> <span class="st">"BFGS"</span>)</span>
 <span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>opt_exp<span class="sc">$</span>par[<span class="dv">7</span><span class="sc">:</span><span class="dv">10</span>]</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>[1] 11.32636293 14.03753092  3.55842584  0.09139421</code></pre>
+<pre><code>[1]  9.91945290 12.29362409  3.11633998  0.08002767</code></pre>
 </div>
 <div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="fu">t</span>(<span class="fu">t</span>(opt_exp<span class="sc">$</span>par[<span class="dv">1</span><span class="sc">:</span><span class="dv">6</span>])) <span class="sc">%*%</span> <span class="fu">t</span>(opt_exp<span class="sc">$</span>par[<span class="dv">7</span><span class="sc">:</span><span class="dv">10</span>]) <span class="sc">|&gt;</span> <span class="fu">round</span>()</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
@@ -643,7 +643,7 @@ L =  \sum_{(i,j)} c_{ij}(p_{ij}  - \sum_{l=1}^k u_{i,l}v_{j,l})^2
 <div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>opt_imp <span class="ot">&lt;-</span> <span class="fu">optim</span>(<span class="at">par =</span> uv_inicial, error_implicito, <span class="at">method =</span> <span class="st">"BFGS"</span>)</span>
 <span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>opt_imp<span class="sc">$</span>par[<span class="dv">7</span><span class="sc">:</span><span class="dv">10</span>]</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>[1] 1.524054 1.526493 1.519993 0.946767</code></pre>
+<pre><code>[1] 0.8903332 0.8917554 0.8879665 0.5530978</code></pre>
 </div>
 <div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="fu">t</span>(<span class="fu">t</span>(opt_imp<span class="sc">$</span>par[<span class="dv">1</span><span class="sc">:</span><span class="dv">6</span>])) <span class="sc">%*%</span> <span class="fu">t</span>(opt_imp<span class="sc">$</span>par[<span class="dv">7</span><span class="sc">:</span><span class="dv">10</span>]) <span class="sc">|&gt;</span> <span class="fu">round</span>(<span class="dv">2</span>)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
@@ -1134,7 +1134,7 @@ _ss_  0.04169529</code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code>
 ── R CMD build ─────────────────────────────────────────────────────────────────
-* checking for file ‘/tmp/RtmpptQpA3/remotes8fbc1db72913/bmschmidt-wordVectors-ad127c1/DESCRIPTION’ ... OK
+* checking for file ‘/tmp/Rtmp7U5hIj/remotes656331cad8dc/bmschmidt-wordVectors-ad127c1/DESCRIPTION’ ... OK
 * preparing ‘wordVectors’:
 * checking DESCRIPTION meta-information ... OK
 * cleaning src
@@ -1188,7 +1188,7 @@ _ss_  0.04169529</code></pre>
 <pre><code>Beginning tokenization to text file at ./cache/noticias_w2v.txt</code></pre>
 </div>
 <div class="cell-output cell-output-stderr">
-<pre><code>Prepping /tmp/RtmpptQpA3/file8fbc9d92b0a</code></pre>
+<pre><code>Prepping /tmp/Rtmp7U5hIj/file6563ed5d547</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Starting training using file ./cache/noticias_w2v.txt
@@ -1777,7 +1777,7 @@ Words written: 21000K</code></pre>
            [,1]       [,2]        [,3]       [,4]        [,5]       [,6]
 [1,] -0.2301596 -0.2543171 -0.04071745 -0.2292878 0.004059255 -0.2283908
 attr(,".cache")
-&lt;environment: 0x560a60e79388&gt;</code></pre>
+&lt;environment: 0x5653dcf026b8&gt;</code></pre>
 </div>
 </div>
 <p>que es un vector en el espacio de representación de palabras. Ahora sumamos este vector a un sustantivo en singular, y vemos qué palabras están cercas de esta “palabra sintética”:</p>
