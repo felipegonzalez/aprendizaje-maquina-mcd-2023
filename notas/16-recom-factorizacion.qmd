@@ -187,7 +187,8 @@ observación de que le gustan otras películas serias u otras divertidas).
 
 Podemos usar también ideas de nuestro modelo base y modelar desviaciones en lugar de calificaciones directamente:
 
-Si $X^0$ son las predicciones del modelo de referencia, y
+Si $X^0$ son las predicciones del modelo de referencia (la media de la película más
+un ajuste que es la diferencia de la media de cada individuo menos la media global), y
 $$R = X-X^0$$
 son los residuales del modelo base, buscamos mejor
 $$R\approx \widetilde{X} = UV^t$$
@@ -261,6 +262,261 @@ para usuarios/películas que tengan pocas evaluaciones.
 Este método está implementado en [spark](https://spark.apache.org/docs/3.0.0/mllib-collaborative-filtering.html). La implementación está basada parcialmente en [@alsreg]. La inicialización
 es diferente en spark, ver [el código](https://github.com/apache/spark/blob/v3.0.0/mllib/src/main/scala/org/apache/spark/ml/recommendation/ALS.scala), donde cada renglón se inicializa con
 un vector de $N(0,1)$ normalizado.
+
+## Búsqueda por similitud y Hashing
+
+Cuando tenemos las representaciones de personas/artículos, muchas veces
+los sistemas de recomendación pueden requerir buscar personas o artículos
+similares a uno dado (por ejemplo, para hacer una *playlist* basada en una canción,
+o mostrar artículos relacionados). Con este fin, podemos definir
+una medida de similitud entre vectores, por ejemplo, distancia euclideana
+o distancia coseno (ángulo entre los vectores).
+
+El objetivo es entonces, dado el embedding (vector) de un artículo, por ejemplo,
+encontrar los 10 vectores más cercanos según nuestra medida de similitud. Este
+problema no es trivial si el espacio de artículos es muy grande, pues requiere
+recorrer todos los vectores y calcular la similitud. Igualmente, precalcular
+todas las similitudes es costoso en tiempo y espacio, 
+pues requiere $O(n^2)$ operaciones (considerar todos los pares posibles).
+
+Una solución aproximada que se utiliza con frecuencia (ver por ejemplo
+[esta librería de Spotify](https://github.com/spotify/annoy)) cuando
+buscamos encontrar elementos muy similares comienza
+utilizando reducción de dimensionalidad utilizando proyecciones aleatorias,
+y formando cubetas de candidatos de similitud.
+
+La idea general es como sigue: supongamos que utilizamos la similitud coseno.
+Escogemos al azar $k$ vectores $w_1,\ldots, w_k$ en el espacio de embeddings que
+nos interesa. Si tomamos un artículo dado representado por el vector $v$, entonces
+para cada $j$ consideramos:
+
+- Si el producto punto $w_j^t v$ es positivo, ponemos $f_j(v) = 1$
+- En otro caso ponemos $f_j(v) = -1$.
+
+Con esto obtenemos otra representación discreta de $v$ como vector
+$(f_1(v),f_2(v),\dots, f_k(v) )$, que es una representación más pequeña
+(podemos codificar como entero por ejemplo). Agrupamos todos los artículos
+que tienen la misma representación en una misma cubeta. Así, cuando queremos
+buscar los artículos muy similares, sólo es necesario buscar en la cubeta correspondiente.
+
+
+Estas funciones que transforman vectores en valores 1 o -1 se llaman,
+por su naturaleza aleatoria *funciones hash*. Construimos ahora nuestra función generadora de hashes:
+
+```{r}
+gen_hash <- function(p){
+  # p es la dimensión del espacio
+  v <- rnorm(p)
+  # devolvemos una función que calcula la cubeta:
+  function(x){
+    sum(x * v) |> sign()
+  }
+}
+set.seed(823)
+hash_1 <- gen_hash(2)
+# los hashes de dos puntos:
+hash_1(c(4, 7))
+hash_1(c(-4, 7))
+# el vector que escogimos es
+environment(hash_1)$v
+```
+
+#### Ejemplo {-}
+
+La siguiente función genera dos clusters de puntos mezclados con puntos distribuidos
+normales con desviación estándar relativamente grande
+
+
+```{r}
+set.seed(1021)
+simular_puntos <- function(d = 2, n = 200){
+  #puntos muy cercanos a (3,3,..., 3):
+  mat_1 <- matrix(rnorm(10 * d, sd = 0.01) + 3, ncol = d)
+  #puntos muy cercanos a (-3,-3,..., -3):
+  mat_2 <- matrix(rnorm(10 * d, sd = 0.01) - 3, ncol = d)
+  # puntos distribuidos alrededor del origen:
+  mat_3 <- matrix(rnorm(n * d, sd = 10), ncol = d)
+  datos_tbl_vars <- rbind(mat_3, mat_1, mat_2)  |> 
+    as_tibble() |> 
+    mutate(id_1 = row_number())
+  datos_tbl_vars
+}
+# diez puntos en cluster 1, diez en cluster 2, y 100 sin cluster:
+datos_tbl_vars <- simular_puntos(d = 2, n = 100)
+ggplot(datos_tbl_vars, aes(x = V1, y= V2)) + 
+  geom_jitter(width = 0.5, height = 0.5, alpha = 0.3)
+```
+
+Para este ejemplo calculamos las similitudes reales entre todos
+los pares de puntos (esto generalmente es muy lento para datos grandes):
+
+```{r}
+sim_e <- function(x, y){
+  sum(x * y) / sqrt(sum(x^2) * sum(y^2))
+}
+datos_tbl <- datos_tbl_vars |>
+  pivot_longer(-id_1, names_to = "variable", values_to = "valor") |> 
+  group_by(id_1) |>
+  arrange(variable) |>
+  summarise(vec_1 = list(valor))
+system.time(
+pares_tbl <- datos_tbl |> 
+    crossing(datos_tbl |> 
+        rename(id_2 = id_1, vec_2 = vec_1)) |>
+    filter(id_1 < id_2) |>
+    mutate(sim = map2_dbl(vec_1, vec_2, sim_e))
+)
+pares_tbl |> head()
+```
+
+```{r}
+nrow(pares_tbl)
+```
+
+Supongamos que queremos encontrar los pares con similitud mayor a 0.999:
+
+```{r}
+pares_sim <- pares_tbl |> filter(sim > 0.999)
+nrow(pares_sim)
+```
+Ahora veremos cómo encontrar estos pares de puntos cercanos.
+
+#### Cálculo de firmas {-}
+
+Usaremos 4 hashes:
+
+```{r}
+#generar hashes
+set.seed(88)
+hash_f <- map(1:4, ~ gen_hash(p = 2))
+# esta es una función de conveniencia:
+calculador_hashes <- function(hash_f){
+  function(z) {
+    map_int(hash_f, ~ .x(z))
+  }
+}
+calc_hashes <- calculador_hashes(hash_f)
+```
+
+Calculamos las firmas:
+
+```{r}
+firmas_tbl <- datos_tbl_vars |> 
+  pivot_longer(cols = -id_1, names_to = "variable", values_to = "valor") |> 
+  group_by(id_1) |> 
+  summarise(vec_1 = list(valor)) |> 
+  mutate(firma = map(vec_1, ~ calc_hashes(.x))) |> 
+  select(id_1, firma)
+firmas_tbl
+firmas_tbl$firma[[1]]
+firmas_tbl$firma[[2]]
+```
+
+
+Para este ejemplo, consideraremos todos los pares que coinciden en todas las cubetas
+
+```{r}
+cubetas_tbl  <- firmas_tbl |> 
+  mutate(cubeta = map_chr(firma, ~ paste(.x, collapse = "/"))) 
+cubetas_tbl
+```
+
+Ahora agrupamos cubetas y filtramos las que tienen más de un elemento
+
+```{r}
+cubetas_tbl <- cubetas_tbl |> group_by(cubeta) |> 
+  summarise(ids = list(id_1), n = length(id_1)) |> 
+  filter(n > 1)
+cubetas_tbl
+```
+
+Y finalmente, extraemos los pares candidatos:
+
+```{r}
+candidatos_tbl <- 
+  cubetas_tbl |> 
+  mutate(pares_cand = map(ids, ~ combn(.x, 2, simplify = FALSE))) |> 
+  select(cubeta, pares_cand) |> 
+  unnest(pares_cand) |> 
+  unnest_wider(pares_cand, names_sep = "_") |> 
+  select(-cubeta) |> 
+  unique()
+candidatos_tbl
+```
+
+```{r}
+nrow(candidatos_tbl)
+```
+
+En este caso, seguramente tenemos algunos falsos positivos que tenemos que
+filtrar, y quizá algunos falsos negativos.
+
+Calculamos distancias para todos los pares candidatos (es una lista
+mucho más corta generalmente):
+
+```{r}
+puntos_tbl <- datos_tbl_vars |> 
+  pivot_longer(V1:V2) |>
+  group_by(id_1) |> 
+  select(-name) |> 
+  summarise(punto = list(value))
+candidatos_tbl <- 
+  candidatos_tbl |> 
+  left_join(puntos_tbl |> rename(pares_cand_1 = id_1, punto_1 = punto)) |> 
+  left_join(puntos_tbl |> rename(pares_cand_2 = id_1, punto_2 = punto))
+candidatos_tbl
+```
+```{r}
+pares_similares_tbl <- 
+  candidatos_tbl |> 
+  mutate(sim = map2_dbl(punto_1, punto_2, sim_e)) |> 
+  filter(sim > 0.999)
+```
+
+```{r}
+nrow(pares_similares_tbl)
+```
+
+
+
+#### Probando con datos de "gold standard" {-}
+
+En este caso, sabemos cuáles son los pares que buscamos, así que podemos
+evaluar nuestro método:
+
+```{r}
+verdadero_pos <- nrow(inner_join(pares_similares_tbl, pares_sim))
+verdadero_pos
+```
+
+
+```{r}
+sensibilidad <- verdadero_pos / nrow(pares_sim)
+sensibilidad
+precision <- verdadero_pos / nrow(pares_similares_tbl)
+precision
+```
+
+Como vemos, la precisión es 1 y la sensibilidad es alta.
+Nos faltó encontrar una pequeña parte de los pares similares. 
+
+- Si queremos ser más exhaustivos (con el mayor cómputo que implica), podemos
+utilizar menos hashes, pero el tiempo de cómputo aumenta.
+
+::: callout-note
+# Hashing y similitud
+
+Este método de hashing se llama más generalmente *Locality Sensitive Hashing*,
+y se utiliza para encontrar de manera eficiente pares de puntos similares
+en embeddings. 
+
+En lugar de sólo construir cubetas, también es posible almacenar la salida
+en estructura de árbol para hacer más eficientes las búsquedas. 
+
+:::
+
+
+
 
 
 ## Retroalimentación implícita
@@ -460,6 +716,105 @@ el conjunto de validación podemos hacer:
 Estas cantidades dependen de cuántos datos tengamos, como siempre, para tener
 un tamaño razonable de datos de validación.
 
+# Embeddings de imágenes
+
+Otro tipo de embeddings similar al de los sistemas de recomendación es el de imágenes.
+En este caso, comenzamos con un clasificador de imágenes construido a partir de una
+red convolucional profunda, y consideramos las últimas capas que se utilizan
+para la clasificación. Estas últimas capas contienen información más relacionada
+con el contenido de la imagen que con patrones de pixeles generales, y puede
+ser utilizado para encontrar imágenes similares.
+
+En esta aplicación, resolveremos el problema de encontrar imágenes duplicadas,
+por ejemplo en pinterest. Existen muchas imágenes con variaciones mínimas
+(crop, rotaciones, algunos cambios de colores, etc), y en general no queremos
+repetir muchas veces una imagen en el *feed* de un usuario.
+
+Es claro que hacer comparaciones de pixeles no es una estrategia muy
+buena, porque las transformaciones de arriba puede producir diferencias grandes
+en los valores de los pixeles, aún cuando el contenido de la imagen es el mismo.
+Consideramos tres imágenes para probar:
+
+```{r echo=FALSE, out.width='40%'}
+knitr::include_graphics(c("figuras/elefante_1.jpg",
+                          "figuras/elefante_3.jpg",
+                          "figuras/leon_1.jpg"))
+```
+
+Como veremos, estas tres imagenes son similares en distancia unas de otras en términos
+de pixeles (muy diferentes), aún cuando el contenido de las primeras dos es altamente similar.
+
+En espacios de dimensión muy alta, como en imágenes, conviene hacer reducción de dimensionalidad
+para definir la métrica de distancia y utilizar estos métodos para encontrar vecinos cercanos. 
+
+Utilizaremos una red convolucional pre-entrenada para extraer características de las imágenes. En este caso, tomaremos la última penúltima capa (antes de la capa
+de softmax), que nos dará embeddings de tamaño 4096:
+
+```{r}
+library(keras)
+modelo <- application_vgg16(weights = 'imagenet')
+# obtener la penúltima
+embed_modelo <-  keras_model(inputs = modelo$input, 
+                     outputs = get_layer(modelo, "fc2")$output)
+embed_modelo
+```
+
+```{r}
+obtener_pixeles <- function(imagen_ruta){
+  img <- image_load(imagen_ruta, target_size = c(224,224))
+  x <- image_to_array(img)
+  array_reshape(x, c(1, dim(x))) 
+}
+calcular_capa <- function(imagen_ruta){
+  x <- obtener_pixeles(imagen_ruta) |> imagenet_preprocess_input()
+  embed_modelo |>  predict(x) |> as.numeric()
+}
+pixeles_1 <- obtener_pixeles("./figuras/elefante_1.jpg") |> 
+  as.numeric()
+pixeles_2 <- obtener_pixeles("./figuras/elefante_3.jpg") |> 
+  as.numeric()
+pixeles_3 <- obtener_pixeles("./figuras/leon_1.jpg") |> 
+  as.numeric()
+```
+
+Calculamos la distancia pixel a pixel:
+
+```{r}
+mean((pixeles_2 - pixeles_1)^2)
+mean((pixeles_1 - pixeles_3)^2)
+```
+
+Calculamos la penúltima capa de nuestro modelo para las imágenes de prueba:
+
+
+```{r}
+features_1 <- calcular_capa("./figuras/elefante_1.jpg")
+features_2 <- calcular_capa("./figuras/elefante_3.jpg")
+features_3 <- calcular_capa("./figuras/leon_1.jpg")
+length(features_1)
+```
+
+Nótese ahora que la distancia en nuestro nuevo espacio de imágenes
+es mucho más chica para los elefantes que entre el león y los elefantes:
+
+```{r}
+mean((features_2 - features_1)^2)
+mean((features_1 - features_3)^2)
+```
+
+Podemos usar entonces el siguiente proceso:
+
+1. Calculamos para cada imagen la representación dada por la última capa
+de una red nueronal de clasificación para imagen (**Embedding** de la imagen)
+2. Definimos como nuestra medida de distancia entre imagenes (por ejemplo similitud coseno) 
+3. Definimos funciones hash con proyecciones en cubetas como vimos arriba.
+4. Con estos hashes, podemos encontrar imagenes duplicadas o muy similares.
+
+
+
+
+
+
 # Representación de palabras y word2vec
 
 En esta parte empezamos a ver los enfoques más modernos (redes neuronales) para construir
@@ -478,7 +833,7 @@ $$P(w_t | w_{t-1} w_{t-2} \cdots w_{t-n+1}),$$
 Un enfoque donde intentamos estimar directamente estas probabilidades de los
 datos observados (modelos de n-gramas) puede ser útil en algunos casos (por ejemplo
 autocorrección simple), pero en general la mayoría de las sucesiones del lenguaje
-no son observadas en ningún corpues, y es necesario considerar un
+no son observadas en ningún corpus, y es necesario considerar un
 un enfoque más estructurado pensando en representaciones "distribucionales" de palabras:
 
 1. Asociamos a cada palabra en el vocabulario un vector numérico con $d$ dimensiones, que es su *representación distribuida*.
@@ -487,7 +842,7 @@ las representaciones vectoriales del primer paso.
 3. Aprendemos (máxima verosimiltud posiblemente regularización) simultáneamente los vectores y la manera de combinar 
 estos vectores para producir probabilidades.
 
- La idea de este modelo es entonces subsanar la relativa escasez de datos (comparado con todos los trigramas que pueden existir) con estructura. Sabemos que esta es una buena estrategia si la estrucutura impuesta es apropiada.
+ La idea de este modelo es entonces subsanar la relativa escasez de datos (comparado con todos los trigramas que pueden existir) con estructura. Sabemos que esta es una buena estrategia si la estructura impuesta es apropiada.
 
 ::: callout-note
 # Embeddings de palabras
@@ -758,7 +1113,7 @@ de Deep Learning de Goodfellow, Bengio y Courville](https://www.deeplearningbook
 Abajo exploramos una parte fundamental de estos modelos: representaciones de palabras, y modelos
 relativamente simples para obtener estas representaciones.
 
-## Representación de palabras
+## Representación de palabras y similitud
 
 Un aspecto interesante de el modelo de arriba es que
 nos da una representación vectorial de las palabras, en la forma
