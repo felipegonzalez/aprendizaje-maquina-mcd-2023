@@ -947,7 +947,7 @@ Gradient boosting (versión simple)
 <div class="sourceCode cell-code" id="cb38"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="fu">system.time</span>(modelo <span class="ot">&lt;-</span> <span class="fu">xgb.train</span>(d_entrena, <span class="at">verbose =</span> <span class="dv">1</span>, <span class="at">nrounds =</span> <span class="dv">10000</span>, <span class="at">params =</span> params))</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>   user  system elapsed 
- 15.522   0.782   4.154 </code></pre>
+ 19.962   0.811   5.313 </code></pre>
 </div>
 <div class="sourceCode cell-code" id="cb40"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="fu">xgb.save</span>(<span class="at">model =</span> modelo, <span class="at">fname =</span> <span class="st">"./cache/casas_boost.xgb"</span>)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
