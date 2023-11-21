@@ -22,6 +22,7 @@ book:
     - 14-interpretacion.qmd
     - 15-reduccion-dim.qmd
     - 16-recom-factorizacion.qmd
+    - 17-validacion-problemas.qmd
   appendices:
     - 81-apendice-descenso.qmd
     - 82-apendice-descenso-estocastico.qmd
